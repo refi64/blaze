@@ -2,6 +2,7 @@ fun f() -> int: return a
 
 fun g() -> int:
     let d = d
+    let e = 1
     return d
 
 #[
@@ -14,5 +15,8 @@ ERROR
             ~
 :4:9: note: d declared here
     let d = d
+        ~
+:5:9: warning: unused variable 'e'
+    let e = 1
         ~
 ]#

@@ -141,6 +141,9 @@ void type(Node* n) {
         type(n->sons[0]);
         force_typed_expr_context(n->sons[0]);
         n->type = n->sons[0]->type;
+        // XXX: This should NOT be here! It should be in a resolve-related pass.
+        if (!(n->flags & Fused))
+            warning(n->loc, "unused variable '%s'", n->s->str);
         break;
     case Nassign:
         type(n->sons[0]);

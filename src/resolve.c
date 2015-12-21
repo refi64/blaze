@@ -118,9 +118,12 @@ static void resolve1(Node* n) {
                 note(e->n->loc, "%s declared here", n->s->str);
             }
             else error(n->loc, "undeclared identifier %s", n->s->str);
-        } else if (n->e->n)
-            n->flags |= (n->e->n->flags & Fmut)  | (n->e->n->flags & Fvar) |
+        } else if (n->e->n) {
+            n->flags |= (n->e->n->flags & Fmut) | (n->e->n->flags & Fvar) |
                         (n->e->n->flags & Fcst);
+            n->e->n->flags |= Fused;
+            n->flags |= Fused;
+        }
         break;
     case Nint: break;
     case Nsons: assert(0);

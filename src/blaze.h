@@ -108,6 +108,7 @@ enum Flags {
     Fmv  =Fmut
          |Fvar, // Mutable or variable?
     Fcst= 1<<4, // Constant?
+    Fused=1<<5, // Has the given value been used?
 };
 
 struct Node {
