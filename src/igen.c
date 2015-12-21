@@ -40,11 +40,9 @@ static Var* igen_node(Func* f, Node* n) {
         ir->dst = ir->v[0];
         break;
     case Nid:
-        ir->kind = Ivar;
         assert(n->e && n->e->n && n->e->n->v);
-        ir->dst = n->e->n->v;
-        list_append(ir->v, ir->dst);
-        break;
+        free(ir);
+        return n->e->n->v;
     case Nint:
         ir->kind = Iint;
         ir->s = string_clone(n->s);
