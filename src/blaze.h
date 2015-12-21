@@ -228,6 +228,7 @@ struct Instr {
         Iset,
         Iret,
         Ivar,
+        Iaddr,
         Iint
     } kind;
     union {

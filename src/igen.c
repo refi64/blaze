@@ -1,6 +1,19 @@
 #include "blaze.h"
 
 static void igen_sons(Func* f, Node* n);
+static Var* igen_node(Func* f, Node* n);
+
+static Var* igen_address(Func* f, Node* n) {
+    Instr* ir = new(Instr);
+    assert(n->flags & Faddr);
+    ir->kind = Iaddr;
+    ir->v = igen_node(f, n);
+    ir->dst = var_new(f, ir, NULL);
+    assert(ir->dst);
+    list_append(f->vars, ir->dst);
+    list_append(f->sons, ir);
+    return ir->dst;
+}
 
 static Var* igen_node(Func* f, Node* n) {
     Instr* ir = new(Instr);
@@ -15,13 +28,15 @@ static Var* igen_node(Func* f, Node* n) {
         if (n->sons[0]) ir->v = igen_node(f, n->sons[0]);
         break;
     case Nlet:
-        ir->kind = n->kind == Nlet ? Inew : Iset;
+        ir->kind = Inew;
         ir->dst = var_new(f, ir, n->s);
         n->v = ir->v = igen_node(f, n->sons[0]);
         assert(ir->v);
         break;
     case Nassign:
-        /* assert(n->sons[0]); */
+        ir->kind = Iset;
+        ir->v = igen_address(f, n->sons[0]);
+        ir->dst = ir->v;
         break;
     case Nid:
         ir->kind = Ivar;

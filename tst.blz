@@ -1,3 +1,4 @@
 fun f() -> int:
-    let a = 2
+    let var a = 2
+    a = 3
     return 1
