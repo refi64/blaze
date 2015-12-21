@@ -1,0 +1,19 @@
+fun f(a: int) -> int: return a
+fun g(a: int, b: char) -> typeof(f):
+    let d = a
+    return d
+#[
+ERROR
+:4:12: error: function was declared to return type '(int) -> int', not 'int'
+    return d
+           ~
+:2:27: note: function return type declared here
+    fun g(a: int, b: char) -> typeof(f):
+                              ~~~~~~
+:3:9: note: d declared here
+    let d = a
+        ~
+:2:7: note: a declared here
+    fun g(a: int, b: char) -> typeof(f):
+          ~
+]#

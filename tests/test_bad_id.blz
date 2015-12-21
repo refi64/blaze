@@ -1,0 +1,18 @@
+fun f() -> int: return a
+
+fun g() -> int:
+    let d = d
+    return d
+
+#[
+ERROR
+:1:24: error: undeclared identifier a
+    fun f() -> int: return a
+                           ~
+:4:13: error: identifier d cannot reference itself in its own declaration
+    let d = d
+            ~
+:4:9: note: d declared here
+    let d = d
+        ~
+]#

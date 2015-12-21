@@ -1,0 +1,61 @@
+fun f() -> int: return f
+fun g(a: f) -> int:
+    let x = f
+    return x
+    return f
+fun h() -> g: return f
+fun i():
+    return f
+fun j() -> typeof(j):
+    return j
+#[
+ERROR
+:1:24: error: function was declared to return type 'int', not '() -> int'
+    fun f() -> int: return f
+                           ~
+:1:12: note: function return type declared here
+    fun f() -> int: return f
+               ~~~
+:1:5: note: f declared here
+    fun f() -> int: return f
+                           ~
+:2:10: error: f is not a type
+    fun g(a: f) -> int:
+             ~
+:4:12: error: function was declared to return type 'int', not '() -> int'
+     return x
+            ~
+:2:16: note: function return type declared here
+    fun g(a: f) -> int:
+                   ~~~
+:3:9: note: x declared here
+    let x = f
+        ~
+:1:5: note: f declared here
+    fun f() -> int: return f
+        ~
+:5:12: error: function was declared to return type 'int', not '() -> int'
+    return f
+           ~
+:2:16: note: function return type declared here
+    fun g(a: f) -> int:
+                   ~~~
+:1:5: note: f declared here
+    fun f() -> int: return f
+        ~
+:6:12: error: g is not a type
+    fun h() -> g: return f
+               ~
+:8:12: error: function should not return a value
+    return f
+           ~
+:7:5: note: function declared here
+    fun i():
+        ~
+:9:19: error: type of expression is recursive
+    fun j() -> typeof(j):
+                      ~
+:9:5: note: j declared here
+    fun j() -> typeof(j):
+        ~
+]#

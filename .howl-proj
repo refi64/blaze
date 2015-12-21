@@ -1,0 +1,18 @@
+src/blaze.h
+src/lex.l
+src/parse.y
+src/errors.c
+src/nutil.c
+src/resolve.c
+src/string.c
+src/symtab.c
+src/type.c
+src/igen.c
+src/iutil.c
+src/util.c
+tst.c
+tst.blz
+fbuildroot.py
+!:
+howl.config.clang_completion = true
+howl.config.project_build_command = 'fbuild'

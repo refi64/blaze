@@ -1,0 +1,11 @@
+fun f() -> char:
+    return 0
+#[
+ERROR
+:2:12: error: function was declared to return type 'char', not 'int'
+    return 0
+           ~
+:1:12: note: function return type declared here
+    fun f() -> char:
+               ~~~~
+]#

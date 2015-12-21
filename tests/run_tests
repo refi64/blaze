@@ -1,0 +1,32 @@
+#!/bin/bash
+
+dir=`dirname $0`
+tests=$dir/test*.blz
+
+run_test() {
+    test=$1
+    shift
+    $@ $dir/../build/tst $test 2>&1 1>/dev/null
+}
+
+if [ "$1" == "--valgrind" ]; then
+    valgrind=1
+    shift
+else
+    valgrind=0
+fi
+
+for test in $tests; do
+    echo "Running $test..."
+    if [ "$valgrind" == "1" ]; then
+        run_test $test valgrind --leak-check=full --show-leak-kinds=all > /tmp/.blaze.output || echo /tmp/.blaze.output
+    else
+        data=`cat $test | awk '/#\[/,/\]#/' | tail -n +2 | head -n -1`
+        kind=`echo "$data" | head -1`
+        expected=`echo "$data" | tail -n +2 | sed "s#^:#$test:#"`
+        output=`run_test $test`
+        diff -u -B -b <(echo "$expected") <(echo "$output")
+    fi
+done
+
+rm -f /tmp/.blaze.output
