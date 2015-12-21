@@ -19,7 +19,7 @@ ERROR
 :1:5: note: f declared here
     fun f() -> int: return f
                            ~
-:2:10: error: f is not a type
+:2:10: error: expression is not a type
     fun g(a: f) -> int:
              ~
 :4:12: error: function was declared to return type 'int', not '() -> int'
@@ -43,7 +43,7 @@ ERROR
 :1:5: note: f declared here
     fun f() -> int: return f
         ~
-:6:12: error: g is not a type
+:6:12: error: expression is not a type
     fun h() -> g: return f
                ~
 :8:12: error: function should not return a value

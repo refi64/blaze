@@ -1,34 +1,12 @@
 #include "blaze.h"
 
 static void force_type_context(Node* n) {
-    switch (n->kind) {
-    case Nmodule: case Nfun: case Nbody: case Narglist: case Narg: case Nreturn:
-    case Nlet: case Nassign: case Nint: case Nsons: assert(0);
-    case Ntypeof:
-        // XXX: This is a hack!
-        if (!n->type) {
-            error(n->sons[0]->loc, "type of expression is recursive");
-            declared_here(n->sons[0]);
-            n->type = anytype->override;
-        }
-        break;
-    case Nptr:
-        if (n->sons[0]->type == anytype->override) {
-            type_free(n->type, n);
-            n->type = anytype->override;
-        }
-        break;
-    case Nid:
-        if (!n->e) n->e = anytype;
-        else if (n->e->n && !(n->e->n->flags & Ftype)) {
-            error(n->loc, "%s is not a type", n->s->str);
-            declared_here(n->e->n);
-            n->e = anytype;
-        }
-        n->type = n->e->n ? n->e->n->type : n->e->override;
-        break;
+    if (!(n->flags & Ftype)) {
+        error(n->loc, "expression is not a type");
+        if (n->e->n) declared_here(n->e->n);
+        n->e = anytype;
+        n->type = anytype->override;
     }
-    n->flags |= Ftype;
 }
 
 static void force_typed_expr_context(Node* n) {
@@ -36,10 +14,7 @@ static void force_typed_expr_context(Node* n) {
 
     switch (n->kind) {
     case Nmodule: case Nfun: case Nbody: case Narglist: case Narg: case Nreturn:
-    case Nlet: case Nassign: case Ntypeof: case Nsons: assert(0);
-    case Nptr:
-        force_typed_expr_context(n->sons[0]);
-        break;
+    case Nlet: case Nassign: case Ntypeof: case Nptr: case Nsons: assert(0);
     case Nid:
         if (n->e && (!n->e->n || n->e->n->flags & Ftype)) {
             error(n->loc, "expected expression, not type");
@@ -194,21 +169,40 @@ void type(Node* n) {
     case Ntypeof:
         type(n->sons[0]);
         n->type = n->sons[0]->type;
+        if (!n->type) {
+            error(n->sons[0]->loc, "type of expression is recursive");
+            declared_here(n->sons[0]);
+            n->type = anytype->override;
+        }
+        n->flags |= Ftype;
         break;
     case Narg:
+        type(n->sons[0]);
         force_type_context(n->sons[0]);
         n->type = n->sons[0]->type;
         break;
     case Nptr:
         type(n->sons[0]);
-        n->type = new(Type);
-        n->type->kind = Tptr;
-        n->type->owner = n;
         force_type_context(n->sons[0]);
-        list_append(n->type->sons, n->sons[0]->type);
+        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
+        else {
+            n->type = new(Type);
+            n->type->kind = Tptr;
+            n->type->owner = n;
+            list_append(n->type->sons, n->sons[0]->type);
+        }
+        n->flags |= Ftype;
         break;
     case Nid:
-        n->type = n->e && n->e->n ? n->e->n->type : anytype->override;
+        if (n->e) {
+            if (n->e->n) {
+                n->type = n->e->n->type;
+                n->flags |= n->e->n->flags & Ftype;
+            } else {
+                n->type = n->e->override;
+                n->flags |= Ftype;
+            }
+        } else n->type = anytype->override;
         break;
     case Nint:
         n->type = builtin_types[Tint]->override;
