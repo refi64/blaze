@@ -16,7 +16,7 @@ static Var* igen_node(Func* f, Node* n) {
         break;
     case Nlet:
         ir->kind = n->kind == Nlet ? Inew : Iset;
-        ir->dst = var_new(f, n->s);
+        ir->dst = var_new(f, ir, n->s);
         n->v = ir->v = igen_node(f, n->sons[0]);
         assert(ir->v);
         break;
@@ -31,14 +31,15 @@ static Var* igen_node(Func* f, Node* n) {
     case Nint:
         ir->kind = Iint;
         ir->s = string_clone(n->s);
-        ir->dst = var_new(f, NULL);
+        ir->dst = var_new(f, ir, NULL);
         break;
     case Nmodule: case Ntypeof: case Nfun: case Narglist: case Narg:
     case Nsons: assert(0);
     }
+
     if (ir) {
         list_append(f->sons, ir);
-        if (ir->dst) list_append(f->vars, ir->dst);
+        if (ir->dst && ir->dst->ir == ir) list_append(f->vars, ir->dst);
         if (ir->v) ++ir->v->uses;
         return ir->dst;
     } else return NULL;

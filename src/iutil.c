@@ -2,10 +2,12 @@
 
 static int var_counter = 0;
 
-Var* var_new(Func* owner, String* name) {
+Var* var_new(Func* owner, Instr* ir, String* name) {
     Var* res = new(Var);
     res->id = var_counter++;
     res->uses = 0;
+    res->owner = owner;
+    res->ir = ir;
     if (name) res->name = string_clone(name);
     return res;
 }
@@ -66,4 +68,8 @@ void func_free(Func* f) {
     for (i=0; i<list_len(f->sons); ++i) instr_free(f->sons[i]);
     for (i=0; i<list_len(f->vars); ++i)
         if (f->vars[i]->owner == f) var_free(f->vars[i]);
+    list_free(f->sons);
+    list_free(f->vars);
+    string_free(f->name);
+    free(f);
 }
