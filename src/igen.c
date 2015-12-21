@@ -47,7 +47,7 @@ static Var* igen_node(Func* f, Node* n) {
         ir->dst = var_new(f, ir, builtin_types[Tint]->override, NULL);
         break;
     case Nmodule: case Ntypeof: case Nfun: case Narglist: case Narg:
-    case Nsons: assert(0);
+    case Nsons: case Nptr: assert(0);
     }
 
     if (ir) {

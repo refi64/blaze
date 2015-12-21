@@ -5,9 +5,16 @@ static void force_type_context(Node* n) {
     case Nmodule: case Nfun: case Nbody: case Narglist: case Narg: case Nreturn:
     case Nlet: case Nassign: case Nint: case Nsons: assert(0);
     case Ntypeof:
+        // XXX: This is a hack!
         if (!n->type) {
             error(n->sons[0]->loc, "type of expression is recursive");
             declared_here(n->sons[0]);
+            n->type = anytype->override;
+        }
+        break;
+    case Nptr:
+        if (n->sons[0]->type == anytype->override) {
+            type_free(n->type, n);
             n->type = anytype->override;
         }
         break;
@@ -30,6 +37,9 @@ static void force_typed_expr_context(Node* n) {
     switch (n->kind) {
     case Nmodule: case Nfun: case Nbody: case Narglist: case Narg: case Nreturn:
     case Nlet: case Nassign: case Ntypeof: case Nsons: assert(0);
+    case Nptr:
+        force_typed_expr_context(n->sons[0]);
+        break;
     case Nid:
         if (n->e && (!n->e->n || n->e->n->flags & Ftype)) {
             error(n->loc, "expected expression, not type");
@@ -49,6 +59,12 @@ static String* typestring(Type* t) {
         case Tchar: return string_new("char");
         case Tbend: assert(0);
         }
+    case Tptr:
+        res = string_newz("*", 1);
+        s = typestring(t->sons[0]);
+        string_merge(res, s);
+        string_free(s);
+        return res;
     case Tfun:
         res = string_newz("(", 1);
         for (i=1; i<list_len(t->sons); ++i) {
@@ -75,6 +91,7 @@ static int types_are_compat(Type* a, Type* b) {
     if (a->kind != b->kind) return 0;
     switch (a->kind) {
     case Tbuiltin: return a->bkind == b->bkind;
+    case Tptr: return types_are_compat(a->sons[0], b->sons[0]);
     case Tfun:
         if (list_len(a->sons) != list_len(b->sons)) return 0;
         for (i=0; i<list_len(a->sons); ++i)
@@ -181,6 +198,14 @@ void type(Node* n) {
     case Narg:
         force_type_context(n->sons[0]);
         n->type = n->sons[0]->type;
+        break;
+    case Nptr:
+        type(n->sons[0]);
+        n->type = new(Type);
+        n->type->kind = Tptr;
+        n->type->owner = n;
+        force_type_context(n->sons[0]);
+        list_append(n->type->sons, n->sons[0]->type);
         break;
     case Nid:
         n->type = n->e && n->e->n ? n->e->n->type : anytype->override;

@@ -85,6 +85,7 @@ struct Type {
     enum {
         Tany,
         Tbuiltin,
+        Tptr,
         Tfun
     } kind;
     union {
@@ -122,6 +123,7 @@ struct Node {
         Nassign,
         Nreturn,
         Ntypeof,
+        Nptr,
         Nfun,
         Narglist,
         Narg,

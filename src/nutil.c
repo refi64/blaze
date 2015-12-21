@@ -7,6 +7,7 @@ static void node_dump2(Node* n, int indent) {
     switch (n->kind) {
     case Nid: put("Nid (s:%s)", n->s->str); break;
     case Nint: put("Nint (s:%s)", n->s->str); break;
+    case Nptr: put("Nptr"); break;
     case Nlet: put("Nlet (s:%s)", n->s->str); break;
     case Nassign: put("Nassign"); break;
     case Nreturn: put("Nreturn"); break;
@@ -26,6 +27,7 @@ static void node_dump2(Node* n, int indent) {
     FLAG(Fmut)
     FLAG(Fvar)
     FLAG(Fcst)
+    FLAG(Fused)
     /* The && n->sons isn't necessary, but it prevents printing a colon if
        there are no child nodes. */
     if (n->kind > Nsons && n->sons) {

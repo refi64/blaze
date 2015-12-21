@@ -40,6 +40,8 @@ void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
 %token <t> TSEMIC
 %token <t> TEQ
 
+%token <t> TSTAR
+
 %token <t> TFUN
 %token <t> TLET
 %token <t> TMUT
@@ -143,6 +145,7 @@ return : TRETURN expr {
 
 texpr : name   { $$ = $1; }
       | typeof { $$ = $1; }
+      | TSTAR texpr { N($$, Nptr, $1.loc); list_append($$->sons, $2); }
 
 typeof : TTYPEOF TLP expr TRP {
     N($$, Ntypeof, $1.loc)

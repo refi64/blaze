@@ -1,4 +1,4 @@
-fun f() -> int:
+fun f() -> *int:
     let var a = 2
     a = 3
     return 1
