@@ -39,6 +39,7 @@ static Var* igen_node(Func* f, Node* n) {
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
         free(ir);
+        ++n->e->n->v->uses;
         return n->e->n->v;
     case Nint:
         ir->kind = Iint;

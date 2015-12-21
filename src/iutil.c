@@ -48,6 +48,8 @@ void instr_dump(Instr* ir) {
     if (ir->dst) {
         printf(" -> ");
         var_dump(ir->dst);
+        printf(" used %d time", ir->dst->uses);
+        if (ir->dst->uses > 1) putchar('s');
     }
 
     putchar('\n');
