@@ -28,16 +28,13 @@ static Var* igen_node(Func* f, Node* n) {
         break;
     case Nlet:
         ir->kind = Inew;
-        ir->dst = var_new(f, ir, n->s);
+        n->v = ir->dst = var_new(f, ir, n->s);
         list_append(ir->v, igen_node(f, n->sons[0]));
-        n->v = ir->v[0];
-        assert(n->v);
         break;
     case Nassign:
         ir->kind = Iset;
         list_append(ir->v, igen_address(f, n->sons[0]));
         list_append(ir->v, igen_node(f, n->sons[1]));
-        ir->dst = ir->v[0];
         break;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
