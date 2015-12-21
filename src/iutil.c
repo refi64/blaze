@@ -9,6 +9,7 @@ Var* var_new(Func* owner, Instr* ir, String* name) {
     res->owner = owner;
     res->ir = ir;
     if (name) res->name = string_clone(name);
+    list_append(owner->vars, res);
     return res;
 }
 

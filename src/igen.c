@@ -10,7 +10,6 @@ static Var* igen_address(Func* f, Node* n) {
     list_append(ir->v, igen_node(f, n));
     ir->dst = var_new(f, ir, NULL);
     assert(ir->dst);
-    list_append(f->vars, ir->dst);
     list_append(f->sons, ir);
     return ir->dst;
 }
@@ -58,7 +57,6 @@ static Var* igen_node(Func* f, Node* n) {
     if (ir) {
         int i;
         list_append(f->sons, ir);
-        if (ir->dst && ir->dst->ir == ir) list_append(f->vars, ir->dst);
         for (i=0; i<list_len(ir->v); ++i) ++ir->v[i]->uses;
         return ir->dst;
     } else return NULL;
