@@ -7,7 +7,7 @@ static Var* igen_address(Func* f, Node* n) {
     Instr* ir = new(Instr);
     assert(n->flags & Faddr);
     ir->kind = Iaddr;
-    ir->v = igen_node(f, n);
+    list_append(ir->v, igen_node(f, n));
     ir->dst = var_new(f, ir, NULL);
     assert(ir->dst);
     list_append(f->vars, ir->dst);
@@ -25,23 +25,26 @@ static Var* igen_node(Func* f, Node* n) {
         break;
     case Nreturn:
         ir->kind = Iret;
-        if (n->sons[0]) ir->v = igen_node(f, n->sons[0]);
+        if (n->sons[0]) list_append(ir->v, igen_node(f, n->sons[0]));
         break;
     case Nlet:
         ir->kind = Inew;
         ir->dst = var_new(f, ir, n->s);
-        n->v = ir->v = igen_node(f, n->sons[0]);
-        assert(ir->v);
+        list_append(ir->v, igen_node(f, n->sons[0]));
+        n->v = ir->v[0];
+        assert(n->v);
         break;
     case Nassign:
         ir->kind = Iset;
-        ir->v = igen_address(f, n->sons[0]);
-        ir->dst = ir->v;
+        list_append(ir->v, igen_address(f, n->sons[0]));
+        list_append(ir->v, igen_node(f, n->sons[1]));
+        ir->dst = ir->v[0];
         break;
     case Nid:
         ir->kind = Ivar;
         assert(n->e && n->e->n && n->e->n->v);
-        ir->dst = ir->v = n->e->n->v;
+        ir->dst = n->e->n->v;
+        list_append(ir->v, ir->dst);
         break;
     case Nint:
         ir->kind = Iint;
@@ -53,9 +56,10 @@ static Var* igen_node(Func* f, Node* n) {
     }
 
     if (ir) {
+        int i;
         list_append(f->sons, ir);
         if (ir->dst && ir->dst->ir == ir) list_append(f->vars, ir->dst);
-        if (ir->v) ++ir->v->uses;
+        for (i=0; i<list_len(ir->v); ++i) ++ir->v[i]->uses;
         return ir->dst;
     } else return NULL;
 }

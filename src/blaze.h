@@ -234,7 +234,8 @@ struct Instr {
     union {
         String* s;
     };
-    Var* dst, *v;
+    Var* dst;
+    List(Var*) v;
     int flags;
 };
 

@@ -24,6 +24,7 @@ void var_free(Var* v) {
 }
 
 void instr_dump(Instr* ir) {
+    int i;
     assert(ir);
     switch (ir->kind) {
     case Iret: printf("Iret"); break;
@@ -35,8 +36,12 @@ void instr_dump(Instr* ir) {
     }
 
     if (ir->v) {
-        printf(" of ");
-        var_dump(ir->v);
+        printf(" of (");
+        for (i=0; i<list_len(ir->v); ++i) {
+            if (i) printf(", ");
+            var_dump(ir->v[i]);
+        }
+        putchar(')');
     }
 
     if (ir->dst) {
@@ -66,7 +71,10 @@ void func_dump(Func* f) {
 
 void func_free(Func* f) {
     int i;
-    for (i=0; i<list_len(f->sons); ++i) instr_free(f->sons[i]);
+    for (i=0; i<list_len(f->sons); ++i) {
+        list_free(f->sons[i]->v);
+        instr_free(f->sons[i]);
+    }
     for (i=0; i<list_len(f->vars); ++i)
         if (f->vars[i]->owner == f) var_free(f->vars[i]);
     list_free(f->sons);
