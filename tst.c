@@ -26,7 +26,6 @@ int main(int argc, char** argv) {
             list_free(ir);
         }
 
-        free_anon_types();
         node_free(ctx.result);
     }
     lex_context_free(&ctx);

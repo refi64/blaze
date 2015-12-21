@@ -1,7 +1,5 @@
 #include "blaze.h"
 
-List(Type*) anon_types;
-
 static void force_type_context(Node* n) {
     switch (n->kind) {
     case Nmodule: case Nfun: case Nbody: case Narglist: case Narg: case Nreturn:
@@ -91,26 +89,14 @@ static Node* get_function(Node* n) {
     return n;
 }
 
-void type_free(Type* t, int force) {
-    int i;
-    assert(t);
-    if ((t->kind == Tbuiltin || t->kind == Tany) && !force) return;
+void type_free(Type* t, Node* owner) {
+    if (!t || t->owner != owner) return;
     switch (t->kind) {
     case Tany: case Tbuiltin: string_free(t->name); break;
-    case Tfun:
-        if (t->anon) break;
-        for (i=1; i<list_len(t->sons); ++i) type_free(t->sons[i], 0);
-        if (t->sons[0]) type_free(t->sons[0], 0);
-        break;
+    default: break;
     }
     list_free(t->sons);
     free(t);
-}
-
-void free_anon_types(Type* t) {
-    int i;
-    for (i=0; i<list_len(anon_types); ++i) type_free(anon_types[i], 0);
-    list_free(anon_types);
 }
 
 void type(Node* n) {
@@ -129,12 +115,11 @@ void type(Node* n) {
         type(n->sons[1]);
         n->type = new(Type);
         n->type->kind = Tfun;
-        n->type->anon = 1;
+        n->type->owner = n;
         if (n->sons[0]) list_append(n->type->sons, n->sons[0]->type);
         else list_append(n->type->sons, NULL);
         for (i=0; i<list_len(n->sons[1]->sons); ++i)
             list_append(n->type->sons, n->sons[1]->sons[i]->type);
-        list_append(anon_types, n->type);
         type(n->sons[2]);
         break;
     case Nlet:

@@ -136,12 +136,12 @@ void free_builtin_types(Symtab* tab) {
     int i;
     for (i=0; i<Tbend; ++i) {
         e = builtin_types[i];
-        type_free(e->override, 1);
+        type_free(e->override, NULL);
         e->override = NULL;
         stentry_free(e);
     }
 
-    type_free(anytype->override, 1);
+    type_free(anytype->override, NULL);
     anytype->override = NULL;
     stentry_free(anytype);
 }

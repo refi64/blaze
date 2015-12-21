@@ -97,7 +97,7 @@ struct Type {
     String* name;
     Node* n;
     List(Type*) sons; // For Tfun: ret, args...
-    int anon;
+    Node* owner; // Only for anonymous types.
 };
 
 enum Flags {
@@ -184,9 +184,7 @@ void resolve(Node* n);
 void type(Node* n);
 
 
-extern List(Type*) anon_types;
-void type_free(Type* t, int force);
-void free_anon_types();
+void type_free(Type* t, Node* owner);
 
 
 struct Token {
