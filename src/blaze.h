@@ -220,6 +220,7 @@ struct Var {
     int uses;
     Func* owner;
     Instr* ir; // Instruction that created this variable.
+    Type* type;
 };
 
 struct Instr {
@@ -239,7 +240,7 @@ struct Instr {
     int flags;
 };
 
-Var* var_new(Func* owner, Instr* ir, String* name);
+Var* var_new(Func* owner, Instr* ir, Type* type, String* name);
 void var_dump(Var* var);
 void var_free(Var* var);
 

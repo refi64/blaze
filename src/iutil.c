@@ -2,12 +2,13 @@
 
 static int var_counter = 0;
 
-Var* var_new(Func* owner, Instr* ir, String* name) {
+Var* var_new(Func* owner, Instr* ir, Type* type, String* name) {
     Var* res = new(Var);
     res->id = var_counter++;
     res->uses = 0;
     res->owner = owner;
     res->ir = ir;
+    res->type = type;
     if (name) res->name = string_clone(name);
     list_append(owner->vars, res);
     return res;

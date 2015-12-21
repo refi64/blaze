@@ -8,7 +8,7 @@ static Var* igen_address(Func* f, Node* n) {
     assert(n->flags & Faddr);
     ir->kind = Iaddr;
     list_append(ir->v, igen_node(f, n));
-    ir->dst = var_new(f, ir, NULL);
+    ir->dst = var_new(f, ir, n->type, NULL);
     assert(ir->dst);
     list_append(f->sons, ir);
     return ir->dst;
@@ -28,7 +28,7 @@ static Var* igen_node(Func* f, Node* n) {
         break;
     case Nlet:
         ir->kind = Inew;
-        n->v = ir->dst = var_new(f, ir, n->s);
+        n->v = ir->dst = var_new(f, ir, n->type, n->s);
         list_append(ir->v, igen_node(f, n->sons[0]));
         break;
     case Nassign:
@@ -44,7 +44,7 @@ static Var* igen_node(Func* f, Node* n) {
     case Nint:
         ir->kind = Iint;
         ir->s = string_clone(n->s);
-        ir->dst = var_new(f, ir, NULL);
+        ir->dst = var_new(f, ir, builtin_types[Tint]->override, NULL);
         break;
     case Nmodule: case Ntypeof: case Nfun: case Narglist: case Narg:
     case Nsons: assert(0);
