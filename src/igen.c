@@ -1,5 +1,7 @@
 #include "blaze.h"
 
+static int func_counter = 0;
+
 static void igen_sons(Func* f, Node* n);
 static Var* igen_node(Func* f, Node* n);
 
@@ -81,6 +83,7 @@ static Func* igen_func(Node* n) {
     assert(n->kind == Nfun);
     Func* res = new(Func);
     res->name = string_clone(n->s);
+    res->id = func_counter++;
     assert(n->sons[1]->kind == Narglist);
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
         Node* arg = n->sons[1]->sons[i];

@@ -67,7 +67,7 @@ void instr_free(Instr* ir) {
 
 void func_dump(Func* f) {
     int i;
-    printf("Function %s:\n", f->name->str);
+    printf("Function %d %s:\n", f->id, f->name->str);
     for (i=0; i<list_len(f->sons); ++i) {
         printf("  ");
         instr_dump(f->sons[i]);

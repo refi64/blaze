@@ -221,6 +221,7 @@ struct Func {
     List(Var*) vars;
     List(Var*) args;
     Type* ret;
+    int id;
 };
 
 struct Var {
