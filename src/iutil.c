@@ -52,7 +52,7 @@ void instr_dump(Instr* ir) {
         printf(" -> ");
         var_dump(ir->dst);
         printf(" used %d time", ir->dst->uses);
-        if (ir->dst->uses > 1) putchar('s');
+        if (ir->dst->uses != 1) putchar('s');
     }
 
     putchar('\n');
@@ -68,7 +68,7 @@ void instr_free(Instr* ir) {
 
 void decl_dump(Decl* f) {
     int i;
-    printf("Decltion %d %s:\n", f->id, f->name->str);
+    printf("Decl %d %s:\n", f->id, f->name->str);
     for (i=0; i<list_len(f->sons); ++i) {
         printf("  ");
         instr_dump(f->sons[i]);
