@@ -3,7 +3,7 @@
 static void resolve0(Node* n) {
     STEntry* e;
     int i;
-    assert(n);
+    assert(n && (n->kind == Nmodule || n->parent));
     if (n->kind != Nmodule && n->kind != Nfun && !n->tab) n->tab = n->parent->tab;
     switch (n->kind) {
     case Nmodule:
@@ -66,6 +66,12 @@ static void resolve0(Node* n) {
         n->sons[0]->parent = n;
         resolve0(n->sons[0]);
         break;
+    case Ncall:
+        for (i=0; i<list_len(n->sons); ++i) {
+            n->sons[i]->parent = n;
+            resolve0(n->sons[i]);
+        }
+        break;
     case Nid: break;
     case Nint: break;
     case Nsons: assert(0);
@@ -115,6 +121,9 @@ static void resolve1(Node* n) {
             error(n->sons[0]->loc, "expression must be addressable");
             declared_here(n->sons[0]);
         }
+        break;
+    case Ncall:
+        for (i=0; i<list_len(n->sons); ++i) resolve1(n->sons[i]);
         break;
     case Nid:
         if (!(n->e = symtab_finds(n->tab, n->s))) {

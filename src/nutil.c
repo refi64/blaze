@@ -9,6 +9,7 @@ static void node_dump2(Node* n, int indent) {
     case Nint: put("Nint (s:%s)", n->s->str); break;
     case Nderef: put("Nderef"); break;
     case Naddr: put("Naddr"); break;
+    case Ncall: put("Ncall"); break;
     case Nptr: put("Nptr"); break;
     case Nlet: put("Nlet (s:%s)", n->s->str); break;
     case Nassign: put("Nassign"); break;

@@ -23,6 +23,7 @@ LexerContext parse_string(const char* file, const char* module,
 %union {
     Token t;
     Node* n;
+    List(Node*) l;
     int i;
 }
 
@@ -79,6 +80,9 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> id
 %type <n> dec
 %type <n> ptr
+%type <n> call
+%type <l> callargs
+%type <l> callargs2
 
 %type <i> letspec
 
@@ -166,6 +170,7 @@ typeof : TTYPEOF TLP expr TRP {
 expr : name { $$ = $1; }
      | dec  { $$ = $1; }
      | ptr  { $$ = $1; }
+     | call { $$ = $1; }
 
 name : id { $$ = $1; $$->flags |= Faddr; }
 
@@ -187,6 +192,20 @@ ptr : TSTAR expr {
     N($$, Naddr, $1.loc)
     list_append($$->sons, $2);
 }
+
+call : expr TLP callargs TRP {
+    int i;
+    N($$, Ncall, $1->loc)
+    list_append($$->sons, $1);
+    for (i=0; i<list_len($3); ++i) list_append($$->sons, $3[i]);
+    list_free($3);
+}
+
+callargs :           { $$ = NULL; }
+         | callargs2 { $$ = $1; }
+
+callargs2 : expr { $$ = NULL; list_append($$, $1); }
+          | callargs2 TCOMMA expr { $$ = $1; list_append($$, $3); }
 
 ws : | ws TNEWL
 /* eof : TEOF */

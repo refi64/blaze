@@ -13,6 +13,9 @@ static void force_typed_expr_context(Node* n) {
     if (n->flags & Ftype) {
         error(n->loc, "expected expression, not type");
         if (n->e && n->e->n) declared_here(n->e->n);
+    } else if (n->flags & Fvoid) {
+        error(n->loc, "cannot use void value in expression");
+        if (n->kind == Ncall) declared_here(n->sons[0]);
     }
 }
 
@@ -211,6 +214,44 @@ void type(Node* n) {
             n->type->owner = n;
             n->type->kind = Tptr;
             list_append(n->type->sons, n->sons[0]->type);
+        }
+        break;
+    case Ncall:
+        for (i=0; i<list_len(n->sons); ++i) {
+            type(n->sons[i]);
+            force_typed_expr_context(n->sons[i]);
+        }
+        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
+        else if (n->sons[0]->type->kind != Tfun) {
+            error(n->loc, "cannot call non-function");
+            declared_here(n->sons[0]);
+        } else {
+            Type* ft = n->sons[0]->type;
+            int ngiven = list_len(n->sons)-1, nexpect = list_len(ft->sons)-1;
+            if (ngiven != nexpect) {
+                error(n->loc, "function expected %d argument(s), not %d",
+                      nexpect, ngiven);
+                declared_here(n->sons[0]);
+            }
+            for (i=1; i<min(ngiven+1, nexpect+1); ++i)
+                if (!types_are_compat(n->sons[i]->type, ft->sons[i])) {
+                    String* expects, *givens;
+                    expects = typestring(ft->sons[i]);
+                    givens = typestring(n->sons[i]->type);
+                    error(n->sons[i]->loc, "function expected argument of type "
+                                           "'%s', not '%s'", expects->str,
+                                           givens->str);
+                    declared_here(n->sons[0]);
+                    declared_here(n->sons[i]);
+                }
+            if (ft->sons[0]){
+                n->type = ft->sons[0];
+                n->type->owner = n;
+            }
+            else {
+                n->type = anytype->override;
+                n->flags |= Fvoid;
+            }
         }
         break;
     case Nid:

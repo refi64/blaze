@@ -28,6 +28,7 @@ typedef struct Instr Instr;
 
 
 void fatal(const char*);
+int min(int a, int b);
 
 
 struct String {
@@ -110,6 +111,7 @@ enum Flags {
          |Fvar, // Mutable or variable?
     Fcst= 1<<4, // Constant?
     Fused=1<<5, // Has the given value been used?
+    Fvoid=1<<6, // Is the node void (has no type)?
 };
 
 struct Node {
@@ -121,6 +123,7 @@ struct Node {
 
         Naddr,
         Nderef,
+        Ncall,
         Nlet,
         Nassign,
         Nreturn,

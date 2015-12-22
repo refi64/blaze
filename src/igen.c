@@ -46,6 +46,9 @@ static Var* igen_node(Decl* f, Node* n) {
     case Naddr:
         free(ir);
         return igen_address(f, n->sons[0]);
+    case Ncall:
+        // ;
+        break;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
         free(ir);
