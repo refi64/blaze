@@ -89,6 +89,7 @@ static Func* igen_func(Node* n) {
         list_append(res->args, v);
         arg->v = v;
     }
+    if (n->sons[0]) res->ret = n->sons[0]->type;
     igen_node(res, n->sons[2]);
     return res;
 }

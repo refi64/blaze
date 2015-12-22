@@ -215,6 +215,7 @@ struct Func {
     List(Instr*) sons;
     List(Var*) vars;
     List(Var*) args;
+    Type* ret;
 };
 
 struct Var {
