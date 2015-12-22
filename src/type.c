@@ -261,6 +261,8 @@ void type(Node* n) {
                                            givens->str);
                     declared_here(n->sons[0]);
                     declared_here(n->sons[i]);
+                    string_free(expects);
+                    string_free(givens);
                 }
             if (ft->sons[0]){
                 n->type = ft->sons[0];
