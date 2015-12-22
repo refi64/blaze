@@ -3,7 +3,7 @@
 static void force_type_context(Node* n) {
     if (!(n->flags & Ftype)) {
         error(n->loc, "expression is not a type");
-        if (n->e->n) declared_here(n->e->n);
+        if (n->e && n->e->n) declared_here(n->e->n);
         n->e = anytype;
         n->type = anytype->override;
     }
