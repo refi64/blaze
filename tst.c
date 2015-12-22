@@ -10,8 +10,7 @@ int main(int argc, char** argv) {
     lex_init();
     init_builtin_types();
     LexerContext ctx;
-    lex_context_init(&ctx, argv[1], buf);
-    ctx.result = NULL;
+    lex_context_init(&ctx, argv[1], "__main__", buf);
     yyparse(&ctx);
     if (ctx.result) {
         node_dump(ctx.result);

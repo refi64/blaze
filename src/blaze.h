@@ -65,7 +65,7 @@ void string_merges(String* base, const char* rhs);
 
 struct Location {
     int first_line, last_line, first_column, last_column;
-    const char* file, *fcont;
+    const char* file, *module, *fcont;
 };
 typedef Location YYLTYPE;
 #define YYLTYPE_IS_DECLARED 1
@@ -158,7 +158,7 @@ void node_free(Node* n);
 struct STEntry {
     Node* n; // Only null with builtin types.
     Type* override;
-    String* qname; // Qualified name.
+    String* name;
     int level;
 };
 
@@ -174,7 +174,7 @@ extern STEntry* builtin_types[Tbend];
 void init_builtin_types();
 void free_builtin_types();
 
-STEntry* stentry_new(Node* n, String* qname, Type* override);
+STEntry* stentry_new(Node* n, String* name, Type* override);
 void stentry_free(STEntry* e);
 Symtab* symtab_new();
 STEntry* symtab_find(Symtab* tab, const char* name);
@@ -199,13 +199,14 @@ struct Token {
 struct LexerContext {
     void* scanner;
     Node* result;
-    const char* file, *fcont;
+    const char* file, *module, *fcont;
 };
 
 int yyparse(LexerContext* ctx);
 
 void lex_init();
-void lex_context_init(LexerContext* ctx, const char* file, const char* fcont);
+void lex_context_init(LexerContext* ctx, const char* file, const char* module,
+    const char* fcont);
 void lex_context_free(LexerContext* ctx);
 void lex_free();
 

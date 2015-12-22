@@ -10,6 +10,7 @@ int cur=0, level=0, sp=0;
     yylloc->first_column = yycolumn;\
     yylloc->last_column = yycolumn+yyleng-1;\
     yylloc->file = yyextra->file;\
+    yylloc->module = yyextra->module;\
     yylloc->fcont = yyextra->fcont;\
     yycolumn += yyleng;\
     yylval->t.loc = *yylloc;\
@@ -34,9 +35,12 @@ void lex_init() {
     ds_hput(kw, "typeof", (void*)(intptr_t)TTYPEOF);
 }
 
-void lex_context_init(LexerContext* ctx, const char* file, const char* fcont) {
+void lex_context_init(LexerContext* ctx, const char* file, const char* module,
+    const char* fcont) {
     ctx->file = file;
+    ctx->module = module;
     ctx->fcont = fcont;
+    ctx->result = NULL;
     yylex_init(&ctx->scanner);
     yyset_extra(ctx, ctx->scanner);
     yy_scan_string(fcont, ctx->scanner);

@@ -31,24 +31,24 @@ void init_builtin_types() {
     anytype = stentry_new(NULL, t->name, t);
 }
 
-STEntry* stentry_new(Node* n, String* qname, Type* override) {
+STEntry* stentry_new(Node* n, String* name, Type* override) {
     STEntry* e = new(STEntry);
     e->n = n;
-    e->qname = string_clone(qname);
+    e->name = string_clone(name);
     e->override = override;
     return e;
 }
 
 void stentry_free(STEntry* e) {
     if (e->override && !e->n) return;
-    string_free(e->qname);
+    string_free(e->name);
     free(e);
 }
 
 static void add_builtins(Symtab* tab) {
     int i;
     for (i=0; i<Tbend; ++i)
-        symtab_add(tab, builtin_types[i]->qname, builtin_types[i]);
+        symtab_add(tab, builtin_types[i]->name, builtin_types[i]);
 }
 
 Symtab* symtab_new() {
