@@ -2,16 +2,18 @@ fun f() -> char:
     let a = 1
     let mut b = 2
     let var c = 3
+    let d = *a
+    let e = *&d
     a = 2
     b = 3
     c = 4
     5 = 6
     f = 7
-    return c
+    return &f
 
 #[
 ERROR
-:5:5: error: left-hand side of assignment must be variable
+:7:5: error: left-hand side of assignment must be variable
     a = 2
     ~
 :2:9: note: a declared here
@@ -20,7 +22,7 @@ ERROR
 :2:9: note: add 'var' to make it variable
     let a = 1
         ~
-:6:5: error: left-hand side of assignment must be variable
+:8:5: error: left-hand side of assignment must be variable
     b = 3
     ~
 :3:13: note: b declared here
@@ -29,28 +31,34 @@ ERROR
 :3:13: note: change 'mut' to 'var' to make it variable
     let mut b = 2
             ~
-:8:5: error: left-hand side of assignment must be addressable
+:10:5: error: left-hand side of assignment must be addressable
     5 = 6
     ~
-:9:5: error: left-hand side of assignment cannot be constant
+:11:5: error: left-hand side of assignment cannot be constant
     f = 7
     ~
 :1:5: note: f declared here
     fun f() -> char:
         ~
-:9:7: error: types '() -> char' and 'int' in assignment are not compatible
+:5:14: error: expected pointer type, got 'int'
+    let d = *a
+             ~
+:2:9: note: a declared here
+    let a = 1
+        ~
+:6:9: warning: unused variable 'e'
+    let e = *&d
+        ~
+:11:7: error: types '() -> char' and 'int' in assignment are not compatible
     f = 7
       ~
 :1:5: note: f declared here
     fun f() -> char:
         ~
-:10:12: error: function was declared to return type 'char', not 'int'
-    return c
+:12:12: error: function was declared to return type 'char', not '*(() -> char)'
+    return &f
            ~
 :1:12: note: function return type declared here
     fun f() -> char:
                ~~~~
-:4:13: note: c declared here
-    let var c = 3
-            ~
 ]#

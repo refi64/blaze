@@ -7,6 +7,8 @@ static void node_dump2(Node* n, int indent) {
     switch (n->kind) {
     case Nid: put("Nid (s:%s)", n->s->str); break;
     case Nint: put("Nint (s:%s)", n->s->str); break;
+    case Nderef: put("Nderef"); break;
+    case Naddr: put("Naddr"); break;
     case Nptr: put("Nptr"); break;
     case Nlet: put("Nlet (s:%s)", n->s->str); break;
     case Nassign: put("Nassign"); break;

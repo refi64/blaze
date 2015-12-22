@@ -10,23 +10,16 @@ static void force_type_context(Node* n) {
 }
 
 static void force_typed_expr_context(Node* n) {
-    assert(n->type);
-
-    switch (n->kind) {
-    case Nmodule: case Nfun: case Nbody: case Narglist: case Narg: case Nreturn:
-    case Nlet: case Nassign: case Ntypeof: case Nptr: case Nsons: assert(0);
-    case Nid:
-        if (n->e && (!n->e->n || n->e->n->flags & Ftype)) {
-            error(n->loc, "expected expression, not type");
-            if (n->e->n) declared_here(n->e->n);
-        }
-    case Nint: break;
+    if (n->flags & Ftype) {
+        error(n->loc, "expected expression, not type");
+        if (n->e && n->e->n) declared_here(n->e->n);
     }
 }
 
 static String* typestring(Type* t) {
     String* res, *s;
     int i;
+    char* p;
     switch (t->kind) {
     case Tbuiltin:
         switch (t->bkind) {
@@ -37,7 +30,9 @@ static String* typestring(Type* t) {
     case Tptr:
         res = string_newz("*", 1);
         s = typestring(t->sons[0]);
+        if ((p = strchr(s->str, ' '))) string_mergec(res, '(');
         string_merge(res, s);
+        if (p) string_mergec(res, ')');
         string_free(s);
         return res;
     case Tfun:
@@ -192,6 +187,30 @@ void type(Node* n) {
             list_append(n->type->sons, n->sons[0]->type);
         }
         n->flags |= Ftype;
+        break;
+    case Nderef:
+        type(n->sons[0]);
+        force_typed_expr_context(n->sons[0]);
+        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
+        else if (n->sons[0]->type->kind == Tptr)
+            n->type = n->sons[0]->type->sons[0];
+        else {
+            String* ts = typestring(n->sons[0]->type);
+            error(n->sons[0]->loc, "expected pointer type, got '%s'", ts->str);
+            declared_here(n->sons[0]);
+            string_free(ts);
+            n->type = anytype->override;
+        }
+        break;
+    case Naddr:
+        type(n->sons[0]);
+        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
+        else {
+            n->type = new(Type);
+            n->type->owner = n;
+            n->type->kind = Tptr;
+            list_append(n->type->sons, n->sons[0]->type);
+        }
         break;
     case Nid:
         if (n->e) {

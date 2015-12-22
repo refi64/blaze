@@ -119,6 +119,8 @@ struct Node {
 
         Nsons,
 
+        Naddr,
+        Nderef,
         Nlet,
         Nassign,
         Nreturn,
@@ -230,6 +232,7 @@ struct Instr {
         Iret,
         Ivar,
         Iaddr,
+        Ideref,
         Iint
     } kind;
     union {

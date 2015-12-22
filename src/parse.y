@@ -41,6 +41,7 @@ void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
 %token <t> TEQ
 
 %token <t> TSTAR
+%token <t> TAND
 
 %token <t> TFUN
 %token <t> TLET
@@ -69,6 +70,7 @@ void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
 %type <n> name
 %type <n> id
 %type <n> dec
+%type <n> ptr
 
 %type <i> letspec
 
@@ -154,6 +156,7 @@ typeof : TTYPEOF TLP expr TRP {
 
 expr : name { $$ = $1; }
      | dec  { $$ = $1; }
+     | ptr  { $$ = $1; }
 
 name : id { $$ = $1; $$->flags |= Faddr; }
 
@@ -165,6 +168,14 @@ id : TID {
 dec : TINT {
     N($$, Nint, $1.loc)
     $$->s = $1.s;
+}
+
+ptr : TSTAR expr {
+    N($$, Nderef, $1.loc)
+    list_append($$->sons, $2);
+}   | TAND expr {
+    N($$, Naddr, $1.loc)
+    list_append($$->sons, $2);
 }
 
 ws : | ws TNEWL

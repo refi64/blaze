@@ -36,6 +36,14 @@ static Var* igen_node(Func* f, Node* n) {
         list_append(ir->v, igen_address(f, n->sons[0]));
         list_append(ir->v, igen_node(f, n->sons[1]));
         break;
+    case Nderef:
+        ir->kind = Ideref;
+        list_append(ir->v, igen_node(f, n->sons[0]));
+        ir->dst = var_new(f, ir, n->type, NULL);
+        break;
+    case Naddr:
+        free(ir);
+        return igen_address(f, n->sons[0]);
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
         free(ir);
@@ -53,7 +61,10 @@ static Var* igen_node(Func* f, Node* n) {
     if (ir) {
         int i;
         list_append(f->sons, ir);
-        for (i=0; i<list_len(ir->v); ++i) ++ir->v[i]->uses;
+        for (i=0; i<list_len(ir->v); ++i) {
+            assert(ir->v[i]);
+            ++ir->v[i]->uses;
+        }
         return ir->dst;
     } else return NULL;
 }

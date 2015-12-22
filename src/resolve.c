@@ -62,11 +62,7 @@ static void resolve0(Node* n) {
             resolve0(n->sons[0]);
         }
         break;
-    case Ntypeof:
-        n->sons[0]->parent = n;
-        resolve0(n->sons[0]);
-        break;
-    case Nptr:
+    case Ntypeof: case Nptr: case Nderef: case Naddr:
         n->sons[0]->parent = n;
         resolve0(n->sons[0]);
         break;
@@ -112,8 +108,14 @@ static void resolve1(Node* n) {
             make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
         }
         break;
-    case Ntypeof: resolve1(n->sons[0]); break;
-    case Nptr: resolve1(n->sons[0]); break;
+    case Ntypeof: case Nptr: case Nderef: resolve1(n->sons[0]); break;
+    case Naddr:
+        resolve1(n->sons[0]);
+        if (!(n->sons[0]->flags & Faddr)) {
+            error(n->sons[0]->loc, "expression must be addressable");
+            declared_here(n->sons[0]);
+        }
+        break;
     case Nid:
         if (!(n->e = symtab_finds(n->tab, n->s))) {
             STEntry* e;
