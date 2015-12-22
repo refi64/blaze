@@ -9,9 +9,7 @@ int main(int argc, char** argv) {
     fclose(f);
     lex_init();
     init_builtin_types();
-    LexerContext ctx;
-    lex_context_init(&ctx, argv[1], "__main__", buf);
-    yyparse(&ctx);
+    LexerContext ctx = parse_string(argv[1], "__main__", buf);
     if (ctx.result) {
         node_dump(ctx.result);
         resolve(ctx.result);

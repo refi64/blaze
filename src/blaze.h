@@ -210,6 +210,10 @@ void lex_context_init(LexerContext* ctx, const char* file, const char* module,
 void lex_context_free(LexerContext* ctx);
 void lex_free();
 
+LexerContext parse_string(const char* file, const char* module,
+    const char* fcont);
+LexerContext parse_file(const char* file, const char* module);
+
 
 struct Func {
     String* name;

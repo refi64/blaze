@@ -7,6 +7,14 @@ void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
     error(*yylloc, "%s", msg);
 }
 
+LexerContext parse_string(const char* file, const char* module,
+    const char* fcont) {
+    LexerContext ctx;
+    lex_context_init(&ctx, file, module, fcont);
+    yyparse(&ctx);
+    return ctx;
+}
+
 #define scanner ctx->scanner
 
 #define N(x,k,l) x = new(Node); x->kind = k; x->loc = l;
