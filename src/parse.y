@@ -134,6 +134,7 @@ sep : TSEMIC | TNEWL
 stmt : let    { $$ = $1; }
      | assign { $$ = $1; }
      | return { $$ = $1; }
+     | call   { $$ = $1; }
 
 let : TLET letspec id TEQ expr {
     N($$, Nlet, $3->loc)
