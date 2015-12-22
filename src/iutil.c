@@ -81,9 +81,11 @@ void func_free(Func* f) {
         instr_free(f->sons[i]);
     }
     for (i=0; i<list_len(f->vars); ++i)
-        if (f->vars[i]->owner == f) var_free(f->vars[i]);
+        if (f->vars[i]->owner == f && f->vars[i]->ir) var_free(f->vars[i]);
+    for (i=0; i<list_len(f->args); ++i) var_free(f->args[i]);
     list_free(f->sons);
     list_free(f->vars);
+    list_free(f->args);
     string_free(f->name);
     free(f);
 }

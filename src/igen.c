@@ -77,9 +77,18 @@ static void igen_sons(Func* f, Node* n) {
 }
 
 static Func* igen_func(Node* n) {
+    int i;
     assert(n->kind == Nfun);
     Func* res = new(Func);
     res->name = string_clone(n->s);
+    assert(n->sons[1]->kind == Narglist);
+    for (i=0; i<list_len(n->sons[1]->sons); ++i) {
+        Node* arg = n->sons[1]->sons[i];
+        assert(arg->kind == Narg);
+        Var* v = var_new(res, NULL, arg->type, arg->s);
+        list_append(res->args, v);
+        arg->v = v;
+    }
     igen_node(res, n->sons[2]);
     return res;
 }

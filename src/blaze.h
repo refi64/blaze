@@ -214,6 +214,7 @@ struct Func {
     String* name;
     List(Instr*) sons;
     List(Var*) vars;
+    List(Var*) args;
 };
 
 struct Var {
@@ -221,7 +222,7 @@ struct Var {
     String* name; // NULL if temporary.
     int uses;
     Func* owner;
-    Instr* ir; // Instruction that created this variable.
+    Instr* ir; // Instruction that created this variable (if NULL, then argument).
     Type* type;
 };
 
