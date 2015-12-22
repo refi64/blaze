@@ -175,6 +175,7 @@ void type(Node* n) {
         type(n->sons[0]);
         force_type_context(n->sons[0]);
         n->type = n->sons[0]->type;
+        n->type->owner = n;
         break;
     case Nptr:
         type(n->sons[0]);
