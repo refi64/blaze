@@ -22,7 +22,7 @@ typedef struct STEntry STEntry;
 typedef struct Symtab Symtab;
 typedef struct Token Token;
 typedef struct LexerContext LexerContext;
-typedef struct Func Func;
+typedef struct Decl Decl;
 typedef struct Var Var;
 typedef struct Instr Instr;
 
@@ -215,7 +215,7 @@ LexerContext parse_string(const char* file, const char* module,
 LexerContext parse_file(const char* file, const char* module);
 
 
-struct Func {
+struct Decl {
     String* name;
     List(Instr*) sons;
     List(Var*) vars;
@@ -228,7 +228,7 @@ struct Var {
     int id;
     String* name; // NULL if temporary.
     int uses;
-    Func* owner;
+    Decl* owner;
     Instr* ir; // Instruction that created this variable (if NULL, then argument).
     Type* type;
 };
@@ -251,16 +251,16 @@ struct Instr {
     int flags;
 };
 
-Var* var_new(Func* owner, Instr* ir, Type* type, String* name);
+Var* var_new(Decl* owner, Instr* ir, Type* type, String* name);
 void var_dump(Var* var);
 void var_free(Var* var);
 
 void instr_dump(Instr* ir);
 void instr_free(Instr* ir);
 
-void func_dump(Func* f);
-void func_free(Func* f);
+void decl_dump(Decl* f);
+void decl_free(Decl* f);
 
-List(Func*) igen(Node* n);
+List(Decl*) igen(Node* n);
 
 #endif

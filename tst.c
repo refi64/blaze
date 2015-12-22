@@ -16,10 +16,10 @@ int main(int argc, char** argv) {
         type(ctx.result);
 
         if (errors == 0) {
-            List(Func*) ir = igen(ctx.result);
+            List(Decl*) ir = igen(ctx.result);
             int i;
-            for (i=0; i<list_len(ir); ++i) func_dump(ir[i]);
-            for (i=0; i<list_len(ir); ++i) func_free(ir[i]);
+            for (i=0; i<list_len(ir); ++i) decl_dump(ir[i]);
+            for (i=0; i<list_len(ir); ++i) decl_free(ir[i]);
             list_free(ir);
         }
 

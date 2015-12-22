@@ -1,11 +1,11 @@
 #include "blaze.h"
 
-static int func_counter = 0;
+static int decl_counter = 0;
 
-static void igen_sons(Func* f, Node* n);
-static Var* igen_node(Func* f, Node* n);
+static void igen_sons(Decl* f, Node* n);
+static Var* igen_node(Decl* f, Node* n);
 
-static Var* igen_address(Func* f, Node* n) {
+static Var* igen_address(Decl* f, Node* n) {
     Instr* ir = new(Instr);
     assert(n->flags & Faddr);
     ir->kind = Iaddr;
@@ -16,7 +16,7 @@ static Var* igen_address(Func* f, Node* n) {
     return ir->dst;
 }
 
-static Var* igen_node(Func* f, Node* n) {
+static Var* igen_node(Decl* f, Node* n) {
     Instr* ir = new(Instr);
     switch (n->kind) {
     case Nbody:
@@ -71,19 +71,19 @@ static Var* igen_node(Func* f, Node* n) {
     } else return NULL;
 }
 
-static void igen_sons(Func* f, Node* n) {
+static void igen_sons(Decl* f, Node* n) {
     int i;
     assert(n && n->kind > Nsons);
     for (i=0; i<list_len(n->sons); ++i)
         igen_node(f, n->sons[i]);
 }
 
-static Func* igen_func(Node* n) {
+static Decl* igen_func(Node* n) {
     int i;
     assert(n->kind == Nfun);
-    Func* res = new(Func);
+    Decl* res = new(Decl);
     res->name = string_clone(n->s);
-    res->id = func_counter++;
+    res->id = decl_counter++;
     assert(n->sons[1]->kind == Narglist);
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
         Node* arg = n->sons[1]->sons[i];
@@ -97,15 +97,15 @@ static Func* igen_func(Node* n) {
     return res;
 }
 
-List(Func*) igen(Node* n) {
-    List(Func*) res = NULL;
+List(Decl*) igen(Node* n) {
+    List(Decl*) res = NULL;
     int i, j, k;
     assert(n);
 
     for (i=0; i<list_len(n->sons); ++i) switch (n->sons[i]->kind) {
     case Nmodule:
         for (j=0; j<list_len(n->sons[i]->sons); ++j) {
-            List(Func*) t = igen(n->sons[i]->sons[j]);
+            List(Decl*) t = igen(n->sons[i]->sons[j]);
             for (k=0; k<list_len(t); ++k) list_append(res, t[k]);
         }
         break;

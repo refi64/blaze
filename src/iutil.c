@@ -2,7 +2,7 @@
 
 static int var_counter = 0;
 
-Var* var_new(Func* owner, Instr* ir, Type* type, String* name) {
+Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
     Var* res = new(Var);
     res->id = var_counter++;
     res->uses = 0;
@@ -65,16 +65,16 @@ void instr_free(Instr* ir) {
     free(ir);
 }
 
-void func_dump(Func* f) {
+void decl_dump(Decl* f) {
     int i;
-    printf("Function %d %s:\n", f->id, f->name->str);
+    printf("Decltion %d %s:\n", f->id, f->name->str);
     for (i=0; i<list_len(f->sons); ++i) {
         printf("  ");
         instr_dump(f->sons[i]);
     }
 }
 
-void func_free(Func* f) {
+void decl_free(Decl* f) {
     int i;
     for (i=0; i<list_len(f->sons); ++i) {
         list_free(f->sons[i]->v);
