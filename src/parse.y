@@ -168,6 +168,7 @@ id : TID {
 dec : TINT {
     N($$, Nint, $1.loc)
     $$->s = $1.s;
+    $$->flags |= Fcst;
 }
 
 ptr : TSTAR expr {

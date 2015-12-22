@@ -31,7 +31,7 @@ ERROR
 :3:13: note: change 'mut' to 'var' to make it variable
     let mut b = 2
             ~
-:10:5: error: left-hand side of assignment must be addressable
+:10:5: error: left-hand side of assignment cannot be constant
     5 = 6
     ~
 :11:5: error: left-hand side of assignment cannot be constant

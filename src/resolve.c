@@ -94,13 +94,13 @@ static void resolve1(Node* n) {
         resolve1(n->sons[0]);
         resolve1(n->sons[1]);
         if (n->kind == Nid && !n->e) break;
-        if (!(n->sons[0]->flags & Faddr)) {
-            error(n->sons[0]->loc, "left-hand side of assignment must be "
-                                   "addressable");
-            declared_here(n->sons[0]);
-        } else if (n->sons[0]->flags & Fcst) {
+        if (n->sons[0]->flags & Fcst) {
             error(n->sons[0]->loc, "left-hand side of assignment cannot be "
                                    "constant");
+            declared_here(n->sons[0]);
+        } else if (!(n->sons[0]->flags & Faddr)) {
+            error(n->sons[0]->loc, "left-hand side of assignment must be "
+                                   "addressable");
             declared_here(n->sons[0]);
         } else if (!(n->sons[0]->flags & Fvar)) {
             error(n->sons[0]->loc, "left-hand side of assignment must be "
