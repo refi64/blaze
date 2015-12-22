@@ -18,6 +18,7 @@ static Var* igen_address(Decl* f, Node* n) {
 
 static Var* igen_node(Decl* f, Node* n) {
     Instr* ir = new(Instr);
+    int i;
     switch (n->kind) {
     case Nbody:
         igen_sons(f, n);
@@ -47,7 +48,10 @@ static Var* igen_node(Decl* f, Node* n) {
         free(ir);
         return igen_address(f, n->sons[0]);
     case Ncall:
-        // ;
+        ir->kind = Icall;
+        for (i=0; i<list_len(n->sons); ++i)
+            list_append(ir->v, igen_node(f, n->sons[i]));
+        ir->dst = var_new(f, ir, n->flags & Fvoid ? NULL : n->type, NULL);
         break;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
@@ -88,6 +92,7 @@ static Decl* igen_func(Node* n) {
     res->name = string_clone(n->s);
     res->id = decl_counter++;
     assert(n->sons[1]->kind == Narglist);
+    n->v = var_new(res, NULL, n->type, n->s);
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
         Node* arg = n->sons[1]->sons[i];
         assert(arg->kind == Narg);

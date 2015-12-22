@@ -244,6 +244,7 @@ struct Instr {
         Ivar,
         Iaddr,
         Ideref,
+        Icall,
         Iint
     } kind;
     union {
