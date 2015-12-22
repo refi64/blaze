@@ -19,7 +19,7 @@ fi
 for test in $tests; do
     echo "Running $test..."
     if [ "$valgrind" == "1" ]; then
-        run_test $test valgrind --leak-check=full --show-leak-kinds=all > /tmp/.blaze.output || echo /tmp/.blaze.output
+        run_test $test valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 > /tmp/.blaze.output || cat /tmp/.blaze.output
     else
         data=`cat $test | awk '/#\[/,/\]#/' | tail -n +2 | head -n -1`
         kind=`echo "$data" | head -1`
