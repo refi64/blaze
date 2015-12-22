@@ -105,7 +105,8 @@ fun : TFUN id arglist funret TCOLON body {
 funret : { $$ = NULL; }
        | TARROW texpr { $$ = $2; }
 
-arglist : TLP TRP { N($$, Narglist, $1.loc); }
+arglist :         { N($$, Narglist, yylloc) }
+        | TLP TRP { N($$, Narglist, $1.loc); }
         | TLP arglist2 TRP { $$ = $2; $$->loc = $1.loc; }
 
 arglist2 : arg { N($$, Narglist, $1->loc); list_append($$->sons, $1); }

@@ -3,8 +3,8 @@ fun g(a: f) -> int:
     let x = f
     return x
     return f
-fun h() -> g: return f
-fun i():
+fun h -> g: return f
+fun i:
     return f
 fun j() -> typeof(j):
     return j
@@ -47,14 +47,14 @@ ERROR
 :1:5: note: f declared here
     fun f() -> int: return f
         ~
-:6:12: error: expression is not a type
-    fun h() -> g: return f
+:6:10: error: expression is not a type
+    fun h -> g: return f
                ~
 :8:12: error: function should not return a value
     return f
            ~
 :7:5: note: function declared here
-    fun i():
+    fun i:
         ~
 :9:19: error: type of expression is recursive
     fun j() -> typeof(j):
