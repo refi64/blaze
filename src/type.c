@@ -79,13 +79,21 @@ static Node* get_function(Node* n) {
     return n;
 }
 
-void type_free(Type* t, Node* owner) {
-    if (!t || t->owner != owner) return;
+void type_free(Type* t, Node* user) {
+    int i, cleared=0, active=0;
+    if (!t || ((t->kind == Tany || t->kind == Tbuiltin) && user)) return;
+    for (i=0; i<list_len(t->users); ++i)
+        if (t->users[i] == user && !cleared) {
+            t->users[i] = NULL;
+            cleared = 1;
+        } else if (t->users[i]) ++active;
+    if (active && t->kind != Tany && t->kind != Tbuiltin) return;
     switch (t->kind) {
     case Tany: case Tbuiltin: string_free(t->name); break;
     default: break;
     }
     list_free(t->sons);
+    list_free(t->users);
     free(t);
 }
 
@@ -105,17 +113,23 @@ void type(Node* n) {
         type(n->sons[1]);
         n->type = new(Type);
         n->type->kind = Tfun;
-        n->type->owner = n;
-        if (n->sons[0]) list_append(n->type->sons, n->sons[0]->type);
+        list_append(n->type->users, n);
+        if (n->sons[0]) {
+            list_append(n->type->sons, n->sons[0]->type);
+            list_append(n->sons[0]->type->users, n);
+        }
         else list_append(n->type->sons, NULL);
-        for (i=0; i<list_len(n->sons[1]->sons); ++i)
+        for (i=0; i<list_len(n->sons[1]->sons); ++i) {
             list_append(n->type->sons, n->sons[1]->sons[i]->type);
+            list_append(n->sons[1]->sons[i]->type->users, n);
+        }
         type(n->sons[2]);
         break;
     case Nlet:
         type(n->sons[0]);
         force_typed_expr_context(n->sons[0]);
         n->type = n->sons[0]->type;
+        list_append(n->type->users, n);
         // XXX: This should NOT be here! It should be in a resolve-related pass.
         if (!(n->flags & Fused))
             warning(n->loc, "unused variable '%s'", n->s->str);
@@ -166,11 +180,13 @@ void type(Node* n) {
         break;
     case Ntypeof:
         type(n->sons[0]);
-        n->type = n->sons[0]->type;
-        if (!n->type) {
+        if (!n->sons[0]->type) {
             error(n->sons[0]->loc, "type of expression is recursive");
             declared_here(n->sons[0]);
             n->type = anytype->override;
+        } else {
+            n->type = n->sons[0]->type;
+            list_append(n->type->users, n);
         }
         n->flags |= Ftype;
         break;
@@ -178,7 +194,7 @@ void type(Node* n) {
         type(n->sons[0]);
         force_type_context(n->sons[0]);
         n->type = n->sons[0]->type;
-        n->type->owner = n;
+        list_append(n->type->users, n);
         break;
     case Nptr:
         type(n->sons[0]);
@@ -187,8 +203,8 @@ void type(Node* n) {
         else {
             n->type = new(Type);
             n->type->kind = Tptr;
-            n->type->owner = n;
             list_append(n->type->sons, n->sons[0]->type);
+            list_append(n->type->users, n);
         }
         n->flags |= Ftype;
         break;
@@ -196,8 +212,10 @@ void type(Node* n) {
         type(n->sons[0]);
         force_typed_expr_context(n->sons[0]);
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
-        else if (n->sons[0]->type->kind == Tptr)
+        else if (n->sons[0]->type->kind == Tptr) {
             n->type = n->sons[0]->type->sons[0];
+            list_append(n->type->users, n);
+        }
         else {
             String* ts = typestring(n->sons[0]->type);
             error(n->sons[0]->loc, "expected pointer type, got '%s'", ts->str);
@@ -211,9 +229,9 @@ void type(Node* n) {
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
         else {
             n->type = new(Type);
-            n->type->owner = n;
             n->type->kind = Tptr;
             list_append(n->type->sons, n->sons[0]->type);
+            list_append(n->type->users, n);
         }
         break;
     case Ncall:
@@ -246,7 +264,7 @@ void type(Node* n) {
                 }
             if (ft->sons[0]){
                 n->type = ft->sons[0];
-                n->type->owner = n;
+                list_append(n->type->users, n);
             }
             else {
                 n->type = anytype->override;
@@ -258,9 +276,11 @@ void type(Node* n) {
         if (n->e) {
             if (n->e->n) {
                 n->type = n->e->n->type;
+                if (n->type) list_append(n->type->users, n);
                 n->flags |= n->e->n->flags & Ftype;
             } else {
                 n->type = n->e->override;
+                // No need to worry about users here, since this is a builtin.
                 n->flags |= Ftype;
             }
         } else n->type = anytype->override;
