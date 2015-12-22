@@ -24,7 +24,7 @@ static Var* igen_node(Func* f, Node* n) {
         break;
     case Nreturn:
         ir->kind = Iret;
-        if (n->sons[0]) list_append(ir->v, igen_node(f, n->sons[0]));
+        if (n->sons) list_append(ir->v, igen_node(f, n->sons[0]));
         break;
     case Nlet:
         ir->kind = Inew;

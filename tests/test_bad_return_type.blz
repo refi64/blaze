@@ -8,6 +8,10 @@ fun i():
     return f
 fun j() -> typeof(j):
     return j
+fun k() -> int:
+    return
+fun l():
+    return 1
 #[
 ERROR
 :1:24: error: function was declared to return type 'int', not '() -> int'
@@ -57,5 +61,17 @@ ERROR
                       ~
 :9:5: note: j declared here
     fun j() -> typeof(j):
+        ~
+:12:5: error: function is supposed to return a value
+    return
+    ~~~~~~
+:11:12: note: function return type declared here
+    fun k() -> int:
+               ~~~
+:14:12: error: function should not return a value
+    return 1
+           ~
+:13:5: note: function declared here
+    fun l():
         ~
 ]#
