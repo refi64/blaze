@@ -22,6 +22,7 @@ typedef struct STEntry STEntry;
 typedef struct Symtab Symtab;
 typedef struct Token Token;
 typedef struct LexerContext LexerContext;
+typedef struct Module Module;
 typedef struct Decl Decl;
 typedef struct Var Var;
 typedef struct Instr Instr;
@@ -218,13 +219,19 @@ LexerContext parse_string(const char* file, const char* module,
 LexerContext parse_file(const char* file, const char* module);
 
 
+struct Module {
+    List(Decl*) decls;
+    List(Type*) types;
+};
+
 struct Decl {
     String* name;
     List(Instr*) sons;
     List(Var*) vars;
     List(Var*) args;
     Type* ret;
-    int id;
+    Var* v;
+    Module* m;
 };
 
 struct Var {
@@ -265,6 +272,11 @@ void instr_free(Instr* ir);
 void decl_dump(Decl* f);
 void decl_free(Decl* f);
 
-List(Decl*) igen(Node* n);
+Module* igen(Node* n);
+void module_dump(Module* m);
+void module_free(Module* m);
+
+
+void cgen(Module* m, FILE* output);
 
 #endif

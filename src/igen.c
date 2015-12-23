@@ -1,7 +1,5 @@
 #include "blaze.h"
 
-static int decl_counter = 0;
-
 static void igen_sons(Decl* f, Node* n);
 static Var* igen_node(Decl* f, Node* n);
 
@@ -85,14 +83,14 @@ static void igen_sons(Decl* f, Node* n) {
         igen_node(f, n->sons[i]);
 }
 
-static Decl* igen_func(Node* n) {
+static Decl* igen_func(Module* m, Node* n) {
     int i;
     assert(n->kind == Nfun);
     Decl* res = new(Decl);
     res->name = string_clone(n->s);
-    res->id = decl_counter++;
+    res->m = m;
     assert(n->sons[1]->kind == Narglist);
-    n->v = var_new(res, NULL, n->type, n->s);
+    res->v = n->v = var_new(res, NULL, n->type, n->s);
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
         Node* arg = n->sons[1]->sons[i];
         assert(arg->kind == Narg);
@@ -105,20 +103,14 @@ static Decl* igen_func(Node* n) {
     return res;
 }
 
-List(Decl*) igen(Node* n) {
-    List(Decl*) res = NULL;
-    int i, j, k;
-    assert(n);
+Module* igen(Node* n) {
+    Module* res = new(Module);
+    int i;
+    assert(n && n->kind == Nmodule);
 
     for (i=0; i<list_len(n->sons); ++i) switch (n->sons[i]->kind) {
-    case Nmodule:
-        for (j=0; j<list_len(n->sons[i]->sons); ++j) {
-            List(Decl*) t = igen(n->sons[i]->sons[j]);
-            for (k=0; k<list_len(t); ++k) list_append(res, t[k]);
-        }
-        break;
     case Nfun:
-        list_append(res, igen_func(n->sons[i]));
+        list_append(res->decls, igen_func(res, n->sons[i]));
         break;
     default: break;
     }

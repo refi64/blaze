@@ -16,11 +16,10 @@ int main(int argc, char** argv) {
         type(ctx.result);
 
         if (errors == 0) {
-            List(Decl*) ir = igen(ctx.result);
-            int i;
-            for (i=0; i<list_len(ir); ++i) decl_dump(ir[i]);
-            for (i=0; i<list_len(ir); ++i) decl_free(ir[i]);
-            list_free(ir);
+            Module* m = igen(ctx.result);
+            module_dump(m);
+            cgen(m, stderr);
+            module_free(m);
         }
 
         node_free(ctx.result);

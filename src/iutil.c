@@ -11,6 +11,7 @@ Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
     res->type = type;
     if (name) res->name = string_clone(name);
     list_append(owner->vars, res);
+    if (type) list_append(owner->m->types, type);
     return res;
 }
 
@@ -68,7 +69,9 @@ void instr_free(Instr* ir) {
 
 void decl_dump(Decl* f) {
     int i;
-    printf("Decl %d %s:\n", f->id, f->name->str);
+    printf("Decl %s (", f->name->str);
+    var_dump(f->v);
+    printf("):\n");
     for (i=0; i<list_len(f->sons); ++i) {
         printf("  ");
         instr_dump(f->sons[i]);
@@ -88,5 +91,19 @@ void decl_free(Decl* f) {
     list_free(f->vars);
     list_free(f->args);
     string_free(f->name);
+    var_free(f->v);
     free(f);
+}
+
+void module_dump(Module* m) {
+    int i;
+    for (i=0; i<list_len(m->decls); ++i) decl_dump(m->decls[i]);
+}
+
+void module_free(Module* m) {
+    int i;
+    for (i=0; i<list_len(m->decls); ++i) decl_free(m->decls[i]);
+    list_free(m->decls);
+    list_free(m->types);
+    free(m);
 }
