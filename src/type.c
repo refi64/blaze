@@ -102,6 +102,7 @@ void type_free(Type* t, Node* user) {
     case Tany: case Tbuiltin: string_free(t->name); break;
     default: break;
     }
+    for (i=0; i<list_len(t->sons); ++i) type_free(t->sons[i], user);
     list_free(t->sons);
     list_free(t->users);
     free(t);
