@@ -29,8 +29,8 @@ static void generate_varname(Var* v) {
     generate_basename('v', &v->d, v->name, v->id);
 }
 
-static void generate_declname(Decl* f) {
-    generate_basename('f', &f->v->d, f->v->name, f->v->id);
+static void generate_declname(Decl* d) {
+    generate_basename('f', &d->v->d, d->v->name, d->v->id);
 }
 
 static void cgen_typedef(Type* t, FILE* output) {

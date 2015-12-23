@@ -66,32 +66,32 @@ void instr_free(Instr* ir) {
     free(ir);
 }
 
-void decl_dump(Decl* f) {
+void decl_dump(Decl* d) {
     int i;
-    printf("Decl %s (", f->name->str);
-    var_dump(f->v);
+    printf("Decl %s (", d->name->str);
+    var_dump(d->v);
     printf("):\n");
-    for (i=0; i<list_len(f->sons); ++i) {
+    for (i=0; i<list_len(d->sons); ++i) {
         printf("  ");
-        instr_dump(f->sons[i]);
+        instr_dump(d->sons[i]);
     }
 }
 
-void decl_free(Decl* f) {
+void decl_free(Decl* d) {
     int i;
-    for (i=0; i<list_len(f->sons); ++i) {
-        list_free(f->sons[i]->v);
-        instr_free(f->sons[i]);
+    for (i=0; i<list_len(d->sons); ++i) {
+        list_free(d->sons[i]->v);
+        instr_free(d->sons[i]);
     }
-    for (i=0; i<list_len(f->vars); ++i)
-        if (f->vars[i]->owner == f && f->vars[i]->ir) var_free(f->vars[i]);
-    for (i=0; i<list_len(f->args); ++i) var_free(f->args[i]);
-    list_free(f->sons);
-    list_free(f->vars);
-    list_free(f->args);
-    string_free(f->name);
-    var_free(f->v);
-    free(f);
+    for (i=0; i<list_len(d->vars); ++i)
+        if (d->vars[i]->owner == d && d->vars[i]->ir) var_free(d->vars[i]);
+    for (i=0; i<list_len(d->args); ++i) var_free(d->args[i]);
+    list_free(d->sons);
+    list_free(d->vars);
+    list_free(d->args);
+    string_free(d->name);
+    var_free(d->v);
+    free(d);
 }
 
 void module_dump(Module* m) {

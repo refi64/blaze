@@ -277,8 +277,8 @@ void var_free(Var* var);
 void instr_dump(Instr* ir);
 void instr_free(Instr* ir);
 
-void decl_dump(Decl* f);
-void decl_free(Decl* f);
+void decl_dump(Decl* d);
+void decl_free(Decl* d);
 
 Module* igen(Node* n);
 void module_dump(Module* m);

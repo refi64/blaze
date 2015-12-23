@@ -1,54 +1,54 @@
 #include "blaze.h"
 
-static void igen_sons(Decl* f, Node* n);
-static Var* igen_node(Decl* f, Node* n);
+static void igen_sons(Decl* d, Node* n);
+static Var* igen_node(Decl* d, Node* n);
 
-static Var* igen_address(Decl* f, Node* n) {
+static Var* igen_address(Decl* d, Node* n) {
     Instr* ir = new(Instr);
-    assert(n->flags & Faddr);
+    assert(n->sons[0]->flags & Faddr);
     ir->kind = Iaddr;
-    list_append(ir->v, igen_node(f, n));
-    ir->dst = var_new(f, ir, n->type, NULL);
-    list_append(f->sons, ir);
+    list_append(ir->v, igen_node(d, n->sons[0]));
+    ir->dst = var_new(d, ir, n->type, NULL);
+    list_append(d->sons, ir);
     return ir->dst;
 }
 
-static Var* igen_node(Decl* f, Node* n) {
+static Var* igen_node(Decl* d, Node* n) {
     Instr* ir = new(Instr);
     int i;
     switch (n->kind) {
     case Nbody:
-        igen_sons(f, n);
+        igen_sons(d, n);
         instr_free(ir);
         ir = NULL;
         break;
     case Nreturn:
         ir->kind = Iret;
-        if (n->sons) list_append(ir->v, igen_node(f, n->sons[0]));
+        if (n->sons) list_append(ir->v, igen_node(d, n->sons[0]));
         break;
     case Nlet:
         ir->kind = Inew;
-        n->v = ir->dst = var_new(f, ir, n->type, n->s);
-        list_append(ir->v, igen_node(f, n->sons[0]));
+        n->v = ir->dst = var_new(d, ir, n->type, n->s);
+        list_append(ir->v, igen_node(d, n->sons[0]));
         break;
     case Nassign:
         ir->kind = Iset;
-        list_append(ir->v, igen_address(f, n->sons[0]));
-        list_append(ir->v, igen_node(f, n->sons[1]));
+        list_append(ir->v, igen_address(d, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[1]));
         break;
     case Nderef:
         ir->kind = Ideref;
-        list_append(ir->v, igen_node(f, n->sons[0]));
-        ir->dst = var_new(f, ir, n->type, NULL);
+        list_append(ir->v, igen_node(d, n->sons[0]));
+        ir->dst = var_new(d, ir, n->type, NULL);
         break;
     case Naddr:
         free(ir);
-        return igen_address(f, n->sons[0]);
+        return igen_address(d, n);
     case Ncall:
         ir->kind = Icall;
         for (i=0; i<list_len(n->sons); ++i)
-            list_append(ir->v, igen_node(f, n->sons[i]));
-        ir->dst = var_new(f, ir, n->flags & Fvoid ? NULL : n->type, NULL);
+            list_append(ir->v, igen_node(d, n->sons[i]));
+        ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
         break;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
@@ -58,7 +58,7 @@ static Var* igen_node(Decl* f, Node* n) {
     case Nint:
         ir->kind = Iint;
         ir->s = string_clone(n->s);
-        ir->dst = var_new(f, ir, builtin_types[Tint]->override, NULL);
+        ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
     case Nmodule: case Ntypeof: case Nfun: case Narglist: case Narg:
     case Nsons: case Nptr: assert(0);
@@ -66,7 +66,7 @@ static Var* igen_node(Decl* f, Node* n) {
 
     if (ir) {
         int i;
-        list_append(f->sons, ir);
+        list_append(d->sons, ir);
         for (i=0; i<list_len(ir->v); ++i) {
             assert(ir->v[i]);
             ++ir->v[i]->uses;
@@ -75,11 +75,11 @@ static Var* igen_node(Decl* f, Node* n) {
     } else return NULL;
 }
 
-static void igen_sons(Decl* f, Node* n) {
+static void igen_sons(Decl* d, Node* n) {
     int i;
     assert(n && n->kind > Nsons);
     for (i=0; i<list_len(n->sons); ++i)
-        igen_node(f, n->sons[i]);
+        igen_node(d, n->sons[i]);
 }
 
 static Decl* igen_func(Module* m, Node* n) {
