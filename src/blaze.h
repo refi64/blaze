@@ -249,6 +249,7 @@ struct Var {
     Decl* owner;
     Instr* ir; // Instruction that created this variable (if NULL, then argument).
     Type* type;
+    GData d;
 };
 
 struct Instr {

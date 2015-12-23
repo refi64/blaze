@@ -3,18 +3,31 @@
 const char* typenames[] = {"int", "char"};
 int type_id=0;
 
-static void generate_typename(Type* t) {
+#define CNAME(x) (x?x->d.cname->str:"void")
+
+static void generate_basename(char p, GData* d, String* name, int id) {
     char buf[1024];
-    t->d.cname = string_newz("t", 1);
-    snprintf(buf, sizeof(buf), "%d", type_id++);
-    string_merges(t->d.cname, buf);
-    if (t->name) {
-        string_mergec(t->d.cname, '_');
-        string_merge(t->d.cname, t->name);
+    if (d->cname) return;
+    d->cname = string_newz("t", 1);
+    snprintf(buf, sizeof(buf), "%d", id);
+    string_merges(d->cname, buf);
+    if (name) {
+        string_mergec(d->cname, '_');
+        string_merge(d->cname, name);
     }
 }
 
-#define CNAME(t) t->d.cname->str
+static void generate_typename(Type* t) {
+    generate_basename('t', &t->d, t->name, type_id++);
+}
+
+static void generate_varname(Var* v) {
+    generate_basename('v', &v->d, v->name, v->id);
+}
+
+static void generate_declname(Decl* f) {
+    generate_basename('f', &f->v->d, f->v->name, f->v->id);
+}
 
 static void cgen_typedef(Type* t, FILE* output) {
     int i;
@@ -33,8 +46,7 @@ static void cgen_typedef(Type* t, FILE* output) {
         fprintf(output, "%s* %s", CNAME(t->sons[0]), CNAME(t));
         break;
     case Tfun:
-        if (t->sons[0]) fputs(CNAME(t->sons[0]), output);
-        else fputs("void", output);
+        fputs(CNAME(t->sons[0]), output);
         fprintf(output, " (*%s)(", CNAME(t));
         for (i=1; i<list_len(t->sons); ++i) {
             if (i > 1) fputs(", ", output);
@@ -46,12 +58,27 @@ static void cgen_typedef(Type* t, FILE* output) {
     fputs(";\n", output);
 }
 
-static void put_var(FILE* output, Var* v) {
-    fprintf(output, "f%d_%s", v->id, v->name ? v->name->str : "");
+static void cgen_proto(Decl* d, FILE* output) {
+    int i;
+    generate_declname(d);
+    fprintf(output, "%s %s(", CNAME(d->v->type->sons[0]), CNAME(d->v));
+    for (i=0; i<list_len(d->args); ++i) {
+        generate_varname(d->args[i]);
+        if (i) fputs(", ", output);
+        fprintf(output, "%s %s", CNAME(d->args[i]->type), CNAME(d->args[i]));
+    }
+    fputc(')', output);
 }
 
-static void cgen_decl(Decl* d, FILE* output) {
-    put_var(output, d->v);
+static void cgen_decl0(Decl* d, FILE* output) {
+    cgen_proto(d, output);
+    fputs(";\n", output);
+}
+
+static void cgen_decl1(Decl* d, FILE* output) {
+    cgen_proto(d, output);
+    fputs(" {\n", output);
+    fputs("}\n", output);
 }
 
 void cgen(Module* m, FILE* output) {
@@ -59,7 +86,9 @@ void cgen(Module* m, FILE* output) {
     for (i=0; i<list_len(m->types); ++i)
         cgen_typedef(m->types[i], output);
     for (i=0; i<list_len(m->decls); ++i)
-        cgen_decl(m->decls[i], output);
+        cgen_decl0(m->decls[i], output);
+    for (i=0; i<list_len(m->decls); ++i)
+        cgen_decl1(m->decls[i], output);
     for (i=0; i<list_len(m->types); ++i)
         string_free(m->types[i]->d.cname);
 }
