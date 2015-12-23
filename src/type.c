@@ -1,10 +1,20 @@
 #include "blaze.h"
 
+static void remove_user(Type* t, Node* user) {
+    int i;
+    for (i=0; i<list_len(t->users); ++i)
+        if (t->users[i] == user) {
+            t->users[i] = NULL;
+            break;
+        }
+}
+
 static void force_type_context(Node* n) {
     if (!(n->flags & Ftype)) {
         error(n->loc, "expression is not a type");
         if (n->e && n->e->n) declared_here(n->e->n);
         n->e = anytype;
+        remove_user(n->type, n);
         n->type = anytype->override;
     }
 }
