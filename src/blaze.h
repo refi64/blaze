@@ -26,6 +26,7 @@ typedef struct Module Module;
 typedef struct Decl Decl;
 typedef struct Var Var;
 typedef struct Instr Instr;
+typedef struct GData GData;
 
 
 void fatal(const char*);
@@ -83,6 +84,11 @@ Node* declared_here(Node* n);
 void make_mutvar(Node* n, int flag, int curflags);
 
 
+// Code-generator-related data.
+struct GData {
+    String* cname;
+};
+
 struct Type {
     enum {
         Tany,
@@ -101,6 +107,7 @@ struct Type {
     Node* n;
     List(Type*) sons; // For Tfun: ret, args...
     int rc;
+    GData d;
 };
 
 enum Flags {
