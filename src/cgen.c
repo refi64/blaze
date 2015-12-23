@@ -63,6 +63,7 @@ static void cgen_typedef(Type* t, FILE* output) {
 }
 
 static void cgen_ir(Instr* ir, FILE* output) {
+    int i;
     fputs("    ", output);
     if (ir->dst) fprintf(output, "%s = ", CNAME(ir->dst));
     switch (ir->kind) {
@@ -77,6 +78,14 @@ static void cgen_ir(Instr* ir, FILE* output) {
         break;
     case Inew:
         fprintf(output, "%s = %s", CNAME(ir->v[0]), CNAME(ir->v[1]));
+        break;
+    case Icall:
+        fprintf(output, "%s(", CNAME(ir->v[0]));
+        for (i=1; i<list_len(ir->v); ++i) {
+            if (i > 1) fputs(", ", output);
+            fputs(CNAME(ir->v[i]), output);
+        }
+        fputc(')', output);
         break;
     case Ideref:
         fprintf(output, "*%s", CNAME(ir->v[0]));
