@@ -106,7 +106,8 @@ static void cgen_decl1(Decl* d, FILE* output) {
     fputs(" {\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
         generate_varname(d->vars[i]);
-        fprintf(output, "%s %s;\n", CNAME(d->vars[i]->type), CNAME(d->vars[i]));
+        fprintf(output, "    %s %s;\n", CNAME(d->vars[i]->type),
+                CNAME(d->vars[i]));
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d->sons[i], output);
     fputs("}\n", output);

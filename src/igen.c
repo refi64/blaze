@@ -9,7 +9,6 @@ static Var* igen_address(Decl* f, Node* n) {
     ir->kind = Iaddr;
     list_append(ir->v, igen_node(f, n));
     ir->dst = var_new(f, ir, n->type, NULL);
-    assert(ir->dst);
     list_append(f->sons, ir);
     return ir->dst;
 }

@@ -9,8 +9,8 @@ Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
     res->owner = owner;
     res->ir = ir;
     res->type = type;
+    if (ir) list_append(owner->vars, res);
     if (name) res->name = string_clone(name);
-    list_append(owner->vars, res);
     if (type) list_append(owner->m->types, type);
     return res;
 }
