@@ -77,7 +77,7 @@ static void cgen_ir(Instr* ir, FILE* output) {
         fprintf(output, " = %s", CNAME(ir->v[1]));
         break;
     case Inew:
-        fprintf(output, "%s = %s", CNAME(ir->v[0]), CNAME(ir->v[1]));
+        fputs(CNAME(ir->v[0]), output);
         break;
     case Icall:
         fprintf(output, "%s(", CNAME(ir->v[0]));
@@ -138,6 +138,9 @@ void cgen(Module* m, FILE* output) {
         cgen_decl0(m->decls[i], output);
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);
-    for (i=0; i<list_len(m->types); ++i)
-        string_free(m->types[i]->d.cname);
+    for (i=0; i<list_len(m->types); ++i) {
+        String** p = &m->types[i]->d.cname;
+        if (*p) string_free(*p);
+        *p = NULL;
+    }
 }
