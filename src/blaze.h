@@ -100,7 +100,7 @@ struct Type {
     String* name;
     Node* n;
     List(Type*) sons; // For Tfun: ret, args...
-    List(Node*) users;
+    int rc;
 };
 
 enum Flags {
@@ -192,7 +192,8 @@ void resolve(Node* n);
 void type(Node* n);
 
 
-void type_free(Type* t, Node* user);
+void type_incref(Type* t);
+void type_decref(Type* t);
 
 
 struct Token {

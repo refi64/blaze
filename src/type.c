@@ -1,21 +1,13 @@
 #include "blaze.h"
 
-static void remove_user(Type* t, Node* user) {
-    int i;
-    for (i=0; i<list_len(t->users); ++i)
-        if (t->users[i] == user) {
-            t->users[i] = NULL;
-            break;
-        }
-}
-
 static void force_type_context(Node* n) {
     if (!(n->flags & Ftype)) {
         error(n->loc, "expression is not a type");
         if (n->e && n->e->n) declared_here(n->e->n);
         n->e = anytype;
-        remove_user(n->type, n);
+        type_decref(n->type);
         n->type = anytype->override;
+        type_incref(n->type);
     }
 }
 
@@ -89,22 +81,21 @@ static Node* get_function(Node* n) {
     return n;
 }
 
-void type_free(Type* t, Node* user) {
-    int i, cleared=0, active=0;
-    if (!t || ((t->kind == Tany || t->kind == Tbuiltin) && user)) return;
-    for (i=0; i<list_len(t->users); ++i)
-        if (t->users[i] == user && !cleared) {
-            t->users[i] = NULL;
-            cleared = 1;
-        } else if (t->users[i]) ++active;
-    if (active && t->kind != Tany && t->kind != Tbuiltin) return;
+void type_incref(Type* t) {
+    assert(t);
+    ++t->rc;
+}
+
+void type_decref(Type* t) {
+    int i;
+    assert(t && t->rc);
+    if (--t->rc) return;
     switch (t->kind) {
     case Tany: case Tbuiltin: string_free(t->name); break;
     default: break;
     }
-    for (i=0; i<list_len(t->sons); ++i) type_free(t->sons[i], user);
+    for (i=0; i<list_len(t->sons); ++i) if (t->sons[i]) type_decref(t->sons[i]);
     list_free(t->sons);
-    list_free(t->users);
     free(t);
 }
 
@@ -124,15 +115,15 @@ void type(Node* n) {
         type(n->sons[1]);
         n->type = new(Type);
         n->type->kind = Tfun;
-        list_append(n->type->users, n);
+        type_incref(n->type);
         if (n->sons[0]) {
             list_append(n->type->sons, n->sons[0]->type);
-            list_append(n->sons[0]->type->users, n);
+            type_incref(n->sons[0]->type);
         }
         else list_append(n->type->sons, NULL);
         for (i=0; i<list_len(n->sons[1]->sons); ++i) {
             list_append(n->type->sons, n->sons[1]->sons[i]->type);
-            list_append(n->sons[1]->sons[i]->type->users, n);
+            type_incref(n->sons[1]->sons[i]->type);
         }
         type(n->sons[2]);
         break;
@@ -140,7 +131,7 @@ void type(Node* n) {
         type(n->sons[0]);
         force_typed_expr_context(n->sons[0]);
         n->type = n->sons[0]->type;
-        list_append(n->type->users, n);
+        type_incref(n->type);
         // XXX: This should NOT be here! It should be in a resolve-related pass.
         if (!(n->flags & Fused))
             warning(n->loc, "unused variable '%s'", n->s->str);
@@ -195,17 +186,15 @@ void type(Node* n) {
             error(n->sons[0]->loc, "type of expression is recursive");
             declared_here(n->sons[0]);
             n->type = anytype->override;
-        } else {
-            n->type = n->sons[0]->type;
-            list_append(n->type->users, n);
-        }
+        } else n->type = n->sons[0]->type;
         n->flags |= Ftype;
+        type_incref(n->type);
         break;
     case Narg:
         type(n->sons[0]);
         force_type_context(n->sons[0]);
         n->type = n->sons[0]->type;
-        list_append(n->type->users, n);
+        type_incref(n->type);
         break;
     case Nptr:
         type(n->sons[0]);
@@ -215,8 +204,8 @@ void type(Node* n) {
             n->type = new(Type);
             n->type->kind = Tptr;
             list_append(n->type->sons, n->sons[0]->type);
-            list_append(n->type->users, n);
         }
+        type_incref(n->type);
         n->flags |= Ftype;
         break;
     case Nderef:
@@ -225,7 +214,7 @@ void type(Node* n) {
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
         else if (n->sons[0]->type->kind == Tptr) {
             n->type = n->sons[0]->type->sons[0];
-            list_append(n->type->users, n);
+            type_incref(n->type);
         }
         else {
             String* ts = typestring(n->sons[0]->type);
@@ -234,6 +223,7 @@ void type(Node* n) {
             string_free(ts);
             n->type = anytype->override;
         }
+        type_incref(n->type);
         break;
     case Naddr:
         type(n->sons[0]);
@@ -242,8 +232,9 @@ void type(Node* n) {
             n->type = new(Type);
             n->type->kind = Tptr;
             list_append(n->type->sons, n->sons[0]->type);
-            list_append(n->type->users, n);
+            type_incref(n->sons[0]->type);
         }
+        type_incref(n->type);
         break;
     case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
@@ -254,6 +245,7 @@ void type(Node* n) {
         else if (n->sons[0]->type->kind != Tfun) {
             error(n->loc, "cannot call non-function");
             declared_here(n->sons[0]);
+            n->type = anytype->override;
         } else {
             Type* ft = n->sons[0]->type;
             int ngiven = list_len(n->sons)-1, nexpect = list_len(ft->sons)-1;
@@ -275,31 +267,29 @@ void type(Node* n) {
                     string_free(expects);
                     string_free(givens);
                 }
-            if (ft->sons[0]){
-                n->type = ft->sons[0];
-                list_append(n->type->users, n);
-            }
+            if (ft->sons[0]) n->type = ft->sons[0];
             else {
                 n->type = anytype->override;
                 n->flags |= Fvoid;
             }
         }
+        type_incref(n->type);
         break;
     case Nid:
         if (n->e) {
             if (n->e->n) {
                 n->type = n->e->n->type;
-                if (n->type) list_append(n->type->users, n);
                 n->flags |= n->e->n->flags & Ftype;
             } else {
                 n->type = n->e->override;
-                // No need to worry about users here, since this is a builtin.
                 n->flags |= Ftype;
             }
         } else n->type = anytype->override;
+        if (n->type) type_incref(n->type);
         break;
     case Nint:
         n->type = builtin_types[Tint]->override;
+        type_incref(n->type);
         break;
     case Nsons: assert(0);
     }

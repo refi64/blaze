@@ -60,6 +60,6 @@ void node_free(Node* n) {
     case Nsons: assert(0);
     default: break;
     }
-    type_free(n->type, n);
+    if (n->type) type_decref(n->type);
     free(n);
 }

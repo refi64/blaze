@@ -20,6 +20,7 @@ void init_builtin_types() {
         t->kind = Tbuiltin;
         t->name = name;
         t->bkind = bkinds[i];
+        type_incref(t);
         e = stentry_new(NULL, name, t);
         builtin_types[bkinds[i]] = e;
     }
@@ -28,6 +29,7 @@ void init_builtin_types() {
     t = new(Type);
     t->kind = Tany;
     t->name = string_new("_any");
+    type_incref(t);
     anytype = stentry_new(NULL, t->name, t);
 }
 
@@ -136,12 +138,12 @@ void free_builtin_types(Symtab* tab) {
     int i;
     for (i=0; i<Tbend; ++i) {
         e = builtin_types[i];
-        type_free(e->override, NULL);
+        type_decref(e->override);
         e->override = NULL;
         stentry_free(e);
     }
 
-    type_free(anytype->override, NULL);
+    type_decref(anytype->override);
     anytype->override = NULL;
     stentry_free(anytype);
 }
