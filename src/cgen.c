@@ -127,15 +127,19 @@ static void cgen_decl1(Decl* d, FILE* output) {
                 CNAME(d->vars[i]));
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d->sons[i], output);
-    fputs("}\n", output);
+    fputs("}\n\n", output);
 }
 
 void cgen(Module* m, FILE* output) {
     int i;
     for (i=0; i<list_len(m->types); ++i)
         cgen_typedef(m->types[i], output);
+    fputs("\n\n", output);
+
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl0(m->decls[i], output);
+    fputs("\n\n", output);
+
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);
 
