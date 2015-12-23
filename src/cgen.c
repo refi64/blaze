@@ -78,6 +78,15 @@ static void cgen_ir(Instr* ir, FILE* output) {
     case Inew:
         fprintf(output, "%s = %s", CNAME(ir->v[0]), CNAME(ir->v[1]));
         break;
+    case Ideref:
+        fprintf(output, "*%s", CNAME(ir->v[0]));
+        break;
+    case Iaddr:
+        fprintf(output, "&%s", CNAME(ir->v[0]));
+        break;
+    case Iint:
+        fputs(ir->s->str, output);
+        break;
     default: break;
     }
     fputs(";\n", output);
