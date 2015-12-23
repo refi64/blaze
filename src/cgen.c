@@ -8,7 +8,7 @@ int type_id=0;
 static void generate_basename(char p, GData* d, String* name, int id) {
     char buf[1024];
     if (d->cname) return;
-    d->cname = string_newz("t", 1);
+    d->cname = string_newz(&p, 1);
     snprintf(buf, sizeof(buf), "%d", id);
     string_merges(d->cname, buf);
     if (name) {
@@ -19,6 +19,10 @@ static void generate_basename(char p, GData* d, String* name, int id) {
 
 static void generate_typename(Type* t) {
     generate_basename('t', &t->d, t->name, type_id++);
+}
+
+static void generate_argname(Var* v) {
+    generate_basename('a', &v->d, v->name, v->id);
 }
 
 static void generate_varname(Var* v) {
@@ -58,12 +62,33 @@ static void cgen_typedef(Type* t, FILE* output) {
     fputs(";\n", output);
 }
 
+static void cgen_ir(Instr* ir, FILE* output) {
+    fputs("    ", output);
+    if (ir->dst) fprintf(output, "%s = ", CNAME(ir->dst));
+    switch (ir->kind) {
+    case Iret:
+        fputs("return", output);
+        if (ir->v) fprintf(output, " %s", CNAME(ir->v[0]));
+        break;
+    case Iset:
+        if (ir->v[0]->ir->kind == Iaddr) fputs(CNAME(ir->v[0]->ir->v[0]), output);
+        else fprintf(output, "*%s", CNAME(ir->v[0]));
+        fprintf(output, " = %s", CNAME(ir->v[1]));
+        break;
+    case Inew:
+        fprintf(output, "%s = %s", CNAME(ir->v[0]), CNAME(ir->v[1]));
+        break;
+    default: break;
+    }
+    fputs(";\n", output);
+}
+
 static void cgen_proto(Decl* d, FILE* output) {
     int i;
     generate_declname(d);
     fprintf(output, "%s %s(", CNAME(d->v->type->sons[0]), CNAME(d->v));
     for (i=0; i<list_len(d->args); ++i) {
-        generate_varname(d->args[i]);
+        generate_argname(d->args[i]);
         if (i) fputs(", ", output);
         fprintf(output, "%s %s", CNAME(d->args[i]->type), CNAME(d->args[i]));
     }
@@ -76,8 +101,14 @@ static void cgen_decl0(Decl* d, FILE* output) {
 }
 
 static void cgen_decl1(Decl* d, FILE* output) {
+    int i;
     cgen_proto(d, output);
     fputs(" {\n", output);
+    for (i=0; i<list_len(d->vars); ++i) {
+        generate_varname(d->vars[i]);
+        fprintf(output, "%s %s;\n", CNAME(d->vars[i]->type), CNAME(d->vars[i]));
+    }
+    for (i=0; i<list_len(d->sons); ++i) cgen_ir(d->sons[i], output);
     fputs("}\n", output);
 }
 
