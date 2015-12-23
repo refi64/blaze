@@ -204,6 +204,7 @@ void type(Node* n) {
             n->type = new(Type);
             n->type->kind = Tptr;
             list_append(n->type->sons, n->sons[0]->type);
+            type_incref(n->sons[0]->type);
         }
         type_incref(n->type);
         n->flags |= Ftype;
