@@ -96,7 +96,6 @@ static void cgen_ir(Instr* ir, FILE* output) {
     case Iint:
         fputs(ir->s->str, output);
         break;
-    default: break;
     }
     fputs(";\n", output);
 }

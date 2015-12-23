@@ -257,7 +257,6 @@ struct Instr {
         Inew,
         Iset,
         Iret,
-        Ivar,
         Iaddr,
         Ideref,
         Icall,
