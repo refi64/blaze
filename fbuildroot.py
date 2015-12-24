@@ -34,10 +34,11 @@ class Flex(fbuild.db.PersistentObject):
 def configure(ctx):
     flex = Flex(ctx)
     bison = Bison(ctx, flags=['-Wno-other'])
-    c = guess_static(ctx, flags=['-fdiagnostics-color'], debug=True, external_libs=['ds'],
-        platform_options=[
-            ({'posix'}, {'flags+': ['-Wall', '-Werror', '-Wno-unneeded-internal-declaration']}),
-            ({'g++'}, {'flags+': ['-fpermissive']})
+    c = guess_static(ctx, flags=['-fdiagnostics-color'], debug=True,
+        external_libs=['ds'], platform_options=[
+            ({'posix'}, {'flags+': ['-Wall', '-Werror']}),
+            ({'clang'}, {'flags+': ['-Wno-unneeded-internal-declaration']}),
+            ({'gcc'}, {'flags+': ['-Wno-return-type', '-Wno-unused-function']}),
         ])
     return Record(flex=flex, bison=bison, c=c)
 

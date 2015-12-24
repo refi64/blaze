@@ -12,9 +12,10 @@ void init_builtin_types() {
     String* name;
     STEntry* e;
     Type* t;
+    int i;
     const char* names[] = {"int", "char"};
     const int bkinds[] = {Tint, Tchar};
-    for (int i=0; i<Tbend; ++i) {
+    for (i=0; i<Tbend; ++i) {
         name = string_new(names[i]);
         t = new(Type);
         t->kind = Tbuiltin;

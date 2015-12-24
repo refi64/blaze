@@ -1,4 +1,5 @@
 #include "blaze.h"
+#include <stdarg.h>
 #include <ctype.h>
 
 int errors=0, warnings=0;
