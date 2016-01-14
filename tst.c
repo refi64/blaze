@@ -1,7 +1,7 @@
 #include "blaze.h"
 
 int main(int argc, char** argv) {
-    char buf[2048];
+    char buf[4096];
     FILE* f;
     assert(argc == 2);
     assert((f = fopen(argv[1], "r")));
