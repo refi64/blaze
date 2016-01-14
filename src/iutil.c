@@ -63,6 +63,7 @@ void instr_free(Instr* ir) {
     case Iint: string_free(ir->s); break;
     default: break;
     }
+    list_free(ir->v);
     free(ir);
 }
 
@@ -79,10 +80,7 @@ void decl_dump(Decl* d) {
 
 void decl_free(Decl* d) {
     int i;
-    for (i=0; i<list_len(d->sons); ++i) {
-        list_free(d->sons[i]->v);
-        instr_free(d->sons[i]);
-    }
+    for (i=0; i<list_len(d->sons); ++i) instr_free(d->sons[i]);
     for (i=0; i<list_len(d->vars); ++i)
         if (d->vars[i]->owner == d && d->vars[i]->ir) var_free(d->vars[i]);
     for (i=0; i<list_len(d->args); ++i) var_free(d->args[i]);
