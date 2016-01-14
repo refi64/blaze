@@ -213,10 +213,8 @@ void type(Node* n) {
         type(n->sons[0]);
         force_typed_expr_context(n->sons[0]);
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
-        else if (n->sons[0]->type->kind == Tptr) {
+        else if (n->sons[0]->type->kind == Tptr)
             n->type = n->sons[0]->type->sons[0];
-            type_incref(n->type);
-        }
         else {
             String* ts = typestring(n->sons[0]->type);
             error(n->sons[0]->loc, "expected pointer type, got '%s'", ts->str);

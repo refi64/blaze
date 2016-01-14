@@ -9,10 +9,12 @@ fun g(n: int) -> int:
     let b = f(n)
     return x
 
-fun y:
+fun h:
     let var x = g(1)
     x = &x
     return x
+
+fun i(a: *int): return *a
 
 #[
 ERROR
@@ -89,6 +91,12 @@ ERROR
     return x
            ~
 :12:5: note: function declared here
-    fun y:
+    fun h:
         ~
+:17:24: error: function should not return a value
+    fun i(a: *int): return *a
+                           ~
+:17:5: note: function declared here
+    fun i(a: *int): return *a
+         ~
 #]
