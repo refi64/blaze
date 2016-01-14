@@ -1,0 +1,8 @@
+fun f(a: *int):
+
+#[
+ERROR
+:9:0: error: syntax error, unexpected TNEWL, expecting TINDENT
+
+
+]#

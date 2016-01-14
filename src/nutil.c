@@ -44,10 +44,9 @@ void node_dump(Node* n) { node_dump2(n, 0); }
 
 void node_free(Node* n) {
     int i;
-    assert(n);
+    if (!n) return;
     if (n->kind > Nsons) {
-        for (i=0; i<list_len(n->sons); ++i)
-            if (n->sons[i]) node_free(n->sons[i]);
+        for (i=0; i<list_len(n->sons); ++i) node_free(n->sons[i]);
         list_free(n->sons);
     }
     switch (n->kind) {
