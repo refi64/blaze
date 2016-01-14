@@ -37,29 +37,28 @@ static void cgen_typedef(Type* t, FILE* output) {
     int i;
     assert(t);
     if (t->d.cname) return;
-    generate_typename(t);
     for (i=0; i<list_len(t->sons); ++i)
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
-    fprintf(output, "typedef ");
     switch (t->kind) {
     case Tany: assert(0);
     case Tbuiltin:
-        fprintf(output, "%s %s", typenames[t->bkind], CNAME(t));
+        t->d.cname = string_new(typenames[t->bkind]);
         break;
     case Tptr:
-        fprintf(output, "%s* %s", CNAME(t->sons[0]), CNAME(t));
+        generate_typename(t);
+        fprintf(output, "typedef %s* %s;\n", CNAME(t->sons[0]), CNAME(t));
         break;
     case Tfun:
-        fputs(CNAME(t->sons[0]), output);
+        generate_typename(t);
+        fprintf(output, "typedef %s", CNAME(t->sons[0]));
         fprintf(output, " (*%s)(", CNAME(t));
         for (i=1; i<list_len(t->sons); ++i) {
             if (i > 1) fputs(", ", output);
             fputs(CNAME(t->sons[i]), output);
         }
-        fputc(')', output);
+        fputs(");\n", output);
         break;
     }
-    fputs(";\n", output);
 }
 
 static void cgen_ir(Instr* ir, FILE* output) {
