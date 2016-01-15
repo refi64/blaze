@@ -30,7 +30,7 @@ void instr_dump(Instr* ir) {
     int i;
     assert(ir);
     switch (ir->kind) {
-    case Inull: break;
+    case Inull: assert(0);
     case Iret: printf("Iret"); break;
     case Inew: printf("Inew"); break;
     case Iset: printf("Iset"); break;
@@ -74,6 +74,7 @@ void decl_dump(Decl* d) {
     var_dump(d->v);
     printf("):\n");
     for (i=0; i<list_len(d->sons); ++i) {
+        if (d->sons[i]->kind == Inull) continue;
         printf("  ");
         instr_dump(d->sons[i]);
     }
