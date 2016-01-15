@@ -25,11 +25,9 @@ LexerContext parse_string(const char* file, const char* module,
     Node* n;
     List(Node*) l;
     struct {
-        union {
-            Node* rn;
-            String* rs;
-        };
-        int import; // If 1, then rs, else rn.
+        Node* rn;
+        String* rs;
+        int import, exportc;
     } funbody;
     int i;
 }
@@ -65,6 +63,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TVAR
 %token <t> TRETURN
 %token <t> TTYPEOF
+%token <t> TEXPORTC
 %token <t> TID
 %token <t> TINT
 %token <t> TSTRING
@@ -113,11 +112,18 @@ fun : TFUN id arglist funret funbody {
     list_append($$->sons, $3);
     if ($5.import) $$->import = $5.rs;
     else list_append($$->sons, $5.rn);
+    if ($5.exportc) $$->exportc = $5.rs;
     $$->flags |= Fcst | Faddr;
 }
 
-funbody : TCOLON body { $$.import = 0; $$.rn = $2; }
-        | TSTRING     { $$.import = 1; $$.rs = $1.s; }
+funbody : TCOLON body { $$.exportc = 0; $$.import = 0; $$.rn = $2; }
+        | TEXPORTC TSTRING TCOLON body {
+            $$.exportc = 1;
+            $$.import = 0;
+            $$.rs = $2.s;
+            $$.rn = $4;
+        }
+        | TSTRING     { $$.exportc = 0; $$.import = 1; $$.rs = $1.s; }
 
 funret : { $$ = NULL; }
        | TARROW texpr { $$ = $2; }

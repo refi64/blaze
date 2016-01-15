@@ -33,6 +33,7 @@ void lex_init() {
     ds_hput(kw, "var", (void*)(intptr_t)TVAR);
     ds_hput(kw, "return", (void*)(intptr_t)TRETURN);
     ds_hput(kw, "typeof", (void*)(intptr_t)TTYPEOF);
+    ds_hput(kw, "exportc", (void*)(intptr_t)TEXPORTC);
 }
 
 void lex_context_init(LexerContext* ctx, const char* file, const char* module,

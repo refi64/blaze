@@ -145,7 +145,7 @@ struct Node {
         Nmodule
     } kind;
     union {
-        String* import; // Nfun
+        struct { String* import, *exportc; }; // Nfun
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
@@ -235,8 +235,7 @@ struct Module {
 };
 
 struct Decl {
-    String* name;
-    String* import;
+    String* name, *import, *exportc;
     List(Instr*) sons;
     List(Var*) vars;
     List(Var*) args;

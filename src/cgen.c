@@ -31,9 +31,8 @@ static void generate_varname(Var* v) {
 }
 
 static void generate_declname(Decl* d) {
-    if (d->v->name && strcmp(d->v->name->str, "main") == 0)
-        d->v->d.cname = string_new("main");
-    else if (d->import) d->v->d.cname = string_clone(d->import);
+    if (d->import) d->v->d.cname = string_clone(d->import);
+    else if (d->exportc) d->v->d.cname = string_clone(d->exportc);
     else generate_basename('f', &d->v->d, d->v->name, d->v->id);
 }
 
@@ -106,6 +105,7 @@ static void cgen_ir(Instr* ir, FILE* output) {
 static void cgen_proto(Decl* d, FILE* output) {
     int i;
     generate_declname(d);
+    if (!d->exportc && !d->import) fputs("static ", output);
     fprintf(output, "%s %s(", CNAME(d->v->type->sons[0]), CNAME(d->v));
     for (i=0; i<list_len(d->args); ++i) {
         generate_argname(d->args[i]);
