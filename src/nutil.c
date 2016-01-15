@@ -55,6 +55,10 @@ void node_free(Node* n) {
         break;
     case Nid: case Nint: case Nfun: case Nlet: case Narg:
         string_free(n->s);
+        if (n->kind == Nfun) {
+            if (n->import) string_free(n->import);
+            if (n->exportc) string_free(n->exportc);
+        }
         break;
     case Nsons: assert(0);
     default: break;
