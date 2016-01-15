@@ -33,7 +33,8 @@ class Flex(fbuild.db.PersistentObject):
 @fbuild.db.caches
 def configure(ctx):
     flex = Flex(ctx)
-    bison = Bison(ctx, flags=['-Wno-other'])
+    bison = Bison(ctx, flags=['-Wno-other', '-v', '--report-file',
+                              ctx.buildroot / 'report'])
     c = guess_static(ctx, flags=['-fdiagnostics-color'], debug=True,
         external_libs=['ds'], platform_options=[
             ({'posix'}, {'flags+': ['-Wall', '-Werror']}),
