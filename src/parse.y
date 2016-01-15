@@ -125,8 +125,8 @@ struct : TSTRUCT id TCOLON members {
 
 members : indent members2 unindent { $$ = $2; }
 
-members2 : member { $$ = NULL; }
-         | members2 sep member { $$ = $1; list_append($1, $3); }
+members2 : member { $$ = NULL; list_append($$, $1); }
+         | members2 sep member { $$ = $1; list_append($$, $3); }
 
 member : fun | decl
 
