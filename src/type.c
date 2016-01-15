@@ -55,6 +55,7 @@ static String* typestring(Type* t) {
             string_free(s);
         }
         return res;
+    case Tstruct: return string_clone(t->name);
     case Tany: assert(0);
     }
 }
@@ -72,6 +73,7 @@ static int types_are_compat(Type* a, Type* b) {
         for (i=0; i<list_len(a->sons); ++i)
             if (!types_are_compat(a->sons[i], b->sons[i])) return 0;
         return 1;
+    case Tstruct: return a == b;
     case Tany: assert(0);
     }
 }
@@ -91,7 +93,7 @@ void type_decref(Type* t) {
     assert(t && t->rc);
     if (--t->rc) return;
     switch (t->kind) {
-    case Tany: case Tbuiltin: string_free(t->name); break;
+    case Tany: case Tbuiltin: case Tstruct: string_free(t->name); break;
     default: break;
     }
     for (i=0; i<list_len(t->sons); ++i) if (t->sons[i]) type_decref(t->sons[i]);
@@ -107,7 +109,13 @@ void type(Node* n) {
     case Nmodule: case Narglist: case Nbody:
         for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
         break;
-    case Nstruct: break;
+    case Nstruct:
+        n->type = new(Type);
+        n->type->kind = Tstruct;
+        n->type->name = string_clone(n->s);
+        type_incref(n->type);
+        for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
+        break;
     case Nfun:
         if (n->sons[0]) {
             type(n->sons[0]);

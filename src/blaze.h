@@ -94,6 +94,7 @@ struct Type {
         Tany,
         Tbuiltin,
         Tptr,
+        Tstruct,
         Tfun
     } kind;
     union {

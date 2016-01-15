@@ -61,6 +61,9 @@ static void cgen_typedef(Type* t, FILE* output) {
         }
         fputs(");\n", output);
         break;
+    case Tstruct:
+        // XXX
+        break;
     }
 }
 
