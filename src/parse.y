@@ -73,6 +73,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> fun
 %type <n> funret
 %type <funbody> funbody
+%type <n> global
 %type <n> arglist
 %type <n> arglist2
 %type <n> decl
@@ -103,7 +104,7 @@ LexerContext parse_string(const char* file, const char* module,
 prog : ws { N(ctx->result, Nmodule, yylloc) }
      | prog tstmt ws { list_append(ctx->result->sons, $2); }
 
-tstmt : fun
+tstmt : fun | global
 
 fun : TFUN id arglist funret funbody {
     N($$, Nfun, $2->loc)
@@ -135,6 +136,8 @@ arglist :         { N($$, Narglist, yylloc) }
 
 arglist2 : decl { N($$, Narglist, $1->loc); list_append($$->sons, $1); }
          | arglist2 TCOMMA decl { $$ = $1; list_append($$->sons, $3); }
+
+global : TGLOBAL decl { $$ = $2; $$->loc = $1.loc; }
 
 decl : id TCOLON texpr {
     N($$, Ndecl, $1->loc);
