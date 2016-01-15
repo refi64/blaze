@@ -60,6 +60,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TTYPEOF
 %token <t> TID
 %token <t> TINT
+%token <t> TSTRING
 
 %type <n> tstmt
 %type <n> fun
