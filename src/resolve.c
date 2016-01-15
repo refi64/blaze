@@ -17,6 +17,11 @@ static void resolve0(Node* n) {
         e = stentry_new(n, n->s, NULL);
         symtab_add(n->parent->tab, n->s, e);
         n->tab = symtab_sub(n->parent->tab);
+
+        if (strcmp(n->loc.module, "__main__") == 0 &&
+            strcmp(n->s->str, "main") == 0)
+            n->exportc = string_new("main");
+
         for (i=0; i<list_len(n->sons); ++i) {
             if (!n->sons[i]) continue;
             n->sons[i]->parent = n;
