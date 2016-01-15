@@ -254,6 +254,7 @@ struct Var {
 
 struct Instr {
     enum {
+        Inull, // Optimized out.
         Inew,
         Iset,
         Iret,

@@ -63,9 +63,11 @@ static void cgen_typedef(Type* t, FILE* output) {
 
 static void cgen_ir(Instr* ir, FILE* output) {
     int i;
+    if (ir->kind == Inull) return;
     fputs("    ", output);
     if (ir->dst && ir->dst->type) fprintf(output, "%s = ", CNAME(ir->dst));
     switch (ir->kind) {
+    case Inull: assert(0);
     case Iret:
         fputs("return", output);
         if (ir->v) fprintf(output, " %s", CNAME(ir->v[0]));

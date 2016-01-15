@@ -30,6 +30,7 @@ void instr_dump(Instr* ir) {
     int i;
     assert(ir);
     switch (ir->kind) {
+    case Inull: break;
     case Iret: printf("Iret"); break;
     case Inew: printf("Inew"); break;
     case Iset: printf("Iset"); break;
