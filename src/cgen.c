@@ -129,6 +129,19 @@ static void cgen_decl1(Decl* d, FILE* output) {
     fputs("}\n\n", output);
 }
 
+#define FREE_CNAME(b) do {\
+        String** p = &(b)->d.cname;\
+        if (*p) string_free(*p);\
+        *p = NULL;\
+    } while (0)
+
+static void free_type_cnames(Type* t) {
+    int i;
+    if (!t) return;
+    FREE_CNAME(t);
+    for (i=0; i<list_len(t->sons); ++i) free_type_cnames(t->sons[i]);
+}
+
 void cgen(Module* m, FILE* output) {
     int i;
     for (i=0; i<list_len(m->types); ++i)
@@ -142,12 +155,7 @@ void cgen(Module* m, FILE* output) {
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);
 
-    #define FREE_CNAME(b) do {\
-        String** p = &(b)->d.cname;\
-        if (*p) string_free(*p);\
-        *p = NULL;\
-    } while (0)
-    for (i=0; i<list_len(m->types); ++i) FREE_CNAME(m->types[i]);
+    for (i=0; i<list_len(m->types); ++i) free_type_cnames(m->types[i]);
     for (i=0; i<list_len(m->decls); ++i) {
         int j;
         Decl* d = m->decls[i];
@@ -155,5 +163,6 @@ void cgen(Module* m, FILE* output) {
         for (j=0; j<list_len(d->args); ++j) FREE_CNAME(d->args[j]);
         for (j=0; j<list_len(d->vars); ++j) FREE_CNAME(d->vars[j]);
     }
-    #undef FREE_CNAME
 }
+
+#undef FREE_CNAME
