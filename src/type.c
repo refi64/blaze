@@ -149,6 +149,8 @@ void type(Node* n) {
             string_free(ls);
             string_free(rs);
         }
+        n->type = n->sons[0]->type;
+        type_incref(n->type);
         break;
     case Nreturn:
         f = get_function(n);

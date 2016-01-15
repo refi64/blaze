@@ -8,7 +8,6 @@ static Var* igen_node(Decl* d, Node* n);
 static Var* igen_address(Decl* d, Node* n) {
     Instr* ir = new(Instr);
     assert(n->sons[0]->flags & Faddr);
-    n->type = n->sons[0]->type;
     ir->kind = Iaddr;
     list_append(ir->v, igen_node(d, n->sons[0]));
     ir->flags |= PUREFLAGS(ir->v[0]);
