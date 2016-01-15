@@ -125,7 +125,7 @@ void type(Node* n) {
             list_append(n->type->sons, n->sons[1]->sons[i]->type);
             type_incref(n->sons[1]->sons[i]->type);
         }
-        type(n->sons[2]);
+        if (!n->import) type(n->sons[2]);
         break;
     case Nlet:
         type(n->sons[0]);

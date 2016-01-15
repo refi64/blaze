@@ -105,7 +105,8 @@ static Decl* igen_func(Module* m, Node* n) {
         arg->v = v;
     }
     if (n->sons[0]) res->ret = n->sons[0]->type;
-    igen_node(res, n->sons[2]);
+    if (!n->import) igen_node(res, n->sons[2]);
+    else res->import = n->import;
     return res;
 }
 

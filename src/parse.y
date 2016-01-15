@@ -24,6 +24,13 @@ LexerContext parse_string(const char* file, const char* module,
     Token t;
     Node* n;
     List(Node*) l;
+    struct {
+        union {
+            Node* rn;
+            String* rs;
+        };
+        int import; // If 1, then rs, else rn.
+    } funbody;
     int i;
 }
 
@@ -65,6 +72,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> tstmt
 %type <n> fun
 %type <n> funret
+%type <funbody> funbody
 %type <n> arglist
 %type <n> arglist2
 %type <n> arg
@@ -97,15 +105,19 @@ prog : ws { N(ctx->result, Nmodule, yylloc) }
 
 tstmt : fun
 
-fun : TFUN id arglist funret TCOLON body {
+fun : TFUN id arglist funret funbody {
     N($$, Nfun, $2->loc)
     $$->s = string_clone($2->s);
     node_free($2);
     list_append($$->sons, $4);
     list_append($$->sons, $3);
-    list_append($$->sons, $6);
+    if ($5.import) $$->import = $5.rs;
+    else list_append($$->sons, $5.rn);
     $$->flags |= Fcst | Faddr;
 }
+
+funbody : TCOLON body { $$.import = 0; $$.rn = $2; }
+        | TSTRING     { $$.import = 1; $$.rs = $1.s; }
 
 funret : { $$ = NULL; }
        | TARROW texpr { $$ = $2; }
