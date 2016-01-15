@@ -112,6 +112,16 @@ static Decl* igen_func(Module* m, Node* n) {
     return res;
 }
 
+static Decl* igen_global(Module* m, Node* n) {
+    assert(n->kind == Ndecl);
+    Decl* res = new(Decl);
+    res->kind = Dglobal;
+    res->name = string_clone(n->s);
+    res->m = m;
+    res->v = n->v = var_new(res, NULL, n->type, n->s);
+    return res;
+}
+
 Module* igen(Node* n) {
     Module* res = new(Module);
     int i;
@@ -120,6 +130,9 @@ Module* igen(Node* n) {
     for (i=0; i<list_len(n->sons); ++i) switch (n->sons[i]->kind) {
     case Nfun:
         list_append(res->decls, igen_func(res, n->sons[i]));
+        break;
+    case Ndecl:
+        list_append(res->decls, igen_global(res, n->sons[i]));
         break;
     default: break;
     }

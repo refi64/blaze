@@ -31,9 +31,11 @@ static void generate_varname(Var* v) {
 }
 
 static void generate_declname(Decl* d) {
+    static const char prefixes[] = "fg";
+
     if (d->import) d->v->d.cname = string_clone(d->import);
     else if (d->exportc) d->v->d.cname = string_clone(d->exportc);
-    else generate_basename('f', &d->v->d, d->v->name, d->v->id);
+    else generate_basename(prefixes[d->kind], &d->v->d, d->v->name, d->v->id);
 }
 
 static void cgen_typedef(Type* t, FILE* output) {
@@ -104,7 +106,7 @@ static void cgen_ir(Instr* ir, FILE* output) {
 
 static void cgen_proto(Decl* d, FILE* output) {
     int i;
-    generate_declname(d);
+    assert(d->kind == Dfun);
     if (!d->exportc && !d->import) fputs("static ", output);
     fprintf(output, "%s %s(", CNAME(d->v->type->sons[0]), CNAME(d->v));
     for (i=0; i<list_len(d->args); ++i) {
@@ -116,13 +118,22 @@ static void cgen_proto(Decl* d, FILE* output) {
 }
 
 static void cgen_decl0(Decl* d, FILE* output) {
-    cgen_proto(d, output);
-    fputs(";\n", output);
+    generate_declname(d);
+    switch (d->kind) {
+    case Dfun:
+        cgen_proto(d, output);
+        fputs(";\n", output);
+        break;
+    case Dglobal:
+        fprintf(output, "%s %s;\n", CNAME(d->v->type), CNAME(d->v));
+        break;
+    }
+
 }
 
 static void cgen_decl1(Decl* d, FILE* output) {
     int i;
-    if (d->import) return;
+    if (d->kind != Dfun || d->import) return;
     cgen_proto(d, output);
     fputs(" {\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
