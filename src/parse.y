@@ -65,6 +65,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TTYPEOF
 %token <t> TEXPORTC
 %token <t> TGLOBAL
+%token <t> TSTRUCT
 %token <t> TID
 %token <t> TINT
 %token <t> TSTRING
@@ -73,6 +74,10 @@ LexerContext parse_string(const char* file, const char* module,
 %left TLP
 
 %type <n> tstmt
+%type <n> struct
+%type <l> members
+%type <l> members2
+%type <n> member
 %type <n> fun
 %type <n> funret
 %type <funbody> funbody
@@ -107,7 +112,23 @@ LexerContext parse_string(const char* file, const char* module,
 prog : ws { N(ctx->result, Nmodule, yylloc) }
      | prog tstmt ws { list_append(ctx->result->sons, $2); }
 
-tstmt : fun | global
+tstmt : struct | fun | global
+
+struct : TSTRUCT id TCOLON members {
+    int i;
+    N($$, Nid, $2->loc)
+    $$->s = string_clone($2->s);
+    node_free($2);
+    for (i=0; i<list_len($4); ++i) list_append($$->sons, $4[i]);
+    list_free($4);
+}
+
+members : indent members2 unindent { $$ = $2; }
+
+members2 : member { $$ = NULL; }
+         | members2 sep member { $$ = $1; list_append($1, $3); }
+
+member : fun | decl
 
 fun : TFUN id arglist funret funbody {
     N($$, Nfun, $2->loc)
