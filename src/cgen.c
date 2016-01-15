@@ -18,7 +18,8 @@ static void generate_basename(char p, GData* d, String* name, int id) {
 }
 
 static void generate_typename(Type* t) {
-    generate_basename('t', &t->d, t->name, type_id++);
+    if (t->kind == Tbuiltin) t->d.cname = string_new(typenames[t->bkind]);
+    else generate_basename('t', &t->d, t->name, type_id++);
 }
 
 static void generate_argname(Var* v) {
@@ -32,6 +33,7 @@ static void generate_varname(Var* v) {
 static void generate_declname(Decl* d) {
     if (d->v->name && strcmp(d->v->name->str, "main") == 0)
         d->v->d.cname = string_new("main");
+    else if (d->import) d->v->d.cname = string_clone(d->import);
     else generate_basename('f', &d->v->d, d->v->name, d->v->id);
 }
 
@@ -39,15 +41,13 @@ static void cgen_typedef(Type* t, FILE* output) {
     int i;
     assert(t);
     if (t->d.cname) return;
+    generate_typename(t);
     for (i=0; i<list_len(t->sons); ++i)
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
     switch (t->kind) {
     case Tany: assert(0);
-    case Tbuiltin:
-        t->d.cname = string_new(typenames[t->bkind]);
-        break;
+    case Tbuiltin: break;
     case Tptr:
-        generate_typename(t);
         fprintf(output, "typedef %s* %s;\n", CNAME(t->sons[0]), CNAME(t));
         break;
     case Tfun:
@@ -105,8 +105,7 @@ static void cgen_ir(Instr* ir, FILE* output) {
 
 static void cgen_proto(Decl* d, FILE* output) {
     int i;
-    if (d->import) d->v->d.cname = string_clone(d->import);
-    else generate_declname(d);
+    generate_declname(d);
     fprintf(output, "%s %s(", CNAME(d->v->type->sons[0]), CNAME(d->v));
     for (i=0; i<list_len(d->args); ++i) {
         generate_argname(d->args[i]);
