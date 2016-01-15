@@ -95,7 +95,11 @@ void lex_free() { ds_hfree(kw); }
         return TID;
     }
 }
-\"([^\\\"]|\\.)*\" { return TSTRING; }
+\"([^\\\"]|\\.)*\" {
+    // Remove quotes.
+    yylval->t.s = string_newz(yytext+1, strlen(yytext)-2);
+    return TSTRING;
+}
 [0-9]+ { yylval->t.s = string_new(yytext); return TINT; }
 . { return TERROR; }
 
