@@ -64,7 +64,7 @@ static void cgen_typedef(Type* t, FILE* output) {
 static void cgen_ir(Instr* ir, FILE* output) {
     int i;
     fputs("    ", output);
-    if (ir->dst) fprintf(output, "%s = ", CNAME(ir->dst));
+    if (ir->dst && ir->dst->type) fprintf(output, "%s = ", CNAME(ir->dst));
     switch (ir->kind) {
     case Iret:
         fputs("return", output);
@@ -121,6 +121,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
     cgen_proto(d, output);
     fputs(" {\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
+        if (!d->vars[i]->type) continue;
         generate_varname(d->vars[i]);
         fprintf(output, "    %s %s;\n", CNAME(d->vars[i]->type),
                 CNAME(d->vars[i]));
