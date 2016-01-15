@@ -67,7 +67,7 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->s = string_clone(n->s);
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
-    case Nmodule: case Ntypeof: case Nfun: case Narglist: case Narg:
+    case Nmodule: case Ntypeof: case Nfun: case Narglist: case Ndecl:
     case Nsons: case Nptr: assert(0);
     }
 
@@ -99,7 +99,7 @@ static Decl* igen_func(Module* m, Node* n) {
     res->v = n->v = var_new(res, NULL, n->type, n->s);
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
         Node* arg = n->sons[1]->sons[i];
-        assert(arg->kind == Narg);
+        assert(arg->kind == Ndecl);
         Var* v = var_new(res, NULL, arg->type, arg->s);
         list_append(res->args, v);
         arg->v = v;

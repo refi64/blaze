@@ -53,7 +53,7 @@ generic_error_func(note,)
 Node* declared_here(Node* n) {
     Node* t;
     switch (n->kind) {
-    case Nfun: case Narg: case Nid:
+    case Nfun: case Ndecl: case Nid:
         if (!n->e || !n->e->n) return NULL;
         note(n->e->n->loc, "%s declared here", n->s->str);
         t = declared_here(n->e->n);

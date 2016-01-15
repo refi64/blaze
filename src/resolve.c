@@ -30,12 +30,12 @@ static void resolve0(Node* n) {
         break;
     case Narglist:
         for (i=0; i<list_len(n->sons); ++i) {
-            assert(n->sons[i]->kind == Narg);
+            assert(n->sons[i]->kind == Ndecl);
             n->sons[i]->parent = n;
             resolve0(n->sons[i]);
         }
         break;
-    case Narg:
+    case Ndecl:
         n->sons[0]->parent = n;
         resolve0(n->sons[0]);
         e = stentry_new(n, n->s, NULL);
@@ -91,7 +91,7 @@ static void resolve1(Node* n) {
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;
-    case Narg:
+    case Ndecl:
         resolve1(n->sons[0]);
         break;
     case Nbody:

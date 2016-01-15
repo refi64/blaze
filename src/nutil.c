@@ -17,7 +17,7 @@ static void node_dump2(Node* n, int indent) {
     case Ntypeof: put("Ntypeof"); break;
     case Nfun: put("Nfun (s:%s)", n->s->str); break;
     case Narglist: put("Narglist"); break;
-    case Narg: put("Narg (s:%s)", n->s->str); break;
+    case Ndecl: put("Ndecl (s:%s)", n->s->str); break;
     case Nbody: put("Nbody"); break;
     case Nmodule: put("Nmodule"); break;
     case Nsons: assert(0);
@@ -53,7 +53,7 @@ void node_free(Node* n) {
     case Nmodule:
         symtab_free(n->tab);
         break;
-    case Nid: case Nint: case Nfun: case Nlet: case Narg:
+    case Nid: case Nint: case Nfun: case Nlet: case Ndecl:
         string_free(n->s);
         if (n->kind == Nfun) {
             if (n->import) string_free(n->import);

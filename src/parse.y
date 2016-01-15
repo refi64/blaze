@@ -64,6 +64,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TRETURN
 %token <t> TTYPEOF
 %token <t> TEXPORTC
+%token <t> TGLOBAL
 %token <t> TID
 %token <t> TINT
 %token <t> TSTRING
@@ -74,7 +75,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <funbody> funbody
 %type <n> arglist
 %type <n> arglist2
-%type <n> arg
+%type <n> decl
 %type <n> body
 %type <n> body2
 %type <n> stmt
@@ -132,11 +133,11 @@ arglist :         { N($$, Narglist, yylloc) }
         | TLP TRP { N($$, Narglist, $1.loc); }
         | TLP arglist2 TRP { $$ = $2; $$->loc = $1.loc; }
 
-arglist2 : arg { N($$, Narglist, $1->loc); list_append($$->sons, $1); }
-         | arglist2 TCOMMA arg { $$ = $1; list_append($$->sons, $3); }
+arglist2 : decl { N($$, Narglist, $1->loc); list_append($$->sons, $1); }
+         | arglist2 TCOMMA decl { $$ = $1; list_append($$->sons, $3); }
 
-arg : id TCOLON texpr {
-    N($$, Narg, $1->loc);
+decl : id TCOLON texpr {
+    N($$, Ndecl, $1->loc);
     $$->s = string_clone($1->s);
     node_free($1);
     list_append($$->sons, $3);

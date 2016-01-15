@@ -190,7 +190,7 @@ void type(Node* n) {
         n->flags |= Ftype;
         type_incref(n->type);
         break;
-    case Narg:
+    case Ndecl:
         type(n->sons[0]);
         force_type_context(n->sons[0]);
         n->type = n->sons[0]->type;

@@ -140,7 +140,7 @@ struct Node {
         Nptr,
         Nfun,
         Narglist,
-        Narg,
+        Ndecl,
         Nbody,
         Nmodule
     } kind;
