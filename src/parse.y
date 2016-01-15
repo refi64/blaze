@@ -94,7 +94,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <l> callargs
 %type <l> callargs2
 
-%type <i> letspec
+%type <i> modspec
 
 %destructor { if ($$.s) string_free($$.s); } <t>
 %destructor { node_free($$); } <n>
@@ -137,7 +137,7 @@ arglist :         { N($$, Narglist, yylloc) }
 arglist2 : decl { N($$, Narglist, $1->loc); list_append($$->sons, $1); }
          | arglist2 TCOMMA decl { $$ = $1; list_append($$->sons, $3); }
 
-global : TGLOBAL decl { $$ = $2; $$->loc = $1.loc; }
+global : TGLOBAL modspec decl { $$ = $3; $$->loc = $1.loc; $$->flags |= $2; }
 
 decl : id TCOLON texpr {
     N($$, Ndecl, $1->loc);
@@ -159,7 +159,7 @@ stmt : let    { $$ = $1; }
      | return { $$ = $1; }
      | call   { $$ = $1; }
 
-let : TLET letspec id TEQ expr {
+let : TLET modspec id TEQ expr {
     N($$, Nlet, $3->loc)
     $$->s = string_clone($3->s);
     node_free($3);
@@ -167,7 +167,7 @@ let : TLET letspec id TEQ expr {
     $$->flags |= $2;
 }
 
-letspec :      { $$ = 0; }
+modspec :      { $$ = 0; }
         | TMUT { $$ = Fmut; }
         | TVAR { $$ = Fvar; }
 
