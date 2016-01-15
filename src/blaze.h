@@ -120,6 +120,7 @@ enum Flags {
     Fcst= 1<<4, // Constant?
     Fused=1<<5, // Has the given value been used?
     Fvoid=1<<6, // Is the node void (has no type)?
+    Fpure=1<<7, // Is the node/IR pure?
 };
 
 struct Node {

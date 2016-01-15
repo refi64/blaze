@@ -3,11 +3,14 @@
 static void igen_sons(Decl* d, Node* n);
 static Var* igen_node(Decl* d, Node* n);
 
+#define PUREFLAGS(v) ((v)->ir ? (v)->ir->flags & Fpure : Fpure)
+
 static Var* igen_address(Decl* d, Node* n) {
     Instr* ir = new(Instr);
     assert(n->sons[0]->flags & Faddr);
     ir->kind = Iaddr;
     list_append(ir->v, igen_node(d, n->sons[0]));
+    ir->flags |= PUREFLAGS(ir->v[0]);
     ir->dst = var_new(d, ir, n->type, NULL);
     list_append(d->sons, ir);
     return ir->dst;
@@ -30,16 +33,19 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->kind = Inew;
         n->v = ir->dst = var_new(d, ir, n->type, n->s);
         list_append(ir->v, igen_node(d, n->sons[0]));
+        ir->flags |= PUREFLAGS(ir->v[0]);
         break;
     case Nassign:
         ir->kind = Iset;
         list_append(ir->v, igen_address(d, n->sons[0]));
         list_append(ir->v, igen_node(d, n->sons[1]));
+        ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
         break;
     case Nderef:
         ir->kind = Ideref;
         list_append(ir->v, igen_node(d, n->sons[0]));
         ir->dst = var_new(d, ir, n->type, NULL);
+        ir->flags |= PUREFLAGS(ir->v[0]);
         break;
     case Naddr:
         free(ir);
@@ -57,6 +63,7 @@ static Var* igen_node(Decl* d, Node* n) {
         return n->e->n->v;
     case Nint:
         ir->kind = Iint;
+        ir->flags |= Fpure;
         ir->s = string_clone(n->s);
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;

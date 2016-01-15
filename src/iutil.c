@@ -19,6 +19,7 @@ void var_dump(Var* v) {
     assert(v);
     printf("Var %d", v->id);
     if (v->name) printf(" (%s)", v->name->str);
+    if (!v->type) printf(" void");
 }
 
 void var_free(Var* v) {
@@ -39,6 +40,9 @@ void instr_dump(Instr* ir) {
     case Icall: printf("Icall"); break;
     case Iint: printf("Iint (i:%s)", ir->s->str); break;
     }
+
+    if (ir->flags & Fpure)
+        printf(" pure");
 
     if (ir->v) {
         printf(" of (");

@@ -16,7 +16,7 @@ static int remove_unused_vars(Decl* d) {
             d->vars[i]->type = NULL;
             ++removed;
 
-            if (d->vars[i]->ir && d->vars[i]->ir->kind == Inew)
+            if (d->vars[i]->ir && d->vars[i]->ir->flags & Fpure)
                 nir(d->vars[i]->ir);
         }
 
@@ -30,6 +30,7 @@ static void remove_useless_news(Decl* d) {
         if (ir->kind == Inew && ir->v[0]->uses == 1 && !ir->v[0]->name &&
             ir->v[0]->ir) {
             ir->v[0]->ir->dst = ir->dst;
+            ir->dst->ir = ir->v[0]->ir;
             ir->v[0]->type = NULL;
             nir(ir);
         }
