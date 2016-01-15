@@ -69,6 +69,9 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TINT
 %token <t> TSTRING
 
+%right UTAND UTSTAR
+%left TLP
+
 %type <n> tstmt
 %type <n> fun
 %type <n> funret
@@ -212,10 +215,11 @@ dec : TINT {
 ptr : TSTAR expr {
     N($$, Nderef, $1.loc)
     list_append($$->sons, $2);
-}   | TAND expr {
+} %prec UTAND
+    | TAND expr {
     N($$, Naddr, $1.loc)
     list_append($$->sons, $2);
-}
+} %prec UTSTAR
 
 call : expr TLP callargs TRP {
     int i;
