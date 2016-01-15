@@ -235,11 +235,19 @@ struct Module {
 };
 
 struct Decl {
+    enum {
+        Dfun,
+        Dglobal,
+    } kind;
+    union {
+        struct {
+            List(Instr*) sons;
+            List(Var*) vars;
+            List(Var*) args;
+            Type* ret;
+        }; // Dfun
+    };
     String* name, *import, *exportc;
-    List(Instr*) sons;
-    List(Var*) vars;
-    List(Var*) args;
-    Type* ret;
     Var* v;
     Module* m;
 };

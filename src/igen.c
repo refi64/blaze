@@ -93,6 +93,7 @@ static Decl* igen_func(Module* m, Node* n) {
     int i;
     assert(n->kind == Nfun);
     Decl* res = new(Decl);
+    res->kind = Dfun;
     res->name = string_clone(n->s);
     res->m = m;
     assert(n->sons[1]->kind == Narglist);

@@ -76,11 +76,19 @@ void decl_dump(Decl* d) {
     int i;
     printf("Decl %s (", d->name->str);
     var_dump(d->v);
-    printf("):\n");
-    for (i=0; i<list_len(d->sons); ++i) {
-        if (d->sons[i]->kind == Inull) continue;
-        printf("  ");
-        instr_dump(d->sons[i]);
+    printf(") ");
+    switch (d->kind) {
+    case Dfun:
+        printf("function:\n");
+        for (i=0; i<list_len(d->sons); ++i) {
+            if (d->sons[i]->kind == Inull) continue;
+            printf("  ");
+            instr_dump(d->sons[i]);
+        }
+        break;
+    case Dglobal:
+        printf("global\n");
+        break;
     }
 }
 
