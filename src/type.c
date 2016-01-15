@@ -107,6 +107,7 @@ void type(Node* n) {
     case Nmodule: case Narglist: case Nbody:
         for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
         break;
+    case Nstruct: break;
     case Nfun:
         if (n->sons[0]) {
             type(n->sons[0]);

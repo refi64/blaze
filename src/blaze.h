@@ -138,6 +138,7 @@ struct Node {
         Nreturn,
         Ntypeof,
         Nptr,
+        Nstruct,
         Nfun,
         Narglist,
         Ndecl,

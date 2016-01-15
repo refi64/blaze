@@ -116,7 +116,7 @@ tstmt : struct | fun | global
 
 struct : TSTRUCT id TCOLON members {
     int i;
-    N($$, Nid, $2->loc)
+    N($$, Nstruct, $2->loc)
     $$->s = string_clone($2->s);
     node_free($2);
     for (i=0; i<list_len($4); ++i) list_append($$->sons, $4[i]);
