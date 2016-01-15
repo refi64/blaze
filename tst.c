@@ -17,6 +17,10 @@ int main(int argc, char** argv) {
 
         if (errors == 0) {
             Module* m = igen(ctx.result);
+            puts("*****Unoptimized*****");
+            module_dump(m);
+            iopt(m);
+            puts("*****Optimized*****");
             module_dump(m);
             cgen(m, stderr);
             module_free(m);

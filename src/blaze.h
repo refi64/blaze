@@ -281,6 +281,7 @@ void decl_dump(Decl* d);
 void decl_free(Decl* d);
 
 Module* igen(Node* n);
+void iopt(Module* m);
 void module_dump(Module* m);
 void module_free(Module* m);
 
