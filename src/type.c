@@ -115,6 +115,7 @@ void type(Node* n) {
         n->type->name = string_clone(n->s);
         type_incref(n->type);
         for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
+        n->flags |= Ftype;
         break;
     case Nfun:
         if (n->sons[0]) {
