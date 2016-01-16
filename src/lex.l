@@ -131,6 +131,11 @@ void lex_free() { ds_hfree(kw); }
             return TINDENT;
         } else if (curlvl < level) {
             --level;
+            if (curlvl < level) {
+                // Put the chars back in the stream so it can be re-unindented.
+                int i;
+                for (i=0; i<sp; ++i) unput(' ');
+            }
             return TUNINDENT;
         }
     } else {
