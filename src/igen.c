@@ -89,6 +89,8 @@ static void igen_sons(Decl* d, Node* n) {
         igen_node(d, n->sons[i]);
 }
 
+static Decl* igen_decl(Module* m, Node* n);
+
 static void igen_func(Module* m, Decl* d, Node* n) {
     int i;
     assert(n->kind == Nfun);
@@ -117,11 +119,11 @@ static void igen_global(Module* m, Decl* d, Node* n) {
 }
 
 static void igen_struct(Module* m, Decl* d, Node* n) {
-    /* int i; */
+    int i;
     assert(n->kind == Nstruct);
     d->kind = Dstruct;
-    /* for (i=0; i<list_len(n->sons); ++i) */
-        /* list_append(); */
+    for (i=0; i<list_len(n->sons); ++i)
+        list_append(d->members, igen_decl(m, n->sons[i]));
 }
 
 static Decl* igen_decl(Module* m, Node* n) {
@@ -142,21 +144,21 @@ static Decl* igen_decl(Module* m, Node* n) {
     default:
         string_free(d->name);
         free(d);
-        return;
+        return NULL;
     }
 
-    list_append(m->decls, d);
+    return d;
 }
 
 Module* igen(Node* n) {
     Module* res = new(Module);
-    Decl* decl = NULL;
     int i;
     assert(n && n->kind == Nmodule);
 
-    if (decl) list_append(res->decls, decl);
-
-    for (i=0; i<list_len(n->sons); ++i) igen_decl(res, n->sons[i]);
+    for (i=0; i<list_len(n->sons); ++i) {
+        Decl* d = igen_decl(res, n->sons[i]);
+        if (d) list_append(res->decls, d);
+    }
 
     return res;
 }
