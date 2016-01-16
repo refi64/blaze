@@ -15,8 +15,10 @@ static void resolve0(Node* n) {
         break;
     case Nstruct:
         e = stentry_new(n, n->s, NULL);
-        symtab_add(n->parent->tab, n->s, e);
         n->tab = symtab_sub(n->parent->tab);
+        symtab_add(n->parent->tab, n->s, e);
+
+        n->tab->level = -n->tab->level;
 
         for (i=0; i<list_len(n->sons); ++i) {
             n->sons[i]->parent = n;
@@ -149,6 +151,10 @@ static void resolve1(Node* n) {
                 note(e->n->loc, "%s declared here", n->s->str);
             }
             else error(n->loc, "undeclared identifier %s", n->s->str);
+        } else if (n->e->level < 0) {
+            error(n->loc, "identifier %s cannot be accessed without @",
+                  n->s->str);
+            if (n->e->n) declared_here(n->e->n);
         } else if (n->e->n) {
             n->flags |= (n->e->n->flags & Fmut) | (n->e->n->flags & Fvar) |
                         (n->e->n->flags & Fcst);

@@ -1,9 +1,9 @@
 #include "blaze.h"
 
-// DSHtab* tab, Symtab* parent
-
 static uint32_t strhash(String* str) { return ds_strhash(str->str); }
 static int streq(String* a, String* b) { return ds_streq(a->str, b->str); }
+
+#define ABS(x) ((x) < 0 ? -(x) : (x))
 
 STEntry* anytype=NULL;
 STEntry* builtin_types[Tbend];
@@ -87,7 +87,7 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
     p = symtab_finds(tab, name);
     if (p) {
         Location el = e->n->loc;
-        if (p->level == e->level) {
+        if (ABS(p->level) == ABS(e->level)) {
             error(el, "duplicate definition of %s", name->str);
             note(p->n->loc, "previous definition is here");
             stentry_free(e);
@@ -95,11 +95,10 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
         } else {
             if (p->level == 0)
                 error(el, "redefinition of %s shadows builtin", name->str);
-            else {
+            else if (e->level > 0) {
                 warning(el, "redefinition of %s shadows outer definition",
                     name->str);
                 note(p->n->loc, "previous definition is here");
-                /* stentry_free(e); */
             }
         }
     }
