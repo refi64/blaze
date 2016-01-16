@@ -129,6 +129,8 @@ static void cgen_decl0(Decl* d, FILE* output) {
     case Dglobal:
         fprintf(output, "%s %s;\n", CNAME(d->v->type), CNAME(d->v));
         break;
+    case Dstruct:
+        break;
     }
 
 }

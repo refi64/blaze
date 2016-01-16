@@ -74,9 +74,12 @@ void instr_free(Instr* ir) {
 
 void decl_dump(Decl* d) {
     int i;
-    printf("Decl %s (", d->name->str);
-    var_dump(d->v);
-    printf(") ");
+    printf("Decl %s ", d->name->str);
+    if (d->v) {
+        putchar('(');
+        var_dump(d->v);
+        printf(") ");
+    }
     switch (d->kind) {
     case Dfun:
         printf("function:\n");
@@ -88,6 +91,9 @@ void decl_dump(Decl* d) {
         break;
     case Dglobal:
         printf("global\n");
+        break;
+    case Dstruct:
+        // XXX
         break;
     }
 }
@@ -102,7 +108,7 @@ void decl_free(Decl* d) {
     list_free(d->vars);
     list_free(d->args);
     string_free(d->name);
-    var_free(d->v);
+    if (d->v) var_free(d->v);
     free(d);
 }
 

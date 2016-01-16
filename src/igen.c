@@ -89,53 +89,74 @@ static void igen_sons(Decl* d, Node* n) {
         igen_node(d, n->sons[i]);
 }
 
-static Decl* igen_func(Module* m, Node* n) {
+static void igen_func(Module* m, Decl* d, Node* n) {
     int i;
     assert(n->kind == Nfun);
-    Decl* res = new(Decl);
-    res->kind = Dfun;
-    res->name = string_clone(n->s);
-    res->m = m;
+    d->kind = Dfun;
     assert(n->sons[1]->kind == Narglist);
-    res->v = n->v = var_new(res, NULL, n->type, n->s);
+    d->v = n->v = var_new(d, NULL, n->type, n->s);
+
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
         Node* arg = n->sons[1]->sons[i];
         assert(arg->kind == Ndecl);
-        Var* v = var_new(res, NULL, arg->type, arg->s);
-        list_append(res->args, v);
+        Var* v = var_new(d, NULL, arg->type, arg->s);
+        list_append(d->args, v);
         arg->v = v;
     }
-    if (n->sons[0]) res->ret = n->sons[0]->type;
-    if (!n->import) igen_node(res, n->sons[2]);
-    else res->import = n->import;
-    res->exportc = n->exportc;
-    return res;
+
+    if (n->sons[0]) d->ret = n->sons[0]->type;
+    if (!n->import) igen_node(d, n->sons[2]);
+    else d->import = n->import;
+    d->exportc = n->exportc;
 }
 
-static Decl* igen_global(Module* m, Node* n) {
+static void igen_global(Module* m, Decl* d, Node* n) {
     assert(n->kind == Ndecl);
-    Decl* res = new(Decl);
-    res->kind = Dglobal;
-    res->name = string_clone(n->s);
-    res->m = m;
-    res->v = n->v = var_new(res, NULL, n->type, n->s);
-    return res;
+    d->kind = Dglobal;
+    d->v = n->v = var_new(d, NULL, n->type, n->s);
+}
+
+static void igen_struct(Module* m, Decl* d, Node* n) {
+    /* int i; */
+    assert(n->kind == Nstruct);
+    d->kind = Dstruct;
+    /* for (i=0; i<list_len(n->sons); ++i) */
+        /* list_append(); */
+}
+
+static Decl* igen_decl(Module* m, Node* n) {
+    Decl* d = new(Decl);
+    d->name = string_clone(n->s);
+    d->m = m;
+
+    switch (n->kind) {
+    case Nfun:
+        igen_func(m, d, n);
+        break;
+    case Ndecl:
+        igen_global(m, d, n);
+        break;
+    case Nstruct:
+        igen_struct(m, d, n);
+        break;
+    default:
+        string_free(d->name);
+        free(d);
+        return;
+    }
+
+    list_append(m->decls, d);
 }
 
 Module* igen(Node* n) {
     Module* res = new(Module);
+    Decl* decl = NULL;
     int i;
     assert(n && n->kind == Nmodule);
 
-    for (i=0; i<list_len(n->sons); ++i) switch (n->sons[i]->kind) {
-    case Nfun:
-        list_append(res->decls, igen_func(res, n->sons[i]));
-        break;
-    case Ndecl:
-        list_append(res->decls, igen_global(res, n->sons[i]));
-        break;
-    default: break;
-    }
+    if (decl) list_append(res->decls, decl);
+
+    for (i=0; i<list_len(n->sons); ++i) igen_decl(res, n->sons[i]);
 
     return res;
 }
