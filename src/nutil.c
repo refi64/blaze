@@ -54,7 +54,7 @@ void node_free(Node* n) {
     case Nmodule:
         symtab_free(n->tab);
         break;
-    case Nid: case Nint: case Nfun: case Nlet: case Ndecl:
+    case Nid: case Nint: case Nstruct: case Nfun: case Nlet: case Ndecl:
         string_free(n->s);
         if (n->kind == Nfun) {
             if (n->import) string_free(n->import);
