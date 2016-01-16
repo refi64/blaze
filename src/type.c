@@ -1,7 +1,7 @@
 #include "blaze.h"
 
 static void force_type_context(Node* n) {
-    if (!(n->flags & Ftype)) {
+    if (!(n->flags & Ftype) && n->type != anytype->override) {
         error(n->loc, "expression is not a type");
         if (n->e && n->e->n) declared_here(n->e->n);
         n->e = anytype;

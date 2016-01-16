@@ -12,8 +12,13 @@ fun k() -> int:
     return
 fun l():
     return 1
+fun m -> n:
+    return
 #[
 ERROR
+:15:10: error: undeclared identifier n
+    fun m -> n:
+             ~
 :1:24: error: function was declared to return type 'int', not '() -> int'
     fun f() -> int: return f
                            ~
@@ -74,4 +79,10 @@ ERROR
 :13:5: note: function declared here
     fun l():
         ~
+:16:5: error: function is supposed to return a value
+    return
+    ~~~~~~
+:15:10: note: function return type declared here
+    fun m -> n:
+             ~
 ]#
