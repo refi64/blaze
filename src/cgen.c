@@ -52,7 +52,6 @@ static void cgen_typedef(Type* t, FILE* output) {
         fprintf(output, "typedef %s* %s;\n", CNAME(t->sons[0]), CNAME(t));
         break;
     case Tfun:
-        generate_typename(t);
         fprintf(output, "typedef %s", CNAME(t->sons[0]));
         fprintf(output, " (*%s)(", CNAME(t));
         for (i=1; i<list_len(t->sons); ++i) {
@@ -62,7 +61,7 @@ static void cgen_typedef(Type* t, FILE* output) {
         fputs(");\n", output);
         break;
     case Tstruct:
-        // XXX
+        fprintf(output, "typedef struct %s %s;\n", CNAME(t), CNAME(t));
         break;
     }
 }
