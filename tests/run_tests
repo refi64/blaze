@@ -1,12 +1,25 @@
 #!/bin/bash
 
 dir=`dirname $0`
-tests=$dir/test*.blz
 
-run_test() {
+run_test1() {
     test=$1
     shift
     $@ $dir/../build/tst $test 2>&1 1>/dev/null
+}
+
+run_test() {
+    test=$1
+    echo "Running $test..."
+    if [ "$valgrind" == "1" ]; then
+        run_test1 $test valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 > /tmp/.blaze.output || cat /tmp/.blaze.output
+    else
+        data=`cat $test | awk '/#\[/,/\]#/' | tail -n +2 | head -n -1`
+        kind=`echo "$data" | head -1`
+        expected=`echo "$data" | tail -n +2 | sed "s#^:#$test:#"`
+        output=`run_test1 $test`
+        diff -u -B -b <(echo "$expected") <(echo "$output")
+    fi
 }
 
 if [ "$1" == "--valgrind" ]; then
@@ -16,17 +29,25 @@ else
     valgrind=0
 fi
 
+if [ "$#" -eq 0 ]; then
+    tests=$dir/test*.blz
+else
+    tests=`echo "$@" | \
+           awk '{
+            for(i = 1; i <= NF; i++) {
+                file="tests/"$i".blz";
+                if ((getline _ < file) < 0) {
+                    print $i" is not a valid test" > "/dev/stderr";
+                    exit 1;
+                }
+                $i=file;
+            }
+            print;
+           }'`
+fi
+
 for test in $tests; do
-    echo "Running $test..."
-    if [ "$valgrind" == "1" ]; then
-        run_test $test valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 > /tmp/.blaze.output || cat /tmp/.blaze.output
-    else
-        data=`cat $test | awk '/#\[/,/\]#/' | tail -n +2 | head -n -1`
-        kind=`echo "$data" | head -1`
-        expected=`echo "$data" | tail -n +2 | sed "s#^:#$test:#"`
-        output=`run_test $test`
-        diff -u -B -b <(echo "$expected") <(echo "$output")
-    fi
+    run_test $test
 done
 
 rm -f /tmp/.blaze.output
