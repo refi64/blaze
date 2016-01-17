@@ -60,18 +60,18 @@ static String* typestring(Type* t) {
     }
 }
 
-static int types_are_compat(Type* a, Type* b) {
+static int typematch(Type* a, Type* b) {
     int i;
     assert(a && b);
     if (a->kind == Tany || b->kind == Tany) return 1;
     if (a->kind != b->kind) return 0;
     switch (a->kind) {
     case Tbuiltin: return a->bkind == b->bkind;
-    case Tptr: return types_are_compat(a->sons[0], b->sons[0]);
+    case Tptr: return typematch(a->sons[0], b->sons[0]);
     case Tfun:
         if (list_len(a->sons) != list_len(b->sons)) return 0;
         for (i=0; i<list_len(a->sons); ++i)
-            if (!types_are_compat(a->sons[i], b->sons[i])) return 0;
+            if (!typematch(a->sons[i], b->sons[i])) return 0;
         return 1;
     case Tstruct: return a == b;
     case Tany: assert(0);
@@ -148,7 +148,7 @@ void type(Node* n) {
     case Nassign:
         type(n->sons[0]);
         type(n->sons[1]);
-        if (!types_are_compat(n->sons[0]->type, n->sons[1]->type)) {
+        if (!typematch(n->sons[0]->type, n->sons[1]->type)) {
             String* ls=typestring(n->sons[0]->type),
                   * rs=typestring(n->sons[1]->type);
             error(n->loc, "types '%s' and '%s' in assignment are not compatible",
@@ -176,7 +176,7 @@ void type(Node* n) {
                 return;
             }
             given = n->sons[0]->type;
-            if (!types_are_compat(ret, given)) {
+            if (!typematch(ret, given)) {
                 String* rets, *givens;
                 rets = typestring(ret);
                 givens = typestring(given);
@@ -268,7 +268,7 @@ void type(Node* n) {
                 declared_here(n->sons[0]);
             }
             for (i=1; i<min(ngiven+1, nexpect+1); ++i)
-                if (!types_are_compat(n->sons[i]->type, ft->sons[i])) {
+                if (!typematch(n->sons[i]->type, ft->sons[i])) {
                     String* expects, *givens;
                     expects = typestring(ft->sons[i]);
                     givens = typestring(n->sons[i]->type);
