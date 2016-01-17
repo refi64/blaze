@@ -116,10 +116,13 @@ void type(Node* n) {
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
             if (n->sons[i]->kind == Nconstr) {
-                if (!n->type->constr) n->type->constr = n->sons[i];
+                if (!n->constr) {
+                    n->constr = n->sons[i];
+                    n->type->constr = n->sons[i]->type;
+                }
                 else {
                     error(n->sons[i]->loc, "duplicate constructor");
-                    note(n->type->constr->loc, "previous constructor here");
+                    note(n->constr->loc, "previous constructor here");
                 }
             }
         }

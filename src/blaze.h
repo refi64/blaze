@@ -107,7 +107,7 @@ struct Type {
             Tchar,
             Tbend
         } bkind; // Tbuiltin
-        Node* constr; // Tstruct
+        Type* constr; // Tstruct
     };
     String* name;
     // Tfun: ret, args...
@@ -159,6 +159,7 @@ struct Node {
         struct {
             String* import, *exportc; // C import name and export name.
         }; // Nfun
+        Node* constr; // Nstruct
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
