@@ -66,6 +66,12 @@ static void cgen_typedef(Type* t, FILE* output) {
     }
 }
 
+static void cgen_typeimpl(Type* t, FILE* output) {
+    if (t->kind != Tstruct) return;
+    fprintf(output, "struct %s {", CNAME(t));
+    fputs("};\n", output);
+}
+
 static void cgen_ir(Instr* ir, FILE* output) {
     int i;
     if (ir->kind == Inull) return;
@@ -142,7 +148,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
         if (!d->vars[i]->type) continue;
         generate_varname(d->vars[i]);
         fprintf(output, "    %s %s;\n", CNAME(d->vars[i]->type),
-                CNAME(d->vars[i]));
+        CNAME(d->vars[i]));
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d->sons[i], output);
     fputs("}\n\n", output);
@@ -169,6 +175,10 @@ void cgen(Module* m, FILE* output) {
 
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl0(m->decls[i], output);
+    fputs("\n\n", output);
+
+    for (i=0; i<list_len(m->types); ++i)
+        cgen_typeimpl(m->types[i], output);
     fputs("\n\n", output);
 
     for (i=0; i<list_len(m->decls); ++i)

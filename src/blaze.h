@@ -87,6 +87,7 @@ void make_mutvar(Node* n, int flag, int curflags);
 // Code-generator-related data.
 struct GData {
     String* cname;
+    List(Decl*) sons;
 };
 
 struct Type {

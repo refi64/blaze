@@ -5,6 +5,18 @@ static Var* igen_node(Decl* d, Node* n);
 
 #define PUREFLAGS(v) ((v)->ir ? (v)->ir->flags & Fpure : Fpure)
 
+static Decl* igen_decl(Module* m, Node* n);
+
+static void igen_struct(Module* m, Node* n) {
+    int i;
+
+    assert(n->kind == Nstruct);
+    for (i=0; i<list_len(n->sons); ++i) {
+        Decl* d = igen_decl(m, n->sons[i]);
+        if (d) list_append(n->type->d.sons, d);
+    }
+}
+
 static Var* igen_address(Decl* d, Node* n) {
     Instr* ir = new(Instr);
     assert(n->sons[0]->flags & Faddr);
@@ -89,8 +101,6 @@ static void igen_sons(Decl* d, Node* n) {
         igen_node(d, n->sons[i]);
 }
 
-static Decl* igen_decl(Module* m, Node* n);
-
 static void igen_func(Module* m, Decl* d, Node* n) {
     int i;
     assert(n->kind == Nfun);
@@ -145,8 +155,12 @@ Module* igen(Node* n) {
     assert(n && n->kind == Nmodule);
 
     for (i=0; i<list_len(n->sons); ++i) {
-        Decl* d = igen_decl(res, n->sons[i]);
-        if (d) list_append(res->decls, d);
+        Node* ns = n->sons[i];
+        if (ns->kind == Nstruct) igen_struct(res, ns);
+        else {
+            Decl* d = igen_decl(res, n->sons[i]);
+            if (d) list_append(res->decls, d);
+        }
     }
 
     return res;
