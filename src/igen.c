@@ -82,8 +82,8 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->s = string_clone(n->s);
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
-    case Nmodule: case Ntypeof: case Nstruct: case Nfun: case Narglist:
-    case Ndecl: case Nsons: case Nptr: assert(0);
+    case Nmodule: case Ntypeof: case Nstruct: case Nconstr: case Nfun:
+    case Narglist: case Ndecl: case Nsons: case Nptr: assert(0);
     }
 
     if (ir) {
@@ -137,7 +137,9 @@ static void igen_global(Module* m, Decl* d, Node* n) {
 }
 
 static Decl* igen_decl(Module* m, Node* n) {
-    Decl* d = new(Decl);
+    Decl* d;
+    if (n->kind == Nconstr) return; // XXX
+    d = new(Decl);
     d->name = string_clone(n->s);
     d->m = m;
 

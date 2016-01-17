@@ -113,10 +113,19 @@ void type(Node* n) {
         n->type->kind = Tstruct;
         n->type->name = string_clone(n->s);
         type_incref(n->type);
-        for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
+        for (i=0; i<list_len(n->sons); ++i) {
+            type(n->sons[i]);
+            if (n->sons[i]->kind == Nconstr) {
+                if (!n->type->constr) n->type->constr = n->sons[i];
+                else {
+                    error(n->sons[i]->loc, "duplicate constructor");
+                    note(n->type->constr->loc, "previous constructor here");
+                }
+            }
+        }
         n->flags |= Ftype;
         break;
-    case Nfun:
+    case Nconstr: case Nfun:
         if (n->sons[0]) {
             type(n->sons[0]);
             force_type_context(n->sons[0]);

@@ -16,6 +16,7 @@ static void node_dump2(Node* n, int indent) {
     case Nreturn: put("Nreturn"); break;
     case Ntypeof: put("Ntypeof"); break;
     case Nstruct: put("Nstruct (s:%s)", n->s->str); break;
+    case Nconstr: put("Nconstr"); break;
     case Nfun: put("Nfun (s:%s)", n->s->str); break;
     case Narglist: put("Narglist"); break;
     case Ndecl: put("Ndecl (s:%s)", n->s->str); break;

@@ -36,6 +36,7 @@ void lex_init() {
     ds_hput(kw, "exportc", (void*)(intptr_t)TEXPORTC);
     ds_hput(kw, "global", (void*)(intptr_t)TGLOBAL);
     ds_hput(kw, "struct", (void*)(intptr_t)TSTRUCT);
+    ds_hput(kw, "new", (void*)(intptr_t)TNEW);
 }
 
 void lex_context_init(LexerContext* ctx, const char* file, const char* module,

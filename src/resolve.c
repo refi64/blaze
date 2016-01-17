@@ -35,6 +35,8 @@ static void resolve0(Node* n) {
             strcmp(n->s->str, "main") == 0)
             n->exportc = string_new("main");
 
+    // Fall though.
+    case Nconstr:
         for (i=0; i<list_len(n->sons); ++i) {
             if (!n->sons[i]) continue;
             n->sons[i]->parent = n;
@@ -102,7 +104,7 @@ static void resolve1(Node* n) {
     int i;
     assert(n);
     switch (n->kind) {
-    case Nmodule: case Nstruct: case Nfun: case Narglist:
+    case Nmodule: case Nstruct: case Nconstr: case Nfun: case Narglist:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;

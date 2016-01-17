@@ -106,7 +106,8 @@ struct Type {
             Tint,
             Tchar,
             Tbend
-        } bkind;
+        } bkind; // Tbuiltin
+        Node* constr; // Tstruct
     };
     String* name;
     // Tfun: ret, args...
@@ -147,6 +148,7 @@ struct Node {
         Ntypeof,
         Nptr,
         Nstruct,
+        Nconstr,
         Nfun,
         Narglist,
         Ndecl,
@@ -171,7 +173,7 @@ struct Node {
     // Ntypeof: expr
     // Nptr: expr
     // Nstruct: members...
-    // Nfun: ret | NULL, args...
+    // Nconstr, Nfun: ret | NULL (always NULL for Nconstr), args...
     // Narglist: Narg...
     // Ndecl: type
     // Nbody: stmts...
