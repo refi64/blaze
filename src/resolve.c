@@ -22,6 +22,7 @@ static void resolve0(Node* n) {
 
         for (i=0; i<list_len(n->sons); ++i) {
             n->sons[i]->parent = n;
+            n->sons[i]->flags |= Fmemb;
             resolve0(n->sons[i]);
         }
         break;

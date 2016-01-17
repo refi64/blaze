@@ -111,7 +111,7 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     assert(n->sons[1]->kind == Narglist);
     d->v = n->v = var_new(d, NULL, n->type, n->s);
 
-    if (n->parent->kind == Nstruct) {
+    if (n->flags & Fmemb) {
         Var* v = var_new(d, NULL, n->parent->type, NULL);
         list_append(d->args, v);
     }

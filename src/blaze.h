@@ -124,6 +124,7 @@ enum Flags {
     Fused=1<<5, // Has the given value been used?
     Fvoid=1<<6, // Is the node void (has no type)?
     Fpure=1<<7, // Is the node/IR pure?
+    Fmemb=1<<8, // Is the node a member value?
 };
 
 struct Node {
