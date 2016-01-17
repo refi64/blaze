@@ -80,7 +80,9 @@ void error(Location loc, const char* fm, ...);
 void warning(Location loc, const char* fm, ...);
 void note(Location loc, const char* fm, ...);
 
+// Returns the node where it was declared.
 Node* declared_here(Node* n);
+// Print a message about making the node mutable or variable.
 void make_mutvar(Node* n, int flag, int curflags);
 
 
@@ -88,7 +90,7 @@ void make_mutvar(Node* n, int flag, int curflags);
 struct GData {
     String* cname;
     List(Decl*) sons;
-    int done;
+    int done; // Has code for the item been generated yet? (Not always set!)
 };
 
 struct Type {
@@ -107,9 +109,11 @@ struct Type {
         } bkind;
     };
     String* name;
-    Node* n;
-    List(Type*) sons; // For Tfun: ret, args...
-    int rc;
+    // Tfun: ret, args...
+    // Tstruct: members...
+    // Tptr: base type
+    List(Type*) sons;
+    int rc; // Reference count.
     GData d;
 };
 
@@ -150,16 +154,26 @@ struct Node {
         Nmodule
     } kind;
     union {
-        struct { String* import, *exportc; }; // Nfun
+        struct {
+            String* import, *exportc; // C import name and export name.
+        }; // Nfun
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
     int flags;
     Location loc;
+    // Naddr: expr
+    // Nderef: expr
+    // Ncall: target, args...
     // Nlet: expr
+    // Nassign: target, rhs
     // Nreturn: [expr]
-    // Nfun: ret or NULL, args...
+    // Ntypeof: expr
+    // Nptr: expr
+    // Nstruct: members...
+    // Nfun: ret | NULL, args...
     // Narglist: Narg...
+    // Ndecl: type
     // Nbody: stmts...
     // Nmodule: tstmts...
     List(Node*) sons;
@@ -175,13 +189,16 @@ void node_free(Node* n);
 // Symbol table entry.
 struct STEntry {
     Node* n; // Only null with builtin types.
-    Type* override;
+    Type* override; // Entry type override; only used for builtin types.
     String* name;
+    /* This is the depth of the given entry in the symbol tables. If it is
+       negative, then it is an attribute, and the depth is its absolute value. */
     int level;
 };
 
 struct Symtab {
     DSHtab* tab;
+    // isol is used to give better errors in recursive lets.
     Symtab* parent, *isol;
     List(Symtab*) sons;
     int level;
@@ -198,6 +215,7 @@ Symtab* symtab_new();
 STEntry* symtab_find(Symtab* tab, const char* name);
 STEntry* symtab_finds(Symtab* tab, String* name);
 void symtab_add(Symtab* tab, String* name, STEntry* e);
+// Create a new table whose parent is `tab`.
 Symtab* symtab_sub(Symtab* tab);
 void symtab_free(Symtab* tab);
 
@@ -246,21 +264,27 @@ struct Decl {
     } kind;
     union {
         struct {
+            // Instructions inside the function.
             List(Instr*) sons;
+            // The variables the function declares.
             List(Var*) vars;
+            // The function arguments.
             List(Var*) args;
+            // Return type.
             Type* ret;
         }; // Dfun
     };
     String* name, *import, *exportc;
+    // The variable associated with the decl.
     Var* v;
+    // The decl's module.
     Module* m;
 };
 
 struct Var {
-    int id;
+    int id; // A unique id given to each variable.
     String* name; // NULL if temporary.
-    int uses;
+    int uses; // Number of uses.
     Decl* owner;
     Instr* ir; // Instruction that created this variable (if NULL, then argument).
     Type* type;
@@ -281,7 +305,9 @@ struct Instr {
     union {
         String* s;
     };
+    // Destination variable.
     Var* dst;
+    // Argument variables.
     List(Var*) v;
     int flags;
 };
