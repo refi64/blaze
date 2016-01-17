@@ -82,6 +82,14 @@ static int is_callable(Node* n) {
     return n->type && (n->type->kind == Tfun || n->flags & Ftype);
 }
 
+static List(Type*) arguments_of(Type* t) {
+    switch (t->kind) {
+    case Tstruct: return t->constr->sons;
+    case Tfun: return t->sons;
+    default: assert(0);
+    }
+}
+
 void type_incref(Type* t) {
     assert(t);
     ++t->rc;
@@ -113,6 +121,7 @@ void type(Node* n) {
         n->type->kind = Tstruct;
         n->type->name = string_clone(n->s);
         type_incref(n->type);
+        n->flags |= Ftype;
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
             if (n->sons[i]->kind == Nconstr) {
@@ -126,7 +135,6 @@ void type(Node* n) {
                 }
             }
         }
-        n->flags |= Ftype;
         break;
     case Nconstr: case Nfun:
         if (n->sons[0]) {
@@ -140,8 +148,11 @@ void type(Node* n) {
         if (n->sons[0]) {
             list_append(n->type->sons, n->sons[0]->type);
             type_incref(n->sons[0]->type);
-        }
-        else list_append(n->type->sons, NULL);
+        } else if (n->kind == Nconstr) {
+            assert(n->parent->flags & Ftype);
+            list_append(n->type->sons, n->parent->type);
+            type_incref(n->type->sons[0]);
+        } else list_append(n->type->sons, NULL);
         for (i=0; i<list_len(n->sons[1]->sons); ++i) {
             list_append(n->type->sons, n->sons[1]->sons[i]->type);
             type_incref(n->sons[1]->sons[i]->type);
@@ -262,7 +273,8 @@ void type(Node* n) {
     case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
-            force_typed_expr_context(n->sons[i]);
+            if (!(n->sons[i]->flags & Ftype))
+                force_typed_expr_context(n->sons[i]);
         }
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
         else if (!is_callable(n->sons[0])) {
@@ -273,16 +285,17 @@ void type(Node* n) {
             n->type = anytype->override;
         } else {
             Type* ft = n->sons[0]->type;
-            int ngiven = list_len(n->sons)-1, nexpect = list_len(ft->sons)-1;
+            List(Type*) expected = arguments_of(ft);
+            int ngiven = list_len(n->sons)-1, nexpect = list_len(expected)-1;
             if (ngiven != nexpect) {
                 error(n->loc, "function expected %d argument(s), not %d",
                       nexpect, ngiven);
                 declared_here(n->sons[0]);
             }
             for (i=1; i<min(ngiven+1, nexpect+1); ++i)
-                if (!typematch(n->sons[i]->type, ft->sons[i])) {
+                if (!typematch(n->sons[i]->type, expected[i])) {
                     String* expects, *givens;
-                    expects = typestring(ft->sons[i]);
+                    expects = typestring(expected[i]);
                     givens = typestring(n->sons[i]->type);
                     error(n->sons[i]->loc, "function expected argument of type "
                                            "'%s', not '%s'", expects->str,
@@ -292,7 +305,7 @@ void type(Node* n) {
                     string_free(expects);
                     string_free(givens);
                 }
-            if (ft->sons[0]) n->type = ft->sons[0];
+            if (expected[0]) n->type = expected[0];
             else {
                 n->type = anytype->override;
                 n->flags |= Fvoid;
