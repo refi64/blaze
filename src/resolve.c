@@ -37,6 +37,7 @@ static void resolve0(Node* n) {
         for (i=0; i<list_len(n->sons); ++i) {
             if (!n->sons[i]) continue;
             n->sons[i]->parent = n;
+            n->sons[i]->func = n;
             resolve0(n->sons[i]);
         }
         break;
@@ -57,6 +58,7 @@ static void resolve0(Node* n) {
         for (i=0; i<list_len(n->sons); ++i) {
             n->tab = symtab_sub(n->tab);
             n->sons[i]->parent = n;
+            n->sons[i]->func = n->func;
             resolve0(n->sons[i]);
         }
         break;

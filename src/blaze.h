@@ -162,7 +162,7 @@ struct Node {
     // Nbody: stmts...
     // Nmodule: tstmts...
     List(Node*) sons;
-    Node* parent;
+    Node* parent, *func;
     STEntry* e; // Only relevant on some kinds (e.g. Nid).
     Symtab* tab; // NOTE: Only Nmodule, Nfun free their symbol tables.
     Var* v;

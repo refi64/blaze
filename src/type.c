@@ -78,11 +78,6 @@ static int types_are_compat(Type* a, Type* b) {
     }
 }
 
-static Node* get_function(Node* n) {
-    while (n->kind != Nfun) n = n->parent;
-    return n;
-}
-
 void type_incref(Type* t) {
     assert(t);
     ++t->rc;
@@ -163,7 +158,8 @@ void type(Node* n) {
         type_incref(n->type);
         break;
     case Nreturn:
-        f = get_function(n);
+        f = n->func;
+        assert(f);
         if (n->sons) {
             type(n->sons[0]);
             force_typed_expr_context(n->sons[0]);
