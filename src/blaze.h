@@ -240,7 +240,6 @@ struct Decl {
     enum {
         Dfun,
         Dglobal,
-        Dstruct,
     } kind;
     union {
         struct {
@@ -249,7 +248,6 @@ struct Decl {
             List(Var*) args;
             Type* ret;
         }; // Dfun
-        List(Decl*) members; // Dstruct
     };
     String* name, *import, *exportc;
     Var* v;

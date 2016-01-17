@@ -92,9 +92,6 @@ void decl_dump(Decl* d) {
     case Dglobal:
         printf("global\n");
         break;
-    case Dstruct:
-        // XXX
-        break;
     }
 }
 

@@ -118,14 +118,6 @@ static void igen_global(Module* m, Decl* d, Node* n) {
     d->v = n->v = var_new(d, NULL, n->type, n->s);
 }
 
-static void igen_struct(Module* m, Decl* d, Node* n) {
-    int i;
-    assert(n->kind == Nstruct);
-    d->kind = Dstruct;
-    for (i=0; i<list_len(n->sons); ++i)
-        list_append(d->members, igen_decl(m, n->sons[i]));
-}
-
 static Decl* igen_decl(Module* m, Node* n) {
     Decl* d = new(Decl);
     d->name = string_clone(n->s);
@@ -138,10 +130,7 @@ static Decl* igen_decl(Module* m, Node* n) {
     case Ndecl:
         igen_global(m, d, n);
         break;
-    case Nstruct:
-        igen_struct(m, d, n);
-        break;
-    default:
+    case Nstruct: default:
         string_free(d->name);
         free(d);
         return NULL;

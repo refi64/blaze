@@ -38,6 +38,8 @@ static void remove_useless_news(Decl* d) {
 }
 
 static void opt_decl(Decl* d) {
+    if (d->kind != Dfun) return;
+
     remove_useless_news(d);
     while (remove_unused_vars(d));
 }
