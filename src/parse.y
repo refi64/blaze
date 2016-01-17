@@ -161,7 +161,7 @@ arglist :         { N($$, Narglist, yylloc) }
 arglist2 : decl { N($$, Narglist, $1->loc); list_append($$->sons, $1); }
          | arglist2 TCOMMA decl { $$ = $1; list_append($$->sons, $3); }
 
-global : TGLOBAL modspec decl { $$ = $3; $$->loc = $1.loc; $$->flags |= $2; }
+global : TGLOBAL modspec decl { $$ = $3; $$->flags |= $2; }
 
 decl : id TCOLON texpr {
     N($$, Ndecl, $1->loc);

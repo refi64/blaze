@@ -78,6 +78,10 @@ static int types_are_compat(Type* a, Type* b) {
     }
 }
 
+static int is_callable(Node* n) {
+    return n->type && (n->type->kind == Tfun || n->flags & Ftype);
+}
+
 void type_incref(Type* t) {
     assert(t);
     ++t->rc;
@@ -249,8 +253,10 @@ void type(Node* n) {
             force_typed_expr_context(n->sons[i]);
         }
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
-        else if (n->sons[0]->type->kind != Tfun) {
-            error(n->loc, "cannot call non-function");
+        else if (!is_callable(n->sons[0])) {
+            String* ts = typestring(n->sons[0]->type);
+            error(n->loc, "cannot call non-callable type '%s'", ts->str);
+            string_free(ts);
             declared_here(n->sons[0]);
             n->type = anytype->override;
         } else {
