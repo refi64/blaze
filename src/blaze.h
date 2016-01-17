@@ -88,6 +88,7 @@ void make_mutvar(Node* n, int flag, int curflags);
 struct GData {
     String* cname;
     List(Decl*) sons;
+    int done;
 };
 
 struct Type {

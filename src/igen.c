@@ -13,7 +13,10 @@ static void igen_struct(Module* m, Node* n) {
     assert(n->kind == Nstruct);
     for (i=0; i<list_len(n->sons); ++i) {
         Decl* d = igen_decl(m, n->sons[i]);
-        if (d) list_append(n->type->d.sons, d);
+        if (d) {
+            list_append(n->type->d.sons, d);
+            if (d->kind == Dfun) list_append(m->decls, d);
+        }
     }
 }
 
@@ -107,6 +110,11 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     d->kind = Dfun;
     assert(n->sons[1]->kind == Narglist);
     d->v = n->v = var_new(d, NULL, n->type, n->s);
+
+    if (n->parent->kind == Nstruct) {
+        Var* v = var_new(d, NULL, n->parent->type, NULL);
+        list_append(d->args, v);
+    }
 
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
         Node* arg = n->sons[1]->sons[i];

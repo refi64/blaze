@@ -66,10 +66,21 @@ static void cgen_typedef(Type* t, FILE* output) {
     }
 }
 
+static void cgen_decl0(Decl* d, FILE* output);
+
 static void cgen_typeimpl(Type* t, FILE* output) {
-    if (t->kind != Tstruct) return;
-    fprintf(output, "struct %s {", CNAME(t));
+    int i;
+
+    if (t->kind != Tstruct || t->d.done) return;
+    fprintf(output, "struct %s {\n", CNAME(t));
+    for (i=0; i<list_len(t->d.sons); ++i) {
+        Decl* d = t->d.sons[i];
+        if (d->kind != Dglobal) continue;
+        fputs("    ", output);
+        cgen_decl0(d, output);
+    }
     fputs("};\n", output);
+    t->d.done = 1;
 }
 
 static void cgen_ir(Instr* ir, FILE* output) {
@@ -114,6 +125,7 @@ static void cgen_ir(Instr* ir, FILE* output) {
 
 static void cgen_proto(Decl* d, FILE* output) {
     int i;
+
     assert(d->kind == Dfun);
     if (!d->exportc && !d->import) fputs("static ", output);
     fprintf(output, "%s %s(", CNAME(d->v->type->sons[0]), CNAME(d->v));
