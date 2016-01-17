@@ -313,6 +313,7 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
+    case Nattr: break; // XXX
     case Nid:
         if (n->e) {
             if (n->e->n) {

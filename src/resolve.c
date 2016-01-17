@@ -94,6 +94,10 @@ static void resolve0(Node* n) {
             resolve0(n->sons[i]);
         }
         break;
+    case Nattr:
+        n->sons[0]->parent = n;
+        resolve0(n->sons[0]);
+        break;
     case Nid: break;
     case Nint: break;
     case Nsons: assert(0);
@@ -146,6 +150,9 @@ static void resolve1(Node* n) {
         break;
     case Ncall:
         for (i=0; i<list_len(n->sons); ++i) resolve1(n->sons[i]);
+        break;
+    case Nattr:
+        resolve1(n->sons[0]);
         break;
     case Nid:
         if (!(n->e = symtab_finds(n->tab, n->s))) {

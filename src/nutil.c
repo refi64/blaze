@@ -10,6 +10,7 @@ static void node_dump2(Node* n, int indent) {
     case Nderef: put("Nderef"); break;
     case Naddr: put("Naddr"); break;
     case Ncall: put("Ncall"); break;
+    case Nattr: put("Nattr (s:%s)", n->s->str); break;
     case Nptr: put("Nptr"); break;
     case Nlet: put("Nlet (s:%s)", n->s->str); break;
     case Nassign: put("Nassign"); break;
@@ -56,6 +57,7 @@ void node_free(Node* n) {
         symtab_free(n->tab);
         break;
     case Nid: case Nint: case Nstruct: case Nfun: case Nlet: case Ndecl:
+    case Nattr:
         string_free(n->s);
         if (n->kind == Nfun) {
             if (n->import) string_free(n->import);

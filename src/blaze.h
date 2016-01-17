@@ -142,6 +142,7 @@ struct Node {
         Naddr,
         Nderef,
         Ncall,
+        Nattr,
         Nlet,
         Nassign,
         Nreturn,
@@ -168,6 +169,7 @@ struct Node {
     // Naddr: expr
     // Nderef: expr
     // Ncall: target, args...
+    // Nattr: base (the attribute is in s)
     // Nlet: expr
     // Nassign: target, rhs
     // Nreturn: [expr]

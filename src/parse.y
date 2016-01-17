@@ -47,6 +47,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TINDERROR
 
 %token <t> TARROW
+%token <t> TDOT
 %token <t> TLP
 %token <t> TRP
 %token <t> TCOMMA
@@ -72,7 +73,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSTRING
 
 %right UTAND UTSTAR
-%left TLP
+%left TDOT TLP
 
 %type <n> tstmt
 %type <n> struct
@@ -103,6 +104,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> call
 %type <l> callargs
 %type <l> callargs2
+%type <n> attr
 
 %type <i> modspec
 
@@ -228,6 +230,7 @@ expr : name { $$ = $1; }
      | dec  { $$ = $1; }
      | ptr  { $$ = $1; }
      | call { $$ = $1; }
+     | attr { $$ = $1; }
 
 name : id { $$ = $1; $$->flags |= Faddr; }
 
@@ -264,6 +267,12 @@ callargs :           { $$ = NULL; }
 
 callargs2 : expr { $$ = NULL; list_append($$, $1); }
           | callargs2 TCOMMA expr { $$ = $1; list_append($$, $3); }
+
+attr : expr TDOT TID {
+    N($$, Nattr, $3.loc)
+    $$->s = $3.s;
+    list_append($$->sons, $1);
+}
 
 ws : | ws TNEWL
 /* eof : TEOF */

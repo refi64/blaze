@@ -81,6 +81,7 @@ void lex_free() { ds_hfree(kw); }
 "\\\n" { yycolumn = 1; }
 "\n"+ { yycolumn = 1; BEGIN indent; return TNEWL; }
 "->" { return TARROW; }
+"." { return TDOT; }
 "(" { return TLP; }
 ")" { return TRP; }
 "," { return TCOMMA; }
