@@ -74,7 +74,8 @@ void instr_free(Instr* ir) {
 
 void decl_dump(Decl* d) {
     int i;
-    printf("Decl %s ", d->name->str);
+    printf("Decl ");
+    if (d->name) printf("%s ", d->name->str);
     if (d->v) {
         putchar('(');
         var_dump(d->v);
@@ -104,7 +105,7 @@ void decl_free(Decl* d) {
     list_free(d->sons);
     list_free(d->vars);
     list_free(d->args);
-    string_free(d->name);
+    if (d->name) string_free(d->name);
     if (d->v) var_free(d->v);
     free(d);
 }
@@ -118,6 +119,11 @@ void module_free(Module* m) {
     int i;
     for (i=0; i<list_len(m->decls); ++i) decl_free(m->decls[i]);
     list_free(m->decls);
+    for (i=0; i<list_len(m->types); ++i) {
+        Type* t = m->types[i];
+        list_free(t->d.sons);
+        t->d.sons = NULL;
+    }
     list_free(m->types);
     free(m);
 }

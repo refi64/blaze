@@ -14,6 +14,7 @@ static void igen_struct(Module* m, Node* n) {
     for (i=0; i<list_len(n->sons); ++i) {
         Decl* d = igen_decl(m, n->sons[i]);
         if (d) {
+            d->flags |= Fmemb;
             list_append(n->type->d.sons, d);
             if (d->kind == Dfun) list_append(m->decls, d);
         }
@@ -105,15 +106,20 @@ static void igen_sons(Decl* d, Node* n) {
 }
 
 static void igen_func(Module* m, Decl* d, Node* n) {
+    Var* this = NULL;
     int i;
-    assert(n->kind == Nfun);
+
+    assert(n->kind == Nconstr || n->kind == Nfun);
     d->kind = Dfun;
     assert(n->sons[1]->kind == Narglist);
     d->v = n->v = var_new(d, NULL, n->type, n->s);
+    if (n->kind == Nconstr) n->parent->v = n->v;
 
     if (n->flags & Fmemb) {
-        Var* v = var_new(d, NULL, n->parent->type, NULL);
-        list_append(d->args, v);
+        this = var_new(d, NULL, n->parent->type, NULL);
+        this->uses = 1;
+        if (n->kind == Nconstr) list_append(d->vars, this);
+        else list_append(d->args, this);
     }
 
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
@@ -127,6 +133,14 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (n->sons[0]) d->ret = n->sons[0]->type;
     if (!n->import) igen_node(d, n->sons[2]);
     else d->import = n->import;
+
+    if (n->kind == Nconstr) {
+        Instr* ir = new(Instr);
+        ir->kind = Iret;
+        list_append(ir->v, this);
+        list_append(d->sons, ir);
+    }
+
     d->exportc = n->exportc;
 }
 
@@ -137,21 +151,19 @@ static void igen_global(Module* m, Decl* d, Node* n) {
 }
 
 static Decl* igen_decl(Module* m, Node* n) {
-    Decl* d;
-    if (n->kind == Nconstr) return; // XXX
-    d = new(Decl);
-    d->name = string_clone(n->s);
+    Decl* d = new(Decl);
+    if (n->s) d->name = string_clone(n->s);
     d->m = m;
 
     switch (n->kind) {
-    case Nfun:
+    case Nconstr: case Nfun:
         igen_func(m, d, n);
         break;
     case Ndecl:
         igen_global(m, d, n);
         break;
     case Nstruct: default:
-        string_free(d->name);
+        if (d->name) string_free(d->name);
         free(d);
         return NULL;
     }

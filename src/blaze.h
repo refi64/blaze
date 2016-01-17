@@ -107,7 +107,7 @@ struct Type {
             Tchar,
             Tbend
         } bkind; // Tbuiltin
-        Type* constr; // Tstruct
+        Type* constr;
     };
     String* name;
     // Tfun: ret, args...
@@ -129,7 +129,7 @@ enum Flags {
     Fused=1<<5, // Has the given value been used?
     Fvoid=1<<6, // Is the node void (has no type)?
     Fpure=1<<7, // Is the node/IR pure?
-    Fmemb=1<<8, // Is the node a member value?
+    Fmemb=1<<8, // Is the node/decl a member value?
 };
 
 struct Node {
@@ -282,6 +282,7 @@ struct Decl {
     Var* v;
     // The decl's module.
     Module* m;
+    int flags;
 };
 
 struct Var {
