@@ -100,8 +100,9 @@ static void cgen_typeimpl(Type* t, FILE* output) {
 
 static void cgen_ir(Instr* ir, FILE* output) {
     int i;
-    if (ir->kind == Inull) return;
     for (i=0; i<list_len(ir->v); ++i) generate_varname(ir->v[i]);
+    // The IR was optimized out by either iopt or cgen_decl1.
+    if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0)) return;
 
     fputs("    ", output);
     if (ir->dst && ir->dst->type) fprintf(output, "%s = ", CNAME(ir->dst));
@@ -173,10 +174,11 @@ static void cgen_decl1(Decl* d, FILE* output) {
     cgen_proto(d, output);
     fputs(" {\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
-        if (!d->vars[i]->type) continue;
-        generate_varname(d->vars[i]);
-        fprintf(output, "    %s %s;\n", CNAME(d->vars[i]->type),
-        CNAME(d->vars[i]));
+        Var* v = d->vars[i];
+        if (!v->type) continue;
+        generate_varname(v);
+        if (v->assign && v->uses == 1) --v->uses;
+        else fprintf(output, "    %s %s;\n", CNAME(v->type), CNAME(v));
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d->sons[i], output);
     fputs("}\n\n", output);

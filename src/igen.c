@@ -66,6 +66,7 @@ static Var* igen_node(Decl* d, Node* n) {
     case Nassign:
         ir->kind = Iset;
         list_append(ir->v, igen_address(d, n));
+        ir->v[0]->assign = 1;
         list_append(ir->v, igen_node(d, n->sons[1]));
         ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
         break;
