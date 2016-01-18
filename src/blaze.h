@@ -108,7 +108,7 @@ struct Type {
             Tbend
         } bkind; // Tbuiltin
         struct {
-            Type* constr;
+            Type** constr;
             Node* n;
         }; // Tstruct
     };
@@ -168,6 +168,7 @@ struct Node {
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
+    int typing; // Is this node being typed? (Used to locate recursion.)
     int flags;
     Location loc;
     // Naddr: expr

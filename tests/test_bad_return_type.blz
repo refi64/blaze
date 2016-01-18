@@ -61,10 +61,7 @@ ERROR
 :7:5: note: function declared here
     fun i:
         ~
-:9:19: error: type of expression is recursive
-    fun j() -> typeof(j):
-                      ~
-:9:5: note: j declared here
+:9:5: error: type is recursive
     fun j() -> typeof(j):
         ~
 :12:5: error: function is supposed to return a value

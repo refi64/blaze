@@ -84,7 +84,7 @@ static int is_callable(Node* n) {
 
 static List(Type*) arguments_of(Type* t) {
     switch (t->kind) {
-    case Tstruct: return t->constr->sons;
+    case Tstruct: return (*t->constr)->sons;
     case Tfun: return t->sons;
     default: assert(0);
     }
@@ -111,7 +111,17 @@ void type_decref(Type* t) {
 void type(Node* n) {
     Node* f;
     int i;
+
     assert(n);
+    if (n->type) return;
+    else if (n->typing) {
+        error(n->loc, "type is recursive");
+        n->type = anytype->override;
+        type_incref(n->type);
+        n->typing = 0;
+        return;
+    } else n->typing = 1;
+
     switch (n->kind) {
     case Nmodule: case Narglist: case Nbody:
         for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
@@ -124,17 +134,18 @@ void type(Node* n) {
         type_incref(n->type);
         n->flags |= Ftype;
         for (i=0; i<list_len(n->sons); ++i) {
-            type(n->sons[i]);
             if (n->sons[i]->kind == Nconstr) {
                 if (!n->constr) {
                     n->constr = n->sons[i];
-                    n->type->constr = n->sons[i]->type;
+                    n->type->constr = &n->constr->type;
                 }
                 else {
                     error(n->sons[i]->loc, "duplicate constructor");
                     note(n->constr->loc, "previous constructor here");
                 }
             }
+
+            type(n->sons[i]);
         }
         break;
     case Nconstr: case Nfun:
@@ -197,7 +208,7 @@ void type(Node* n) {
             if (!n->sons) {
                 error(n->loc, "function is supposed to return a value");
                 note(f->sons[0]->loc, "function return type declared here");
-                return;
+                break;
             }
             given = n->sons[0]->type;
             if (!typematch(ret, given)) {
@@ -338,6 +349,7 @@ void type(Node* n) {
     case Nid:
         if (n->e) {
             if (n->e->n) {
+                type(n->e->n);
                 n->type = n->e->n->type;
                 n->flags |= n->e->n->flags & Ftype;
             } else {
@@ -345,7 +357,7 @@ void type(Node* n) {
                 n->flags |= Ftype;
             }
         } else n->type = anytype->override;
-        if (n->type) type_incref(n->type);
+        type_incref(n->type);
         break;
     case Nint:
         n->type = builtin_types[Tint]->override;
@@ -353,4 +365,6 @@ void type(Node* n) {
         break;
     case Nsons: assert(0);
     }
+
+    n->typing = 0;
 }
