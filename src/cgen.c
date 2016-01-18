@@ -111,7 +111,7 @@ static void cgen_ir(Instr* ir, FILE* output) {
         fputc(')', output);
         break;
     case Iattr:
-        fprintf(output, "%s.%s", CNAME(ir->v[0]), ir->s->str);
+        fprintf(output, "%s.%s", CNAME(ir->v[0]), CNAME((*ir->av)));
         break;
     case Ideref:
         fprintf(output, "*%s", CNAME(ir->v[0]));

@@ -164,6 +164,7 @@ struct Node {
             String* import, *exportc; // C import name and export name.
         }; // Nfun
         Node* constr; // Nstruct
+        Node* attr; // Nattr
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
@@ -189,6 +190,7 @@ struct Node {
     STEntry* e; // Only relevant on some kinds (e.g. Nid).
     Symtab* tab; // NOTE: Only Nmodule, Nfun free their symbol tables.
     Var* v;
+    Decl* d;
 };
 void node_dump(Node* n);
 void node_free(Node* n);
@@ -314,12 +316,13 @@ struct Instr {
         Iint
     } kind;
     union {
-        String* s;
+        Var** av; // Iattr
     };
     // Destination variable.
     Var* dst;
     // Argument variables.
     List(Var*) v;
+    String* s;
     int flags;
 };
 

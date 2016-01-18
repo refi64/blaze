@@ -328,6 +328,9 @@ void type(Node* n) {
                 declared_here(n->sons[0]);
                 n->type = anytype->override;
             } else n->type = e->n->type;
+
+            assert(e->n);
+            n->attr = e->n;
         }
         type_incref(n->type);
         break;

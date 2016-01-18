@@ -75,6 +75,7 @@ static Var* igen_node(Decl* d, Node* n) {
     case Nattr:
         ir->kind = Iattr;
         list_append(ir->v, igen_node(d, n->sons[0]));
+        ir->av = &n->attr->d->v;
         ir->s = string_clone(n->s);
         ir->dst = var_new(d, ir, n->type, NULL);
         break;
@@ -174,6 +175,7 @@ static Decl* igen_decl(Module* m, Node* n) {
         return NULL;
     }
 
+    n->d = d;
     return d;
 }
 
