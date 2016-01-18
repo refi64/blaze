@@ -34,7 +34,8 @@ static void generate_varname(Var* v) {
         string_mergec(s, ')');
         v->d.cname = s;
     } else {
-        generate_basename('v', &v->d, v->name, v->base ? v->base->id : v->id);
+        if (v->base) v->d.cname = string_clone(v->base->d.cname);
+        else generate_basename('v', &v->d, v->name, v->id);
         if (v->av) {
             int i;
             for (i=0; i<list_len(v->av); ++i) {
