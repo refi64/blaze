@@ -272,6 +272,7 @@ attr : expr TDOT TID {
     N($$, Nattr, $3.loc)
     $$->s = $3.s;
     list_append($$->sons, $1);
+    $$->flags |= Faddr;
 }
 
 ws : | ws TNEWL

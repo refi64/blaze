@@ -321,6 +321,7 @@ void type(Node* n) {
             String* ts = typestring(n->sons[0]->type);
             error(n->sons[0]->loc, "'%s' is not a struct", ts->str);
             declared_here(n->sons[0]);
+            n->type = anytype->override;
         } else {
             STEntry* e = symtab_findl(n->sons[0]->type->n->tab, n->s);
             if (!e) {
