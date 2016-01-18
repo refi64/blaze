@@ -21,6 +21,18 @@ static void igen_struct(Module* m, Node* n) {
     }
 }
 
+static Var* instr_result(Decl* d, Instr* ir) {
+    if (ir) {
+        int i;
+        list_append(d->sons, ir);
+        for (i=0; i<list_len(ir->v); ++i) {
+            assert(ir->v[i]);
+            ++ir->v[i]->uses;
+        }
+        return ir->dst;
+    } else return NULL;
+}
+
 static Var* igen_address(Decl* d, Node* n) {
     Instr* ir = new(Instr);
     assert(n->sons[0]->flags & Faddr);
@@ -28,8 +40,7 @@ static Var* igen_address(Decl* d, Node* n) {
     list_append(ir->v, igen_node(d, n->sons[0]));
     ir->flags |= PUREFLAGS(ir->v[0]);
     ir->dst = var_new(d, ir, n->type, NULL);
-    list_append(d->sons, ir);
-    return ir->dst;
+    return instr_result(d, ir);
 }
 
 static Var* igen_node(Decl* d, Node* n) {
@@ -94,15 +105,7 @@ static Var* igen_node(Decl* d, Node* n) {
     case Narglist: case Ndecl: case Nsons: case Nptr: assert(0);
     }
 
-    if (ir) {
-        int i;
-        list_append(d->sons, ir);
-        for (i=0; i<list_len(ir->v); ++i) {
-            assert(ir->v[i]);
-            ++ir->v[i]->uses;
-        }
-        return ir->dst;
-    } else return NULL;
+    return instr_result(d, ir);
 }
 
 static void igen_sons(Decl* d, Node* n) {
