@@ -43,6 +43,17 @@ static Var* igen_address(Decl* d, Node* n) {
     return instr_result(d, ir);
 }
 
+static Var* igen_attr_chain(Decl* d, Var* v, Node* n) {
+    // Make sure the original attributes come FIRST.
+    if (n->kind != Nattr) {
+        v->base = igen_node(d, n);
+        ++v->base->uses;
+    } else {
+        igen_attr_chain(d, v, n->sons[0]);
+        list_append(v->av, &n->attr->d->v);
+    }
+}
+
 static Var* igen_node(Decl* d, Node* n) {
     Instr* ir = new(Instr);
     Var* v;
@@ -89,9 +100,7 @@ static Var* igen_node(Decl* d, Node* n) {
     case Nattr:
         free(ir);
         v = var_new(d, NULL, n->type, NULL);
-        list_append(v->av, &n->attr->d->v);
-        v->base = igen_node(d, n->sons[0]);
-        ++v->base->uses;
+        igen_attr_chain(d, v, n);
         return v;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
