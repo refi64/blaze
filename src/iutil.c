@@ -38,6 +38,7 @@ void instr_dump(Instr* ir) {
     case Ideref: printf("Ideref"); break;
     case Iaddr: printf("Iaddr"); break;
     case Icall: printf("Icall"); break;
+    case Iattr: printf("Iattr (s:%s)", ir->s->str); break;
     case Iint: printf("Iint (i:%s)", ir->s->str); break;
     }
 
@@ -65,7 +66,7 @@ void instr_dump(Instr* ir) {
 
 void instr_free(Instr* ir) {
     switch (ir->kind) {
-    case Iint: string_free(ir->s); break;
+    case Iint: case Iattr: string_free(ir->s); break;
     default: break;
     }
     list_free(ir->v);

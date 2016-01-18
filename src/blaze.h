@@ -310,6 +310,7 @@ struct Instr {
         Iaddr,
         Ideref,
         Icall,
+        Iattr,
         Iint
     } kind;
     union {
