@@ -27,7 +27,22 @@ static void generate_argname(Var* v) {
 }
 
 static void generate_varname(Var* v) {
-    generate_basename('v', &v->d, v->name, v->id);
+    if (v->deref) {
+        String* s = string_newz("(*", 2);
+        assert(v->base);
+        string_merge(s, v->base->d.cname);
+        string_mergec(s, ')');
+        v->d.cname = s;
+    } else {
+        generate_basename('v', &v->d, v->name, v->base ? v->base->id : v->id);
+        if (v->av) {
+            int i;
+            for (i=0; i<list_len(v->av); ++i) {
+                string_mergec(v->d.cname, '.');
+            string_merge(v->d.cname, (*v->av[i])->d.cname);
+            }
+        }
+    }
 }
 
 static void generate_declname(Decl* d) {
@@ -86,8 +101,11 @@ static void cgen_typeimpl(Type* t, FILE* output) {
 static void cgen_ir(Instr* ir, FILE* output) {
     int i;
     if (ir->kind == Inull) return;
+    for (i=0; i<list_len(ir->v); ++i) generate_varname(ir->v[i]);
+
     fputs("    ", output);
     if (ir->dst && ir->dst->type) fprintf(output, "%s = ", CNAME(ir->dst));
+
     switch (ir->kind) {
     case Inull: assert(0);
     case Iret:
@@ -110,14 +128,9 @@ static void cgen_ir(Instr* ir, FILE* output) {
         }
         fputc(')', output);
         break;
-    case Iattr:
-        fprintf(output, "%s.%s", CNAME(ir->v[0]), CNAME((*ir->av)));
-        break;
-    case Ideref:
-        fprintf(output, "*%s", CNAME(ir->v[0]));
-        break;
     case Iaddr:
-        fprintf(output, "&%s", CNAME(ir->v[0]));
+        if (ir->v[0]->deref) fputs(CNAME(ir->v[0]->base), output);
+        else fprintf(output, "&%s", CNAME(ir->v[0]));
         break;
     case Iint:
         fputs(ir->s->str, output);

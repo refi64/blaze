@@ -17,7 +17,20 @@ Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
 
 void var_dump(Var* v) {
     assert(v);
-    printf("Var %d", v->id);
+    printf("Var ");
+    if (v->deref) {
+        printf("*(");
+        var_dump(v->base);
+        putchar(')');
+    } else if (v->av) {
+        int i;
+        printf("%d", v->base->id);
+        for (i=0; i<list_len(v->av); ++i) {
+            printf(".(");
+            var_dump(*v->av[i]);
+            putchar(')');
+        }
+    } else printf("%d", v->id);
     if (v->name) printf(" (%s)", v->name->str);
     if (!v->type) printf(" void");
 }
@@ -35,10 +48,8 @@ void instr_dump(Instr* ir) {
     case Iret: printf("Iret"); break;
     case Inew: printf("Inew"); break;
     case Iset: printf("Iset"); break;
-    case Ideref: printf("Ideref"); break;
     case Iaddr: printf("Iaddr"); break;
     case Icall: printf("Icall"); break;
-    case Iattr: printf("Iattr (s:%s)", ir->s->str); break;
     case Iint: printf("Iint (i:%s)", ir->s->str); break;
     }
 
@@ -66,7 +77,7 @@ void instr_dump(Instr* ir) {
 
 void instr_free(Instr* ir) {
     switch (ir->kind) {
-    case Iint: case Iattr: string_free(ir->s); break;
+    case Iint: string_free(ir->s); break;
     default: break;
     }
     list_free(ir->v);

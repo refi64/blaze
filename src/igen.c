@@ -45,6 +45,7 @@ static Var* igen_address(Decl* d, Node* n) {
 
 static Var* igen_node(Decl* d, Node* n) {
     Instr* ir = new(Instr);
+    Var* v;
     int i;
     switch (n->kind) {
     case Nbody:
@@ -69,11 +70,12 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
         break;
     case Nderef:
-        ir->kind = Ideref;
-        list_append(ir->v, igen_node(d, n->sons[0]));
-        ir->dst = var_new(d, ir, n->type, NULL);
-        ir->flags |= PUREFLAGS(ir->v[0]);
-        break;
+        free(ir);
+        v = var_new(d, NULL, n->type, NULL);
+        v->deref = 1;
+        v->base = igen_node(d, n->sons[0]);
+        ++v->base->uses;
+        return v;
     case Naddr:
         free(ir);
         return igen_address(d, n);
@@ -84,12 +86,12 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
         break;
     case Nattr:
-        ir->kind = Iattr;
-        list_append(ir->v, igen_node(d, n->sons[0]));
-        ir->av = &n->attr->d->v;
-        ir->s = string_clone(n->s);
-        ir->dst = var_new(d, ir, n->type, NULL);
-        break;
+        free(ir);
+        v = var_new(d, NULL, n->type, NULL);
+        list_append(v->av, &n->attr->d->v);
+        v->base = igen_node(d, n->sons[0]);
+        ++v->base->uses;
+        return v;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
         free(ir);

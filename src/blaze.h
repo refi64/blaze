@@ -300,6 +300,13 @@ struct Var {
     Decl* owner;
     Instr* ir; // Instruction that created this variable (if NULL, then argument).
     Type* type;
+
+    /* A "variable" may actually be a dereference or an attribute. This is to fix
+       later complications with codegen. */
+
+    int deref; // Is this a deref?
+    List(Var**) av; // The attribute variables.
+    Var* base; // If either of the above are truthy, this is the base var.
     GData d;
 };
 
@@ -310,14 +317,9 @@ struct Instr {
         Iset,
         Iret,
         Iaddr,
-        Ideref,
         Icall,
-        Iattr,
         Iint
     } kind;
-    union {
-        Var** av; // Iattr
-    };
     // Destination variable.
     Var* dst;
     // Argument variables.
