@@ -223,8 +223,9 @@ void type(Node* n) {
                 string_free(givens);
             }
         } else if (n->sons) {
-            error(n->sons[0]->loc, "function should not return a value");
-            note(f->loc, "function declared here");
+            const char* k = f->kind == Nconstr ? "constructor" : "function";
+            error(n->sons[0]->loc, "%s should not return a value", k);
+            note(f->loc, "%s declared here", k);
         }
         break;
     case Ntypeof:
