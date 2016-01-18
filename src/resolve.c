@@ -1,5 +1,7 @@
 #include "blaze.h"
 
+#define SVFLAGS (Fmut | Fvar | Fcst)
+
 static void resolve0(Node* n) {
     STEntry* e;
     int i;
@@ -140,7 +142,7 @@ static void resolve1(Node* n) {
             make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
         }
         break;
-    case Ntypeof: case Nptr: case Nderef: case Nattr: resolve1(n->sons[0]); break;
+    case Ntypeof: case Nptr: case Nderef: resolve1(n->sons[0]); break;
     case Naddr:
         resolve1(n->sons[0]);
         if (!(n->sons[0]->flags & Faddr)) {
@@ -150,6 +152,10 @@ static void resolve1(Node* n) {
         break;
     case Ncall:
         for (i=0; i<list_len(n->sons); ++i) resolve1(n->sons[i]);
+        break;
+    case Nattr:
+        resolve1(n->sons[0]);
+        n->flags |= n->sons[0]->flags & SVFLAGS;
         break;
     case Nid:
         if (!(n->e = symtab_finds(n->tab, n->s))) {
@@ -165,8 +171,7 @@ static void resolve1(Node* n) {
                   n->s->str);
             if (n->e->n) declared_here(n->e->n);
         } else if (n->e->n) {
-            n->flags |= (n->e->n->flags & Fmut) | (n->e->n->flags & Fvar) |
-                        (n->e->n->flags & Fcst);
+            n->flags |= n->e->n->flags & SVFLAGS;
             n->e->n->flags |= Fused;
             n->flags |= Fused;
         }
