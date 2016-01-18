@@ -142,7 +142,11 @@ static void resolve1(Node* n) {
             make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
         }
         break;
-    case Ntypeof: case Nptr: case Nderef: resolve1(n->sons[0]); break;
+    case Ntypeof: case Nptr: resolve1(n->sons[0]); break;
+    case Nderef:
+        resolve1(n->sons[0]);
+        n->flags |= n->sons[0]->flags & SVFLAGS;
+        break;
     case Naddr:
         resolve1(n->sons[0]);
         if (!(n->sons[0]->flags & Faddr)) {

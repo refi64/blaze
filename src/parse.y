@@ -248,6 +248,7 @@ dec : TINT {
 ptr : TSTAR expr {
     N($$, Nderef, $1.loc)
     list_append($$->sons, $2);
+    $$->flags |= Faddr;
 } %prec UTAND
     | TAND expr {
     N($$, Naddr, $1.loc)
