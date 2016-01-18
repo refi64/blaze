@@ -39,7 +39,7 @@ static void generate_varname(Var* v) {
             int i;
             for (i=0; i<list_len(v->av); ++i) {
                 string_mergec(v->d.cname, '.');
-            string_merge(v->d.cname, (*v->av[i])->d.cname);
+                string_merge(v->d.cname, (*v->av[i])->d.cname);
             }
         }
     }
