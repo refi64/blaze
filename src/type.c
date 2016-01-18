@@ -120,6 +120,7 @@ void type(Node* n) {
         n->type = new(Type);
         n->type->kind = Tstruct;
         n->type->name = string_clone(n->s);
+        n->type->n = n;
         type_incref(n->type);
         n->flags |= Ftype;
         for (i=0; i<list_len(n->sons); ++i) {
@@ -313,7 +314,23 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
-    case Nattr: break; // XXX
+    case Nattr:
+        type(n->sons[0]);
+        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
+        else if (n->sons[0]->type->kind != Tstruct) {
+            String* ts = typestring(n->sons[0]->type);
+            error(n->sons[0]->loc, "'%s' is not a struct", ts->str);
+            declared_here(n->sons[0]);
+        } else {
+            STEntry* e = symtab_findl(n->sons[0]->type->n->tab, n->s);
+            if (!e) {
+                error(n->loc, "undefined attribute '%s'", n->s->str);
+                declared_here(n->sons[0]);
+                n->type = anytype->override;
+            } else n->type = e->n->type;
+        }
+        type_incref(n->type);
+        break;
     case Nid:
         if (n->e) {
             if (n->e->n) {

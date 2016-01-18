@@ -74,11 +74,15 @@ STEntry* symtab_finds(Symtab* tab, String* name) {
     assert(name);
 
     while (tab) {
-        STEntry* e = ds_hget(tab->tab, name);
+        STEntry* e = symtab_findl(tab, name);
         if (e) return e;
         tab = tab->parent;
     }
     return NULL;
+}
+STEntry* symtab_findl(Symtab* tab, String* name) {
+    assert(name);
+    return (STEntry*)ds_hget(tab->tab, name);
 }
 
 void symtab_add(Symtab* tab, String* name, STEntry* e) {

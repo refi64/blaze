@@ -140,7 +140,7 @@ static void resolve1(Node* n) {
             make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
         }
         break;
-    case Ntypeof: case Nptr: case Nderef: resolve1(n->sons[0]); break;
+    case Ntypeof: case Nptr: case Nderef: case Nattr: resolve1(n->sons[0]); break;
     case Naddr:
         resolve1(n->sons[0]);
         if (!(n->sons[0]->flags & Faddr)) {
@@ -150,9 +150,6 @@ static void resolve1(Node* n) {
         break;
     case Ncall:
         for (i=0; i<list_len(n->sons); ++i) resolve1(n->sons[i]);
-        break;
-    case Nattr:
-        resolve1(n->sons[0]);
         break;
     case Nid:
         if (!(n->e = symtab_finds(n->tab, n->s))) {

@@ -107,7 +107,10 @@ struct Type {
             Tchar,
             Tbend
         } bkind; // Tbuiltin
-        Type* constr;
+        struct {
+            Type* constr;
+            Node* n;
+        }; // Tstruct
     };
     String* name;
     // Tfun: ret, args...
@@ -219,6 +222,7 @@ void stentry_free(STEntry* e);
 Symtab* symtab_new();
 STEntry* symtab_find(Symtab* tab, const char* name);
 STEntry* symtab_finds(Symtab* tab, String* name);
+STEntry* symtab_findl(Symtab* tab, String* name);
 void symtab_add(Symtab* tab, String* name, STEntry* e);
 // Create a new table whose parent is `tab`.
 Symtab* symtab_sub(Symtab* tab);
