@@ -4,6 +4,7 @@
 
 static void resolve0(Node* n) {
     STEntry* e;
+    String* s;
     int i;
     assert(n && (n->kind == Nmodule || n->parent));
     if (n->kind != Nmodule && n->kind != Nfun && !n->tab) n->tab = n->parent->tab;
@@ -19,6 +20,11 @@ static void resolve0(Node* n) {
         e = stentry_new(n, n->s, NULL);
         n->tab = symtab_sub(n->parent->tab);
         symtab_add(n->parent->tab, n->s, e);
+
+        s = string_new("@");
+        e = stentry_new(n, s, NULL);
+        symtab_add(n->tab, s, e);
+        string_free(s);
 
         n->tab->level = -n->tab->level;
 

@@ -136,7 +136,8 @@ members : indent members2 unindent { $$ = $2; }
 members2 : member { $$ = NULL; list_append($$, $1); }
          | members2 sep member { $$ = $1; list_append($$, $3); }
 
-member : new | fun | decl
+member : new | fun
+       | modspec decl { $$ = $2; $$->flags |= $1; }
 
 new : TNEW arglist TCOLON body {
     N($$, Nconstr, $1.loc);
