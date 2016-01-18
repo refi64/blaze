@@ -58,6 +58,8 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSTAR
 %token <t> TAND
 
+%token <t> TAT
+
 %token <t> TFUN
 %token <t> TLET
 %token <t> TMUT
@@ -98,12 +100,14 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> typeof
 %type <n> expr
 %type <n> name
+%type <n> this
 %type <n> id
 %type <n> dec
 %type <n> ptr
 %type <n> call
 %type <l> callargs
 %type <l> callargs2
+%type <n> lattr
 %type <n> attr
 
 %type <i> modspec
@@ -232,11 +236,17 @@ expr : name { $$ = $1; }
      | call { $$ = $1; }
      | attr { $$ = $1; }
 
-name : id { $$ = $1; $$->flags |= Faddr; }
+name : id   { $$ = $1; $$->flags |= Faddr; }
+     | this { $$ = $1; $$->flags |= Faddr; }
 
 id : TID {
     N($$, Nid, $1.loc)
     $$->s = $1.s;
+}
+
+this : TAT {
+    N($$, Nid, $1.loc)
+    $$->s = string_new("@");
 }
 
 dec : TINT {
@@ -269,9 +279,12 @@ callargs :           { $$ = NULL; }
 callargs2 : expr { $$ = NULL; list_append($$, $1); }
           | callargs2 TCOMMA expr { $$ = $1; list_append($$, $3); }
 
-attr : expr TDOT TID {
-    N($$, Nattr, $3.loc)
-    $$->s = $3.s;
+lattr : expr TDOT { $$ = $1; }
+      | this      { $$ = $1; }
+
+attr : lattr TID {
+    N($$, Nattr, $2.loc)
+    $$->s = $2.s;
     list_append($$->sons, $1);
     $$->flags |= Faddr;
 }

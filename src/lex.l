@@ -92,6 +92,8 @@ void lex_free() { ds_hfree(kw); }
 "*" { return TSTAR; }
 "&" { return TAND; }
 
+"@" { return TAT; }
+
 [a-zA-Z_][a-zA-Z0-9_]* {
     intptr_t p = (intptr_t)ds_hget(kw, yytext);
     if (p) return (int)p;
