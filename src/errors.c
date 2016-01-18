@@ -58,7 +58,7 @@ Node* declared_here(Node* n) {
         note(n->e->n->loc, "%s declared here", n->s->str);
         t = declared_here(n->e->n);
         break;
-    case Nlet:
+    case Nlet: case Nderef:
         t = declared_here(n->sons[0]);
         break;
     default: return NULL;
