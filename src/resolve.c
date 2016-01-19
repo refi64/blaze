@@ -21,8 +21,11 @@ static void resolve0(Node* n) {
         n->tab = symtab_sub(n->parent->tab);
         symtab_add(n->parent->tab, n->s, e);
 
+        // Setup @ magic variable.
         s = string_new("@");
-        e = stentry_new(n, s, NULL);
+        n->this = new(Node);
+        n->this->kind = Nid;
+        e = stentry_new(n->this, s, NULL);
         symtab_add(n->tab, s, e);
         string_free(s);
 

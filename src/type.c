@@ -132,6 +132,10 @@ void type(Node* n) {
         n->type->name = string_clone(n->s);
         n->type->n = n;
         type_incref(n->type);
+
+        n->this->type = n->type;
+        type_incref(n->this->type);
+
         n->flags |= Ftype;
         for (i=0; i<list_len(n->sons); ++i) {
             if (n->sons[i]->kind == Nconstr) {

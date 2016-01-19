@@ -163,7 +163,9 @@ struct Node {
         struct {
             String* import, *exportc; // C import name and export name.
         }; // Nfun
-        Node* constr; // Nstruct
+        struct {
+            Node* constr, *this;
+        }; // Nstruct
         Node* attr; // Nattr
     };
     String* s;

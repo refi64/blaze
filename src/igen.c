@@ -142,6 +142,8 @@ static void igen_func(Module* m, Decl* d, Node* n) {
         this->uses = 1;
         if (n->kind == Nconstr) list_append(d->vars, this);
         else list_append(d->args, this);
+
+        n->parent->this->v = this;
     }
 
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
