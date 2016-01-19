@@ -344,10 +344,11 @@ void type(Node* n) {
                 error(n->loc, "undefined attribute '%s'", n->s->str);
                 declared_here(n->sons[0]);
                 n->type = anytype->override;
-            } else n->type = e->n->type;
-
-            assert(e->n);
-            n->attr = e->n;
+            } else {
+                assert(e->n);
+                n->type = e->n->type;
+                n->attr = e->n;
+            }
         }
         type_incref(n->type);
         break;
