@@ -113,6 +113,7 @@ struct Type {
             Type** constr;
             Node* n;
         }; // Tstruct
+        int mut; // Tptr
     };
     String* name;
     // Tfun: ret, args...
@@ -126,7 +127,7 @@ struct Type {
 enum Flags {
     Ftype=1<<0, // Type?
     Faddr=1<<1, // Addressable?
-    Fmut =1<<2, // Mutable?
+    Fmut =1<<2, // Mutable? (Can be set on ptr type nodes to refer to memory.)
     Fvar =1<<3, // Variable?
     Fmv  =Fmut
          |Fvar, // Mutable or variable?

@@ -150,25 +150,9 @@ static void resolve1(Node* n) {
     case Nassign:
         resolve1(n->sons[0]);
         resolve1(n->sons[1]);
-        if (n->kind == Nid && !n->e) break;
-        if (n->sons[0]->flags & Fcst) {
-            error(n->sons[0]->loc, "left-hand side of assignment cannot be "
-                                   "constant");
-            declared_here(n->sons[0]);
-        } else if (!(n->sons[0]->flags & Faddr)) {
-            error(n->sons[0]->loc, "left-hand side of assignment must be "
-                                   "addressable");
-            declared_here(n->sons[0]);
-        } else if (!(n->sons[0]->flags & Fvar)) {
-            error(n->sons[0]->loc, "left-hand side of assignment must be "
-                                   "variable");
-            make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
-        }
         break;
-    case Ntypeof: case Nptr: resolve1(n->sons[0]); break;
-    case Nderef: case Nindex:
+    case Ntypeof: case Nptr: case Nderef: case Nindex:
         resolve1(n->sons[0]);
-        n->flags |= n->sons[0]->flags & SVFLAGS;
         break;
     case Naddr:
         resolve1(n->sons[0]);

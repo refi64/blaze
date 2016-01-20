@@ -102,6 +102,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> assign
 %type <n> return
 %type <n> texpr
+%type <i> mutptr
 %type <n> typeof
 %type <n> expr
 %type <n> name
@@ -232,7 +233,14 @@ return : TRETURN expr {
 
 texpr : name   { $$ = $1; }
       | typeof { $$ = $1; }
-      | TSTAR texpr { N($$, Nptr, $1.loc); list_append($$->sons, $2); }
+      | TSTAR mutptr texpr {
+          N($$, Nptr, $1.loc);
+          list_append($$->sons, $3);
+          $$->flags |= $2;
+      }
+
+mutptr :      { $$ = 0; }
+       | TMUT { $$ = Fmut; }
 
 typeof : TTYPEOF TLP expr TRP {
     N($$, Ntypeof, $1.loc)

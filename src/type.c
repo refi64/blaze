@@ -190,6 +190,21 @@ void type(Node* n) {
     case Nassign:
         type(n->sons[0]);
         type(n->sons[1]);
+        if (n->sons[0]->flags & Fcst) {
+            error(n->sons[0]->loc, "left-hand side of assignment cannot be "
+                                   "constant");
+            declared_here(n->sons[0]);
+        } else if (!(n->sons[0]->flags & Faddr)) {
+            error(n->sons[0]->loc, "left-hand side of assignment must be "
+                                   "addressable");
+            declared_here(n->sons[0]);
+        } else if (!(n->sons[0]->flags & Fvar)) {
+            error(n->sons[0]->loc, "left-hand side of assignment must be "
+                                   "variable");
+            if (n->sons[0]->kind == Nid)
+                make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
+            else  make_mutvar(declared_here(n->sons[0]), Fmut, n->sons[0]->flags);
+        }
         if (!typematch(n->sons[0]->type, n->sons[1]->type)) {
             String* ls=typestring(n->sons[0]->type),
                   * rs=typestring(n->sons[1]->type);
@@ -260,6 +275,7 @@ void type(Node* n) {
             n->type->kind = Tptr;
             list_append(n->type->sons, n->sons[0]->type);
             type_incref(n->sons[0]->type);
+            if (n->flags & Fmut) n->type->mut = 1;
         }
         type_incref(n->type);
         n->flags |= Ftype;
@@ -268,8 +284,11 @@ void type(Node* n) {
         type(n->sons[0]);
         force_typed_expr_context(n->sons[0]);
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
-        else if (n->sons[0]->type->kind == Tptr)
+        else if (n->sons[0]->type->kind == Tptr) {
             n->type = n->sons[0]->type->sons[0];
+            if (n->sons[0]->type->mut || n->sons[0]->flags & Fmv)
+                n->flags |= Fmv;
+        }
         else {
             String* ts = typestring(n->sons[0]->type);
             error(n->sons[0]->loc, "expected pointer type, got '%s'", ts->str);
