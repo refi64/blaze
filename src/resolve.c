@@ -112,7 +112,7 @@ static void resolve0(Node* n) {
         n->sons[0]->parent = n;
         resolve0(n->sons[0]);
         break;
-    case Nnew: case Ncall: case Ncast:
+    case Nnew: case Ncall: case Nindex: case Ncast:
         for (i=0; i<list_len(n->sons); ++i) {
             n->sons[i]->parent = n;
             resolve0(n->sons[i]);
@@ -166,7 +166,7 @@ static void resolve1(Node* n) {
         }
         break;
     case Ntypeof: case Nptr: resolve1(n->sons[0]); break;
-    case Nderef:
+    case Nderef: case Nindex:
         resolve1(n->sons[0]);
         n->flags |= n->sons[0]->flags & SVFLAGS;
         break;

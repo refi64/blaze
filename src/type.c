@@ -290,6 +290,7 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
+    case Nindex: assert(0);
     case Nnew: case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);

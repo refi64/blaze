@@ -10,6 +10,7 @@ static void node_dump2(Node* n, int indent) {
     case Nderef: put("Nderef"); break;
     case Naddr: put("Naddr"); break;
     case Ncall: put("Ncall"); break;
+    case Nindex: put("Nindex"); break;
     case Nattr: put("Nattr (s:%s)", n->s->str); break;
     case Nnew: put("Nnew"); break;
     case Ncast: put("Ncast"); break;

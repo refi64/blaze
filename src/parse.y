@@ -50,6 +50,8 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TDOT
 %token <t> TLP
 %token <t> TRP
+%token <t> TLBK
+%token <t> TRBK
 %token <t> TCOMMA
 %token <t> TCOLON
 %token <t> TDCOLON
@@ -78,7 +80,7 @@ LexerContext parse_string(const char* file, const char* module,
 %right UTAND UTSTAR
 %left TDCOLON
 %left TNEW
-%left TDOT TLP
+%left TDOT TLP TLBK
 
 %type <n> tstmt
 %type <n> struct
@@ -110,6 +112,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> call
 %type <l> callargs
 %type <l> callargs2
+%type <n> index
 %type <n> lattr
 %type <n> attr
 %type <n> new
@@ -240,6 +243,7 @@ expr : name { $$ = $1; }
      | dec  { $$ = $1; }
      | ptr  { $$ = $1; }
      | call { $$ = $1; }
+     | index { $$ = $1; }
      | attr { $$ = $1; }
      | new  { $$ = $1; }
      | cast { $$ = $1; }
@@ -286,6 +290,13 @@ callargs :           { $$ = NULL; }
 
 callargs2 : expr { $$ = NULL; list_append($$, $1); }
           | callargs2 TCOMMA expr { $$ = $1; list_append($$, $3); }
+
+index : expr TLBK expr TRBK {
+    N($$, Nindex, $2.loc)
+    list_append($$->sons, $1);
+    list_append($$->sons, $3);
+    $$->flags |= Faddr;
+}
 
 lattr : expr TDOT { $$ = $1; }
       | this      { $$ = $1; }

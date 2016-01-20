@@ -93,6 +93,8 @@ static Var* igen_node(Decl* d, Node* n) {
     case Naddr:
         free(ir);
         return igen_address(d, n);
+    case Nindex:
+        break;
     case Nnew: case Ncall:
         ir->kind = n->kind == Nnew ? Iconstr : Icall;
         ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
