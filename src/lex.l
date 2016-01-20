@@ -27,16 +27,17 @@ static DSHtab* kw = NULL;
 
 void lex_init() {
     kw = ds_hnew(ds_strhash, ds_streq);
-    ds_hput(kw, "fun", (void*)(intptr_t)TFUN);
-    ds_hput(kw, "let", (void*)(intptr_t)TLET);
-    ds_hput(kw, "mut", (void*)(intptr_t)TMUT);
-    ds_hput(kw, "var", (void*)(intptr_t)TVAR);
-    ds_hput(kw, "return", (void*)(intptr_t)TRETURN);
-    ds_hput(kw, "typeof", (void*)(intptr_t)TTYPEOF);
-    ds_hput(kw, "exportc", (void*)(intptr_t)TEXPORTC);
-    ds_hput(kw, "global", (void*)(intptr_t)TGLOBAL);
-    ds_hput(kw, "struct", (void*)(intptr_t)TSTRUCT);
-    ds_hput(kw, "new", (void*)(intptr_t)TNEW);
+    #define KW(s,t) ds_hput(kw, #s, (void*)(intptr_t)t);
+    KW(fun, TFUN)
+    KW(let, TLET)
+    KW(mut, TMUT)
+    KW(var, TVAR)
+    KW(return, TRETURN)
+    KW(typeof, TTYPEOF)
+    KW(exportc, TEXPORTC)
+    KW(global, TGLOBAL)
+    KW(struct, TSTRUCT)
+    KW(new, TNEW)
 }
 
 void lex_context_init(LexerContext* ctx, const char* file, const char* module,
