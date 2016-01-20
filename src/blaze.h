@@ -104,6 +104,7 @@ struct Type {
     union {
         enum {
             Tint,
+            Tbyte,
             Tchar,
             Tbend
         } bkind; // Tbuiltin

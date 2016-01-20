@@ -30,6 +30,7 @@ static String* typestring(Type* t) {
         switch (t->bkind) {
         case Tint: return string_new("int");
         case Tchar: return string_new("char");
+        case Tbyte: return string_new("byte");
         case Tbend: assert(0);
         }
     case Tptr:
