@@ -170,10 +170,6 @@ void type(Node* n) {
         if (n->sons[0]) {
             list_append(n->type->sons, n->sons[0]->type);
             type_incref(n->sons[0]->type);
-        } else if (n->kind == Nconstr) {
-            assert(n->parent->flags & Ftype);
-            list_append(n->type->sons, n->parent->type);
-            type_incref(n->type->sons[0]);
         } else list_append(n->type->sons, NULL);
         for (i=0; i<list_len(n->sons[1]->sons); ++i) {
             list_append(n->type->sons, n->sons[1]->sons[i]->type);
@@ -330,7 +326,10 @@ void type(Node* n) {
                     string_free(givens);
                 }
             if (expected[0]) n->type = expected[0];
-            else {
+            else if (n->kind == Nnew) {
+                assert(n->sons[0]->flags & Ftype);
+                n->type = n->sons[0]->type;
+            } else {
                 n->type = anytype->override;
                 n->flags |= Fvoid;
             }

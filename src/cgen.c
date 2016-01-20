@@ -131,6 +131,12 @@ static void cgen_ir(Instr* ir, FILE* output) {
     case Inew:
         fputs(CNAME(ir->v[0]), output);
         break;
+    case Iconstr:
+        fprintf(output, "%s(&(%s)", CNAME(ir->v[0]), CNAME(ir->dst));
+        for (i=1; i<list_len(ir->v); ++i)
+            fprintf(output, ", %s", CNAME(ir->v[i]));
+        fputc(')', output);
+        break;
     case Icall:
         fprintf(output, "%s(", CNAME(ir->v[0]));
         if (ir->v[0]->flags & Fstc && ir->v[0]->base) {

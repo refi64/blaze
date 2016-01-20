@@ -323,6 +323,7 @@ struct Instr {
         Iset,
         Iret,
         Iaddr,
+        Iconstr,
         Icall,
         Iint
     } kind;

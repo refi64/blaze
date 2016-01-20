@@ -49,6 +49,7 @@ void instr_dump(Instr* ir) {
     case Inew: printf("Inew"); break;
     case Iset: printf("Iset"); break;
     case Iaddr: printf("Iaddr"); break;
+    case Iconstr: printf("Iconstr"); break;
     case Icall: printf("Icall"); break;
     case Iint: printf("Iint (i:%s)", ir->s->str); break;
     }

@@ -93,18 +93,17 @@ static Var* igen_node(Decl* d, Node* n) {
     case Naddr:
         free(ir);
         return igen_address(d, n);
-    case Ncall:
-        ir->kind = Icall;
+    case Nnew: case Ncall:
+        ir->kind = n->kind == Nnew ? Iconstr : Icall;
+        ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
         for (i=0; i<list_len(n->sons); ++i)
             list_append(ir->v, igen_node(d, n->sons[i]));
-        ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
         break;
     case Nattr:
         free(ir);
         v = var_new(d, NULL, n->type, NULL);
         igen_attr_chain(d, v, n);
         return v;
-    case Nnew: break;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
         free(ir);
@@ -143,8 +142,8 @@ static void igen_func(Module* m, Decl* d, Node* n) {
         assert(n->this);
         n->this->v = var_new(d, NULL, n->this->type, NULL);
         n->this->v->uses = 1;
-        if (n->kind == Nconstr) list_append(d->vars, n->this->v);
-        else {
+        /* if (n->kind == Nconstr) list_append(d->vars, n->this->v); */
+        /* else { */
             Var* v;
 
             Type* orig = n->this->type;
@@ -160,7 +159,7 @@ static void igen_func(Module* m, Decl* d, Node* n) {
             v->base = n->this->v;
             v->deref = 1;
             n->this->v = v;
-        }
+        /* } */
     }
 
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
@@ -174,13 +173,6 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (n->sons[0]) d->ret = n->sons[0]->type;
     if (!n->import) igen_node(d, n->sons[2]);
     else d->import = n->import;
-
-    if (n->kind == Nconstr) {
-        Instr* ir = new(Instr);
-        ir->kind = Iret;
-        list_append(ir->v, n->this->v);
-        list_append(d->sons, ir);
-    }
 
     d->exportc = n->exportc;
 }
