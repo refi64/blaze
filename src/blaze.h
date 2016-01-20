@@ -163,9 +163,7 @@ struct Node {
         struct {
             String* import, *exportc; // C import name and export name.
         }; // Nfun
-        struct {
-            Node* constr, *this;
-        }; // Nstruct
+        Node* constr; // Nstruct
         Node* attr; // Nattr
     };
     String* s;
@@ -189,7 +187,7 @@ struct Node {
     // Nbody: stmts...
     // Nmodule: tstmts...
     List(Node*) sons;
-    Node* parent, *func;
+    Node* parent, *func, *this;
     STEntry* e; // Only relevant on some kinds (e.g. Nid).
     Symtab* tab; // NOTE: Only Nmodule, Nfun free their symbol tables.
     Var* v;

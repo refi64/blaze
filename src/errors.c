@@ -53,11 +53,9 @@ generic_error_func(note,)
 Node* declared_here(Node* n) {
     Node* t;
 
-    if (!n->loc.file) return n;
-
     switch (n->kind) {
     case Nfun: case Ndecl: case Nid:
-        if (!n->e || !n->e->n) return NULL;
+        if (!n->e || !n->e->n || !n->e->n->loc.file) return NULL;
         note(n->e->n->loc, "%s declared here", n->s->str);
         t = declared_here(n->e->n);
         break;

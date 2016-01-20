@@ -99,7 +99,7 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
         } else {
             if (p->level == 0)
                 error(el, "redefinition of %s shadows builtin", name->str);
-            else if (e->level > 0) {
+            else if (p->level > 0 && e->level > 0) {
                 warning(el, "redefinition of %s shadows outer definition",
                     name->str);
                 note(p->n->loc, "previous definition is here");
@@ -113,7 +113,7 @@ Symtab* symtab_sub(Symtab* tab) {
     Symtab* res = new(Symtab);
     res->parent = tab;
     res->tab = ds_hnew((DSHashFn)strhash, (DSCmpFn)streq);
-    res->level = tab->level+1;
+    res->level = ABS(tab->level)+1;
     list_append(tab->sons, res);
     return res;
 }

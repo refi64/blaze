@@ -132,11 +132,11 @@ void type(Node* n) {
         n->type->name = string_clone(n->s);
         n->type->n = n;
         type_incref(n->type);
-
         n->this->type = n->type;
-        type_incref(n->this->type);
+        type_incref(n->type);
 
         n->flags |= Ftype;
+        n->typing = 0;
         for (i=0; i<list_len(n->sons); ++i) {
             if (n->sons[i]->kind == Nconstr) {
                 if (!n->constr) {
@@ -147,6 +147,11 @@ void type(Node* n) {
                     error(n->sons[i]->loc, "duplicate constructor");
                     note(n->constr->loc, "previous constructor here");
                 }
+            }
+
+            if (n->sons[i]->this) {
+                n->sons[i]->this->type = n->type;
+                type_incref(n->type);
             }
 
             type(n->sons[i]);

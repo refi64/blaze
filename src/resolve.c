@@ -2,9 +2,20 @@
 
 #define SVFLAGS (Fmut | Fvar | Fcst)
 
+static void make_magic_this(Node* n) {
+    STEntry* e;
+    String* s = string_new("@");
+
+    n->this = new(Node);
+    n->this->kind = Nid;
+
+    e = stentry_new(n->this, s, NULL);
+    symtab_add(n->tab, s, e);
+    string_free(s);
+}
+
 static void resolve0(Node* n) {
     STEntry* e;
-    String* s;
     int i;
     assert(n && (n->kind == Nmodule || n->parent));
     if (n->kind != Nmodule && n->kind != Nfun && !n->tab) n->tab = n->parent->tab;
@@ -21,15 +32,9 @@ static void resolve0(Node* n) {
         n->tab = symtab_sub(n->parent->tab);
         symtab_add(n->parent->tab, n->s, e);
 
-        // Setup @ magic variable.
-        s = string_new("@");
-        n->this = new(Node);
-        n->this->kind = Nid;
-        e = stentry_new(n->this, s, NULL);
-        symtab_add(n->tab, s, e);
-        string_free(s);
-
         n->tab->level = -n->tab->level;
+
+        make_magic_this(n);
 
         for (i=0; i<list_len(n->sons); ++i) {
             n->sons[i]->parent = n;
@@ -40,7 +45,6 @@ static void resolve0(Node* n) {
     case Nfun:
         e = stentry_new(n, n->s, NULL);
         symtab_add(n->parent->tab, n->s, e);
-        n->tab = symtab_sub(n->parent->tab);
 
         if (strcmp(n->loc.module, "__main__") == 0 &&
             strcmp(n->s->str, "main") == 0)
@@ -48,6 +52,15 @@ static void resolve0(Node* n) {
 
     // Fall though.
     case Nconstr:
+        n->tab = symtab_sub(n->parent->tab);
+
+        if (n->parent->kind == Nstruct) {
+            make_magic_this(n); // Overrides the parent struct's this.
+            if (n->kind == Nconstr)
+                // Constructors can always mutate the struct.
+                n->this->flags |= Fmv;
+        }
+
         for (i=0; i<list_len(n->sons); ++i) {
             if (!n->sons[i]) continue;
             n->sons[i]->parent = n;

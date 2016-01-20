@@ -128,7 +128,6 @@ static void igen_sons(Decl* d, Node* n) {
 }
 
 static void igen_func(Module* m, Decl* d, Node* n) {
-    Var* this = NULL;
     int i;
 
     assert(n->kind == Nconstr || n->kind == Nfun);
@@ -138,12 +137,11 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (n->kind == Nconstr) n->parent->v = n->v;
 
     if (n->flags & Fmemb) {
-        this = var_new(d, NULL, n->parent->type, NULL);
-        this->uses = 1;
-        if (n->kind == Nconstr) list_append(d->vars, this);
-        else list_append(d->args, this);
-
-        n->parent->this->v = this;
+        assert(n->this);
+        n->this->v = var_new(d, NULL, n->parent->type, NULL);
+        n->this->v->uses = 1;
+        if (n->kind == Nconstr) list_append(d->vars, n->this->v);
+        else list_append(d->args, n->this->v);
     }
 
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
@@ -161,7 +159,7 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (n->kind == Nconstr) {
         Instr* ir = new(Instr);
         ir->kind = Iret;
-        list_append(ir->v, this);
+        list_append(ir->v, n->this->v);
         list_append(d->sons, ir);
     }
 
