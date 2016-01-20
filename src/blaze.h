@@ -150,6 +150,7 @@ struct Node {
         Ncall,
         Nattr,
         Nnew,
+        Ncast,
         Nlet,
         Nassign,
         Nreturn,
@@ -326,6 +327,7 @@ struct Instr {
         Iaddr,
         Iconstr,
         Icall,
+        Icast,
         Iint
     } kind;
     // Destination variable.

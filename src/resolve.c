@@ -112,7 +112,7 @@ static void resolve0(Node* n) {
         n->sons[0]->parent = n;
         resolve0(n->sons[0]);
         break;
-    case Nnew: case Ncall:
+    case Nnew: case Ncall: case Ncast:
         for (i=0; i<list_len(n->sons); ++i) {
             n->sons[i]->parent = n;
             resolve0(n->sons[i]);
@@ -133,6 +133,7 @@ static void resolve1(Node* n) {
     assert(n);
     switch (n->kind) {
     case Nmodule: case Nstruct: case Nconstr: case Nfun: case Narglist:
+    case Ncast:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;

@@ -51,6 +51,7 @@ void instr_dump(Instr* ir) {
     case Iaddr: printf("Iaddr"); break;
     case Iconstr: printf("Iconstr"); break;
     case Icall: printf("Icall"); break;
+    case Icast: printf("Icast"); break;
     case Iint: printf("Iint (i:%s)", ir->s->str); break;
     }
 

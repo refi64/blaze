@@ -157,6 +157,10 @@ static void cgen_ir(Instr* ir, FILE* output) {
         if (ir->v[0]->deref) fputs(CNAME(ir->v[0]->base), output);
         else fprintf(output, "&%s", CNAME(ir->v[0]));
         break;
+    case Icast:
+        assert(ir->dst);
+        fprintf(output, "(%s)(%s)", CNAME(ir->dst->type), CNAME(ir->v[0]));
+        break;
     case Iint:
         fputs(ir->s->str, output);
         break;

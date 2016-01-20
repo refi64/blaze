@@ -85,6 +85,7 @@ void lex_free() { ds_hfree(kw); }
 "(" { return TLP; }
 ")" { return TRP; }
 "," { return TCOMMA; }
+"::" { return TDCOLON; }
 ":" { return TCOLON; }
 ";" { return TSEMIC; }
 "=" { return TEQ; }

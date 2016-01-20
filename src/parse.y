@@ -52,6 +52,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TRP
 %token <t> TCOMMA
 %token <t> TCOLON
+%token <t> TDCOLON
 %token <t> TSEMIC
 %token <t> TEQ
 
@@ -75,6 +76,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSTRING
 
 %right UTAND UTSTAR
+%left TDCOLON
 %left TNEW
 %left TDOT TLP
 
@@ -111,6 +113,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> lattr
 %type <n> attr
 %type <n> new
+%type <n> cast
 
 %type <i> modspec
 
@@ -239,6 +242,7 @@ expr : name { $$ = $1; }
      | call { $$ = $1; }
      | attr { $$ = $1; }
      | new  { $$ = $1; }
+     | cast { $$ = $1; }
 
 name : id   { $$ = $1; $$->flags |= Faddr; }
      | this { $$ = $1; $$->flags |= Faddr; }
@@ -302,6 +306,12 @@ new : TNEW texpr TLP callargs TRP {
 }   | TNEW texpr {
     N($$, Nnew, $2->loc)
     list_append($$->sons, $2);
+}
+
+cast : expr TDCOLON texpr {
+    N($$, Ncast, $2.loc)
+    list_append($$->sons, $1);
+    list_append($$->sons, $3);
 }
 
 ws : | ws TNEWL

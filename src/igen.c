@@ -99,6 +99,12 @@ static Var* igen_node(Decl* d, Node* n) {
         for (i=0; i<list_len(n->sons); ++i)
             list_append(ir->v, igen_node(d, n->sons[i]));
         break;
+    case Ncast:
+        ir->kind = Icast;
+        ir->dst = var_new(d, ir, n->type, NULL);
+        list_append(ir->v, igen_node(d, n->sons[0]));
+        ir->flags |= PUREFLAGS(ir->v[0]);
+        break;
     case Nattr:
         free(ir);
         v = var_new(d, NULL, n->type, NULL);

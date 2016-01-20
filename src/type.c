@@ -337,6 +337,15 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
+    case Ncast:
+        type(n->sons[0]);
+        type(n->sons[1]);
+        force_typed_expr_context(n->sons[0]);
+        force_type_context(n->sons[1]);
+        if (n->sons[1]->type == anytype->override) n->type = anytype->override;
+        else n->type = n->sons[1]->type;
+        type_incref(n->type);
+        break;
     case Nattr:
         type(n->sons[0]);
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
