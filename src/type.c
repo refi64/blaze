@@ -62,18 +62,18 @@ static String* typestring(Type* t) {
     }
 }
 
-static int typematch(Type* a, Type* b) {
+static int typematch(Type* a, Type* b, Node* ctx) {
     int i;
     assert(a && b);
     if (a->kind == Tany || b->kind == Tany) return 1;
     if (a->kind != b->kind) return 0;
     switch (a->kind) {
-    case Tbuiltin: return a->bkind == b->bkind;
-    case Tptr: return typematch(a->sons[0], b->sons[0]);
+    case Tbuiltin: return (ctx && ctx->kind == Nint) || (a->bkind == b->bkind);
+    case Tptr: return typematch(a->sons[0], b->sons[0], NULL);
     case Tfun:
         if (list_len(a->sons) != list_len(b->sons)) return 0;
         for (i=0; i<list_len(a->sons); ++i)
-            if (!typematch(a->sons[i], b->sons[i])) return 0;
+            if (!typematch(a->sons[i], b->sons[i], NULL)) return 0;
         return 1;
     case Tstruct: return a == b;
     case Tany: assert(0);
@@ -205,7 +205,7 @@ void type(Node* n) {
                 make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
             else  make_mutvar(declared_here(n->sons[0]), Fmut, n->sons[0]->flags);
         }
-        if (!typematch(n->sons[0]->type, n->sons[1]->type)) {
+        if (!typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1])) {
             String* ls=typestring(n->sons[0]->type),
                   * rs=typestring(n->sons[1]->type);
             error(n->loc, "types '%s' and '%s' in assignment are not compatible",
@@ -233,7 +233,7 @@ void type(Node* n) {
                 break;
             }
             given = n->sons[0]->type;
-            if (!typematch(ret, given)) {
+            if (!typematch(ret, given, n->sons[0])) {
                 String* rets, *givens;
                 rets = typestring(ret);
                 givens = typestring(given);
@@ -334,7 +334,7 @@ void type(Node* n) {
                 declared_here(n->sons[0]);
             }
             for (i=1; i<min(ngiven+1, nexpect+1); ++i)
-                if (!typematch(n->sons[i]->type, expected[i])) {
+                if (!typematch(expected[i], n->sons[i]->type, n->sons[i])) {
                     String* expects, *givens;
                     expects = typestring(expected[i]);
                     givens = typestring(n->sons[i]->type);
