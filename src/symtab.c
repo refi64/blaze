@@ -13,8 +13,8 @@ void init_builtin_types() {
     STEntry* e;
     Type* t;
     int i;
-    const char* names[] = {"int", "char", "byte"};
-    const int bkinds[] = {Tint, Tchar, Tbyte};
+    const char* names[] = {"int", "char", "byte", "size"};
+    const int bkinds[] = {Tint, Tchar, Tbyte, Tsize};
     for (i=0; i<Tbend; ++i) {
         name = string_new(names[i]);
         t = new(Type);

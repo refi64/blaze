@@ -31,6 +31,7 @@ static String* typestring(Type* t) {
         case Tint: return string_new("int");
         case Tchar: return string_new("char");
         case Tbyte: return string_new("byte");
+        case Tsize: return string_new("size");
         case Tbend: assert(0);
         }
     case Tptr:
