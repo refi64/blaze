@@ -3,7 +3,7 @@
 const char* typenames[] = {"int", "char"};
 int type_id=0;
 
-#define CNAME(x) (x?x->d.cname->str:"void")
+#define CNAME(x) ((x)?(x)->d.cname->str:"void")
 
 static void generate_basename(char p, GData* d, String* name, int id) {
     char buf[1024];
@@ -37,10 +37,17 @@ static void generate_varname(Var* v) {
         if (v->base) v->d.cname = string_clone(v->base->d.cname);
         else generate_basename('v', &v->d, v->name, v->id);
         if (v->av) {
-            int i;
-            for (i=0; i<list_len(v->av); ++i) {
-                string_mergec(v->d.cname, '.');
-                string_merge(v->d.cname, (*v->av[i])->d.cname);
+            Var* last = *v->av[list_len(v->av)-1];
+            if (last->flags & Fstc) {
+                string_free(v->d.cname);
+                v->d.cname = string_clone(last->d.cname);
+                v->flags |= Fstc;
+            } else {
+                int i;
+                for (i=0; i<list_len(v->av); ++i) {
+                    string_mergec(v->d.cname, '.');
+                    string_merge(v->d.cname, (*v->av[i])->d.cname);
+                }
             }
         }
     }
@@ -124,6 +131,11 @@ static void cgen_ir(Instr* ir, FILE* output) {
         break;
     case Icall:
         fprintf(output, "%s(", CNAME(ir->v[0]));
+        if (ir->v[0]->flags & Fstc && ir->v[0]->base) {
+            fputs(CNAME(ir->v[0]->base), output);
+            for (i=0; i<list_len(ir->v[0]->av)-1; ++i)
+                fprintf(output, ".%s", CNAME(*ir->v[0]->av[i]));
+        }
         for (i=1; i<list_len(ir->v); ++i) {
             if (i > 1) fputs(", ", output);
             fputs(CNAME(ir->v[i]), output);

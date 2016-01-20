@@ -15,6 +15,8 @@ static void igen_struct(Module* m, Node* n) {
         Decl* d = igen_decl(m, n->sons[i]);
         if (d) {
             d->flags |= Fmemb;
+            if (n->sons[i]->kind == Nconstr || n->sons[i]->kind == Nfun)
+                d->v->flags |= Fstc;
             list_append(n->type->d.sons, d);
             if (d->kind == Dfun) list_append(m->decls, d);
         }

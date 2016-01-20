@@ -133,6 +133,7 @@ enum Flags {
     Fvoid=1<<6, // Is the node void (has no type)?
     Fpure=1<<7, // Is the node/IR pure?
     Fmemb=1<<8, // Is the node/decl a member value?
+    Fstc =1<<9, // Is the var a constant method/constructor of a parent struct?
 };
 
 struct Node {
@@ -301,6 +302,7 @@ struct Var {
     Decl* owner;
     Instr* ir; // Instruction that created this variable (if NULL, then argument).
     Type* type;
+    int flags;
 
     /* A "variable" may actually be a dereference or an attribute. This is to fix
        later complications with codegen. */
