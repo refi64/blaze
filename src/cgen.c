@@ -34,8 +34,10 @@ static void generate_varname(Var* v) {
         string_mergec(s, ')');
         v->d.cname = s;
     } else {
-        if (v->base) v->d.cname = string_clone(v->base->d.cname);
-        else generate_basename('v', &v->d, v->name, v->id);
+        if (v->base) {
+            generate_varname(v->base);
+            v->d.cname = string_clone(v->base->d.cname);
+        } else generate_basename('v', &v->d, v->name, v->id);
         if (v->av) {
             Var* last = *v->av[list_len(v->av)-1];
             if (last->flags & Fstc) {
@@ -132,9 +134,11 @@ static void cgen_ir(Instr* ir, FILE* output) {
     case Icall:
         fprintf(output, "%s(", CNAME(ir->v[0]));
         if (ir->v[0]->flags & Fstc && ir->v[0]->base) {
-            fputs(CNAME(ir->v[0]->base), output);
+            fprintf(output, "&(%s", CNAME(ir->v[0]->base));
             for (i=0; i<list_len(ir->v[0]->av)-1; ++i)
                 fprintf(output, ".%s", CNAME(*ir->v[0]->av[i]));
+            fputc(')', output);
+            if (list_len(ir->v) > 1) fputs(", ", output);
         }
         for (i=1; i<list_len(ir->v); ++i) {
             if (i > 1) fputs(", ", output);
