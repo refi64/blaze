@@ -11,6 +11,7 @@ static void node_dump2(Node* n, int indent) {
     case Naddr: put("Naddr"); break;
     case Ncall: put("Ncall"); break;
     case Nattr: put("Nattr (s:%s)", n->s->str); break;
+    case Nnew: put("Nnew"); break;
     case Nptr: put("Nptr"); break;
     case Nlet: put("Nlet (s:%s)", n->s->str); break;
     case Nassign: put("Nassign"); break;

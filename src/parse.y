@@ -75,6 +75,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSTRING
 
 %right UTAND UTSTAR
+%left TNEW
 %left TDOT TLP
 
 %type <n> tstmt
@@ -82,7 +83,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <l> members
 %type <l> members2
 %type <n> member
-%type <n> new
+%type <n> constr
 %type <n> fun
 %type <n> funret
 %type <funbody> funbody
@@ -109,6 +110,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <l> callargs2
 %type <n> lattr
 %type <n> attr
+%type <n> new
 
 %type <i> modspec
 
@@ -136,10 +138,10 @@ members : indent members2 unindent { $$ = $2; }
 members2 : member { $$ = NULL; list_append($$, $1); }
          | members2 sep member { $$ = $1; list_append($$, $3); }
 
-member : new | fun
+member : constr | fun
        | modspec decl { $$ = $2; $$->flags |= $1; }
 
-new : TNEW arglist TCOLON body {
+constr : TNEW arglist TCOLON body {
     N($$, Nconstr, $1.loc);
     list_append($$->sons, NULL);
     list_append($$->sons, $2);
@@ -236,6 +238,7 @@ expr : name { $$ = $1; }
      | ptr  { $$ = $1; }
      | call { $$ = $1; }
      | attr { $$ = $1; }
+     | new  { $$ = $1; }
 
 name : id   { $$ = $1; $$->flags |= Faddr; }
      | this { $$ = $1; $$->flags |= Faddr; }
@@ -288,6 +291,17 @@ attr : lattr TID {
     $$->s = $2.s;
     list_append($$->sons, $1);
     $$->flags |= Faddr;
+}
+
+new : TNEW texpr TLP callargs TRP {
+    int i;
+    N($$, Nnew, $2->loc)
+    list_append($$->sons, $2);
+    for (i=0; i<list_len($4); ++i) list_append($$->sons, $4[i]);
+    list_free($4);
+}   | TNEW texpr {
+    N($$, Nnew, $2->loc)
+    list_append($$->sons, $2);
 }
 
 ws : | ws TNEWL

@@ -80,7 +80,7 @@ static int typematch(Type* a, Type* b) {
 }
 
 static int is_callable(Node* n) {
-    return n->type && (n->type->kind == Tfun || n->flags & Ftype);
+    return n->type && n->type->kind == Tfun;
 }
 
 static List(Type*) arguments_of(Type* t) {
@@ -293,26 +293,27 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
-    case Ncall:
+    case Nnew: case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
-            if (!(n->sons[i]->flags & Ftype))
-                force_typed_expr_context(n->sons[i]);
+            if (n->kind == Nnew) force_type_context(n->sons[i]);
+            else force_typed_expr_context(n->sons[i]);
         }
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
-        else if (!is_callable(n->sons[0])) {
+        else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "cannot call non-callable type '%s'", ts->str);
             string_free(ts);
             declared_here(n->sons[0]);
             n->type = anytype->override;
         } else {
+            const char* msgs[] = {"function", "constructor"};
             Type* ft = n->sons[0]->type;
             List(Type*) expected = arguments_of(ft);
             int ngiven = list_len(n->sons)-1, nexpect = list_len(expected)-1;
             if (ngiven != nexpect) {
-                error(n->loc, "function expected %d argument(s), not %d",
-                      nexpect, ngiven);
+                error(n->loc, "%s expected %d argument(s), not %d",
+                      msgs[n->kind == Nconstr], nexpect, ngiven);
                 declared_here(n->sons[0]);
             }
             for (i=1; i<min(ngiven+1, nexpect+1); ++i)
@@ -320,9 +321,9 @@ void type(Node* n) {
                     String* expects, *givens;
                     expects = typestring(expected[i]);
                     givens = typestring(n->sons[i]->type);
-                    error(n->sons[i]->loc, "function expected argument of type "
-                                           "'%s', not '%s'", expects->str,
-                                           givens->str);
+                    error(n->sons[i]->loc, "%s expected argument of type '%s', "
+                                           "not '%s'", msgs[n->kind == Nconstr],
+                                           expects->str, givens->str);
                     declared_here(n->sons[0]);
                     declared_here(n->sons[i]);
                     string_free(expects);

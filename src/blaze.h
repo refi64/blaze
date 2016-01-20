@@ -148,6 +148,7 @@ struct Node {
         Nderef,
         Ncall,
         Nattr,
+        Nnew,
         Nlet,
         Nassign,
         Nreturn,
