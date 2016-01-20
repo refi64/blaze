@@ -309,7 +309,26 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
-    case Nindex: assert(0);
+    case Nindex:
+        type(n->sons[0]);
+        type(n->sons[1]);
+        if (n->sons[0]->type->kind != Tptr) {
+            String* ts = typestring(n->sons[0]->type);
+            error(n->loc, "only pointers can be indexed, not '%s'", ts->str);
+            string_free(ts);
+            n->type = anytype->override;
+        } else if (!typematch(builtin_types[Tsize]->override, n->sons[1]->type,
+                              n->sons[1])) {
+            String* ts = typestring(n->sons[1]->type);
+            error(n->loc, "only integral types can be indices, not '%s'",
+                  ts->str);
+            string_free(ts);
+            n->type = anytype->override;
+        } else n->type = n->sons[0]->type->sons[0];
+        type_incref(n->type);
+        if (n->sons[0]->type->mut || n->sons[0]->flags & Fmv)
+            n->flags |= Fmv;
+        break;
     case Nnew: case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
