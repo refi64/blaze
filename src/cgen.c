@@ -1,6 +1,6 @@
 #include "blaze.h"
 
-const char* typenames[] = {"int", "char", "uint8_t", "size_t"};
+const char* typenames[] = {"int", "char", "unsigned char", "unsigned long"};
 int type_id=0;
 
 #define CNAME(x) ((x)?(x)->d.cname->str:"void")
@@ -227,8 +227,6 @@ static void free_type_cnames(Type* t) {
 
 void cgen(Module* m, FILE* output) {
     int i;
-
-    fputs("#include <stdint.h>\n#include <string.h>\n\n", output);
 
     for (i=0; i<list_len(m->types); ++i)
         cgen_typedef(m->types[i], output);
