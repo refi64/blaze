@@ -115,7 +115,8 @@ static void cgen_ir(Instr* ir, FILE* output) {
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0)) return;
 
     fputs("    ", output);
-    if (ir->dst && ir->dst->type) fprintf(output, "%s = ", CNAME(ir->dst));
+    if (ir->dst && ir->dst->type && ir->kind != Iconstr)
+        fprintf(output, "%s = ", CNAME(ir->dst));
 
     switch (ir->kind) {
     case Inull: assert(0);
