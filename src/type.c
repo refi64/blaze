@@ -332,7 +332,7 @@ void type(Node* n) {
     case Nnew: case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
-            if (n->kind == Nnew) force_type_context(n->sons[i]);
+            if (n->kind == Nnew && i == 0) force_type_context(n->sons[i]);
             else force_typed_expr_context(n->sons[i]);
         }
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
