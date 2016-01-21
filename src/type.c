@@ -403,6 +403,7 @@ void type(Node* n) {
                 assert(e->n);
                 n->type = e->n->type;
                 n->attr = e->n;
+                n->flags |= (n->sons[0]->flags & Fmv) & (e->n->flags & Fmv);
             }
         }
         type_incref(n->type);
