@@ -199,9 +199,11 @@ void type(Node* n) {
                                    "addressable");
             declared_here(n->sons[0]);
         } else if (!(n->sons[0]->flags & Fvar)) {
+            Node* d;
             error(n->sons[0]->loc, "left-hand side of assignment must be "
                                    "variable");
-            make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
+            d = declared_here(n->sons[0]);
+            if (n->sons[0] != d) make_mutvar(d, Fvar, n->sons[0]->flags);
         }
         if (!typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1])) {
             String* ls=typestring(n->sons[0]->type),
