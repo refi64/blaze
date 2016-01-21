@@ -161,27 +161,25 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (n->kind == Nconstr) n->parent->v = n->v;
 
     if (n->flags & Fmemb) {
+        Var* v;
+        Type* orig;
         assert(n->this);
         n->this->v = var_new(d, NULL, n->this->type, NULL);
         n->this->v->uses = 1;
-        /* if (n->kind == Nconstr) list_append(d->vars, n->this->v); */
-        /* else { */
-            Var* v;
 
-            Type* orig = n->this->type;
-            n->this->type = new(Type);
-            n->this->type->kind = Tptr;
-            list_append(n->this->type->sons, orig);
-            type_incref(n->this->type);
-            n->this->v->type = n->this->type;
-            list_append(d->m->types, n->this->type);
-            list_append(d->args, n->this->v);
+        orig = n->this->type;
+        n->this->type = new(Type);
+        n->this->type->kind = Tptr;
+        list_append(n->this->type->sons, orig);
+        type_incref(n->this->type);
+        n->this->v->type = n->this->type;
+        list_append(d->m->types, n->this->type);
+        list_append(d->args, n->this->v);
 
-            v = var_new(d, NULL, n->this->type, NULL);
-            v->base = n->this->v;
-            v->deref = 1;
-            n->this->v = v;
-        /* } */
+        v = var_new(d, NULL, n->this->type, NULL);
+        v->base = n->this->v;
+        v->deref = 1;
+        n->this->v = v;
     }
 
     for (i=0; i<list_len(n->sons[1]->sons); ++i) {
