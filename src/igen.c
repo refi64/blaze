@@ -45,7 +45,7 @@ static Var* igen_address(Decl* d, Node* n) {
     return instr_result(d, ir);
 }
 
-static Var* igen_attr_chain(Decl* d, Var* v, Node* n) {
+static void igen_attr_chain(Decl* d, Var* v, Node* n) {
     // Make sure the original attributes come FIRST.
     if (n->kind != Nattr) {
         v->base = igen_node(d, n);
@@ -53,6 +53,17 @@ static Var* igen_attr_chain(Decl* d, Var* v, Node* n) {
     } else {
         igen_attr_chain(d, v, n->sons[0]);
         list_append(v->av, &n->attr->d->v);
+    }
+}
+
+static void igen_index_chain(Decl* d, Var* v, Node* n) {
+    if (n->kind != Nindex) {
+        v->base = igen_node(d, n);
+        ++v->base->uses;
+    } else {
+        igen_index_chain(d, v, n->sons[0]);
+        list_append(v->iv, igen_node(d, n->sons[1]));
+        ++v->iv[list_len(v->iv)-1]->uses;
     }
 }
 
@@ -94,7 +105,10 @@ static Var* igen_node(Decl* d, Node* n) {
         free(ir);
         return igen_address(d, n);
     case Nindex:
-        break;
+        free(ir);
+        v = var_new(d, NULL, n->type, NULL);
+        igen_index_chain(d, v, n);
+        return v;
     case Nnew: case Ncall:
         ir->kind = n->kind == Nnew ? Iconstr : Icall;
         ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);

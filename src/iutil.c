@@ -22,14 +22,21 @@ void var_dump(Var* v) {
         printf("*(");
         var_dump(v->base);
         putchar(')');
-    } else if (v->av) {
+    } else if (v->av || v->iv) {
         int i;
         printf("%d", v->base->id);
-        for (i=0; i<list_len(v->av); ++i) {
-            printf(".(");
-            var_dump(*v->av[i]);
-            putchar(')');
-        }
+        if (v->av)
+            for (i=0; i<list_len(v->av); ++i) {
+                printf(".(");
+                var_dump(*v->av[i]);
+                putchar(')');
+            }
+        else
+            for (i=0; i<list_len(v->iv); ++i) {
+                printf(" [");
+                var_dump(v->iv[i]);
+                putchar(']');
+            }
     } else printf("%d", v->id);
     if (v->name) printf(" (%s)", v->name->str);
     if (!v->type) printf(" void");

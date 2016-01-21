@@ -40,6 +40,7 @@ static void generate_varname(Var* v) {
         } else generate_basename('v', &v->d, v->name, v->id);
         if (v->av) {
             Var* last = *v->av[list_len(v->av)-1];
+            assert(!v->iv);
             if (last->flags & Fstc) {
                 string_free(v->d.cname);
                 v->d.cname = string_clone(last->d.cname);
@@ -50,6 +51,14 @@ static void generate_varname(Var* v) {
                     string_mergec(v->d.cname, '.');
                     string_merge(v->d.cname, (*v->av[i])->d.cname);
                 }
+            }
+        } else if (v->iv) {
+            int i;
+            for (i=0; i<list_len(v->iv); ++i) {
+                generate_varname(v->iv[i]);
+                string_mergec(v->d.cname, '[');
+                string_merge(v->d.cname, v->iv[i]->d.cname);
+                string_mergec(v->d.cname, ']');
             }
         }
     }
