@@ -201,9 +201,7 @@ void type(Node* n) {
         } else if (!(n->sons[0]->flags & Fvar)) {
             error(n->sons[0]->loc, "left-hand side of assignment must be "
                                    "variable");
-            if (n->sons[0]->kind == Nid)
-                make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
-            else  make_mutvar(declared_here(n->sons[0]), Fmut, n->sons[0]->flags);
+            make_mutvar(declared_here(n->sons[0]), Fvar, n->sons[0]->flags);
         }
         if (!typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1])) {
             String* ls=typestring(n->sons[0]->type),
@@ -286,8 +284,7 @@ void type(Node* n) {
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
         else if (n->sons[0]->type->kind == Tptr) {
             n->type = n->sons[0]->type->sons[0];
-            if (n->sons[0]->type->mut || n->sons[0]->flags & Fmv)
-                n->flags |= Fmv;
+            if (n->sons[0]->type->mut) n->flags |= Fmv;
         }
         else {
             String* ts = typestring(n->sons[0]->type);
@@ -305,6 +302,7 @@ void type(Node* n) {
             n->type = new(Type);
             n->type->kind = Tptr;
             list_append(n->type->sons, n->sons[0]->type);
+            if (n->sons[0]->flags & Fvar) n->type->mut = 1;
             type_incref(n->sons[0]->type);
         }
         type_incref(n->type);
@@ -326,7 +324,7 @@ void type(Node* n) {
             n->type = anytype->override;
         } else n->type = n->sons[0]->type->sons[0];
         type_incref(n->type);
-        if (n->sons[0]->type->mut || n->sons[0]->flags & Fmv)
+        if (n->sons[0]->type->mut)
             n->flags |= Fmv;
         break;
     case Nnew: case Ncall:

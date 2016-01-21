@@ -51,7 +51,7 @@ generic_error_func(warning,++warnings;)
 generic_error_func(note,)
 
 Node* declared_here(Node* n) {
-    Node* t;
+    Node* t = NULL;
 
     switch (n->kind) {
     case Nfun: case Ndecl: case Nid:
@@ -59,8 +59,13 @@ Node* declared_here(Node* n) {
         note(n->e->n->loc, "%s declared here", n->s->str);
         t = declared_here(n->e->n);
         break;
-    case Nlet: case Nderef:
+    case Nlet: case Naddr:
         t = declared_here(n->sons[0]);
+        break;
+    case Nderef: case Nindex:
+        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->n &&
+            n->sons[0]->e->n->kind == Nlet)
+            t = declared_here(n->sons[0]->e->n->sons[0]);
         break;
     default: return NULL;
     }
