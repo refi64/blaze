@@ -18,13 +18,16 @@ Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
 void var_dump(Var* v) {
     assert(v);
     printf("Var ");
+    printf("%d", v->id);
     if (v->deref) {
-        printf("*(");
+        printf(" *(");
         var_dump(v->base);
         putchar(')');
     } else if (v->av || v->iv) {
         int i;
-        printf("%d", v->base->id);
+        printf(" (");
+        var_dump(v->base);
+        putchar(')');
         if (v->av)
             for (i=0; i<list_len(v->av); ++i) {
                 printf(".(");
@@ -37,7 +40,7 @@ void var_dump(Var* v) {
                 var_dump(v->iv[i]);
                 putchar(']');
             }
-    } else printf("%d", v->id);
+    }
     if (v->name) printf(" (%s)", v->name->str);
     if (!v->type) printf(" void");
 }
