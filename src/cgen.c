@@ -30,6 +30,7 @@ static void generate_varname(Var* v) {
     if (v->deref) {
         String* s = string_newz("(*", 2);
         assert(v->base);
+        generate_varname(v->base);
         string_merge(s, v->base->d.cname);
         string_mergec(s, ')');
         v->d.cname = s;
