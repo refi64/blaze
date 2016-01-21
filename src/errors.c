@@ -54,18 +54,21 @@ Node* declared_here(Node* n) {
     Node* t = NULL;
 
     switch (n->kind) {
-    case Nfun: case Ndecl: case Nid:
-        if (!n->e || !n->e->n || !n->e->n->loc.file) return NULL;
-        note(n->e->n->loc, "%s declared here", n->s->str);
-        t = declared_here(n->e->n);
+    case Nfun: case Ndecl:
+        note(n->loc, "%s declared here", n->s->str);
         break;
-    case Nlet: case Naddr:
+    case Nid:
+        if (n->e && n->e->n && n->e->n->loc.file) {
+            note(n->e->n->loc, "%s declared here", n->s->str);
+            t = declared_here(n->e->n);
+        }
+        break;
+    case Nlet: case Naddr: case Nderef: case Nindex:
         t = declared_here(n->sons[0]);
         break;
-    case Nderef: case Nindex:
-        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->n &&
-            n->sons[0]->e->n->kind == Nlet)
-            t = declared_here(n->sons[0]->e->n->sons[0]);
+    case Nattr:
+        declared_here(n->sons[0]);
+        if (n->attr) t = declared_here(n->attr);
         break;
     default: return NULL;
     }
