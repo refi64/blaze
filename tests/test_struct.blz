@@ -1,0 +1,33 @@
+global var x: int
+
+struct A:
+    mx: int
+    mx: int
+    x: int
+    fun my -> int:
+        let x = 1
+        my(x)
+        return mx
+    ;mz: int # XXX: The ; here is due to a lexer bug.
+
+#[
+ERROR
+:5:5: error: duplicate definition of mx
+    mx: int
+    ~~
+:4:5: note: previous definition is here
+    mx: int
+    ~~
+:9:9: error: identifier my cannot be accessed without @
+    my(x)
+    ~~
+:10:16: error: identifier mx cannot be accessed without @
+    return mx
+           ~~
+:9:9: error: function expected 0 argument(s), not 1
+    my(x)
+    ~~
+:7:9: note: my declared here
+    fun my -> int:
+        ~~
+#]
