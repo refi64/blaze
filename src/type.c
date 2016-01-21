@@ -158,6 +158,9 @@ void type(Node* n) {
 
             type(n->sons[i]);
         }
+
+        if (!n->constr)
+            error(n->loc, "struct must have a constructor");
         break;
     case Nconstr: case Nfun:
         if (n->sons[0]) {
@@ -345,8 +348,15 @@ void type(Node* n) {
         } else {
             const char* msgs[] = {"function", "constructor"};
             Type* ft = n->sons[0]->type;
-            List(Type*) expected = arguments_of(ft);
-            int ngiven = list_len(n->sons)-1, nexpect = list_len(expected)-1;
+            List(Type*) expected = NULL;
+            int ngiven = list_len(n->sons)-1, nexpect;
+            if (ft->kind == Tstruct && !ft->constr) {
+                expected = NULL;
+                nexpect = 0;
+            } else {
+                expected = arguments_of(ft);
+                nexpect = list_len(expected)-1;
+            }
             if (ngiven != nexpect) {
                 error(n->loc, "%s expected %d argument(s), not %d",
                       msgs[n->kind == Nconstr], nexpect, ngiven);
@@ -365,7 +375,7 @@ void type(Node* n) {
                     string_free(expects);
                     string_free(givens);
                 }
-            if (expected[0]) n->type = expected[0];
+            if (expected && expected[0]) n->type = expected[0];
             else if (n->kind == Nnew) {
                 assert(n->sons[0]->flags & Ftype);
                 n->type = n->sons[0]->type;
