@@ -172,13 +172,13 @@ static void resolve1(Node* n) {
         if (!(n->e = symtab_finds(n->tab, n->s))) {
             STEntry* e;
             if (n->tab->isol && (e = symtab_finds(n->tab->isol, n->s))) {
-                error(n->loc, "identifier %s cannot reference itself in its own "
-                              "declaration", n->s->str);
-                note(e->n->loc, "%s declared here", n->s->str);
+                error(n->loc, "identifier '%s' cannot reference itself in its own"
+                              " declaration", n->s->str);
+                note(e->n->loc, "'%s' declared here", n->s->str);
             }
-            else error(n->loc, "undeclared identifier %s", n->s->str);
+            else error(n->loc, "undeclared identifier '%s'", n->s->str);
         } else if (n->e->level < 0) {
-            error(n->loc, "identifier %s cannot be accessed without @",
+            error(n->loc, "identifier '%s' cannot be accessed without @",
                   n->s->str);
             if (n->e->n) declared_here(n->e->n);
         } else if (n->e->n) {

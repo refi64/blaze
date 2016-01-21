@@ -26,40 +26,42 @@ static inline void generic_error(const char* name, Location loc, const char* fm,
     const char* b;
     size_t e;
     int c=0;
-    fprintf(stderr, "%s:%d:%d: %s: ", loc.file, loc.first_line, loc.first_column,
-        name);
+    fprintf(stderr, "\033[1m%s:%d:%d: %s: \033[0m\033[1m", loc.file,
+        loc.first_line, loc.first_column, name);
     vfprintf(stderr, fm, args);
+    fputs("\033[0m", stderr);
     find_line(loc.fcont, loc.first_line, &b, &e);
     for (; *b && isspace(*b) && *b != '\n'; ++b, ++c);
     fprintf(stderr, "\n    %.*s\n", (int)e-c, b);
     fputs("    ", stderr);
     for (++c; c<loc.first_column; ++c) fputc(' ', stderr);
+    fputs("\033[32m", stderr);
     for (; c<loc.last_column+1; ++c) fputc('~', stderr);
-    fputc('\n', stderr);
+    fputs("\033[0m\n", stderr);
 }
 
-#define generic_error_func(name,x) void name(Location loc, const char* fm, ...) {\
+#define generic_error_func(n,c,x) void n(Location loc, const char* fm, ...) {\
     va_list args;\
     va_start(args, fm);\
-    generic_error( #name , loc, fm, args);\
+    generic_error("\033[3" #c "m" #n , loc, fm, args);\
     va_end(args);\
     x\
 }
 
-generic_error_func(error,++errors;)
-generic_error_func(warning,++warnings;)
-generic_error_func(note,)
+generic_error_func(error,1,++errors;)
+generic_error_func(warning,5,++warnings;)
+generic_error_func(note,6,)
 
 Node* declared_here(Node* n) {
     Node* t = NULL;
 
     switch (n->kind) {
     case Nfun: case Ndecl:
-        note(n->loc, "%s declared here", n->s->str);
+        note(n->loc, "'%s' declared here", n->s->str);
         break;
     case Nid:
         if (n->e && n->e->n && n->e->n->loc.file) {
-            note(n->e->n->loc, "%s declared here", n->s->str);
+            note(n->e->n->loc, "'%s' declared here", n->s->str);
             t = declared_here(n->e->n);
         }
         break;
