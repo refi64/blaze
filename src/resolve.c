@@ -147,11 +147,11 @@ static void resolve1(Node* n) {
         if (n->sons) resolve1(n->sons[0]);
         break;
     case Nlet: resolve1(n->sons[0]); break;
-    case Nassign:
+    case Nassign: case Nindex:
         resolve1(n->sons[0]);
         resolve1(n->sons[1]);
         break;
-    case Ntypeof: case Nptr: case Nderef: case Nindex:
+    case Ntypeof: case Nptr: case Nderef:
         resolve1(n->sons[0]);
         break;
     case Naddr:
