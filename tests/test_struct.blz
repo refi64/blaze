@@ -1,4 +1,5 @@
 global var x: int
+global var mz: int
 
 struct A:
     mx: int
@@ -12,31 +13,37 @@ struct A:
 
 #[
 ERROR
-:5:5: error: duplicate definition of mx
+:6:5: error: duplicate definition of mx
     mx: int
     ~~
-:4:5: note: previous definition is here
+:5:5: note: previous definition is here
     mx: int
     ~~
-:9:9: error: identifier 'my' cannot be accessed without @
+:9:13: warning: redefinition of x shadows outer definition
+    let x = 1
+        ~
+:1:12: note: previous definition is here
+    global var x: int
+               ~
+:10:9: error: identifier 'my' cannot be accessed without @
     my(x)
     ~~
-:7:9: note: 'my' declared here
+:8:9: note: 'my' declared here
     fun my -> int:
         ~~
-:10:16: error: identifier 'mx' cannot be accessed without @
+:11:16: error: identifier 'mx' cannot be accessed without @
     return mx
            ~~
-:4:5: note: 'mx' declared here
+:5:5: note: 'mx' declared here
     mx: int
     ~~
-:9:9: error: function expected 0 argument(s), not 1
+:10:9: error: function expected 0 argument(s), not 1
     my(x)
     ~~
-:7:9: note: 'my' declared here
+:8:9: note: 'my' declared here
     fun my -> int:
         ~~
-:3:8: error: struct must have a constructor
+:4:8: error: struct must have a constructor
     struct A:
            ~
 #]

@@ -71,14 +71,18 @@ STEntry* symtab_find(Symtab* tab, const char* name) {
     return e;
 }
 STEntry* symtab_finds(Symtab* tab, String* name) {
+    STEntry* init = NULL;
     assert(name);
 
     while (tab) {
         STEntry* e = symtab_findl(tab, name);
-        if (e) return e;
+        if (e) {
+            if (e->level < 0) init = init ? init : e;
+            else return e;
+        }
         tab = tab->parent;
     }
-    return NULL;
+    return init;
 }
 STEntry* symtab_findl(Symtab* tab, String* name) {
     assert(name);
