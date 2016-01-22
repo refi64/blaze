@@ -410,10 +410,14 @@ void type(Node* n) {
                 declared_here(n->sons[0]);
                 n->type = anytype->override;
             } else {
+                int flags = 0;
+
                 assert(e->n);
                 n->type = e->n->type;
                 n->attr = e->n;
-                n->flags |= (n->sons[0]->flags & Fmv) & (e->n->flags & Fmv);
+                if (n->sons[0]->flags & Fmv) flags |= Fvar;
+                flags &= e->n->flags & Fmv;
+                n->flags |= flags;
             }
         }
         type_incref(n->type);
