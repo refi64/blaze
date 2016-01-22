@@ -16,6 +16,15 @@ fun f() -> char:
 
 #[
 ERROR
+:7:14: error: expected pointer type, got 'int'
+    let d = *a
+             ~
+:4:9: note: 'a' declared here
+    let a = 1
+        ~
+:8:9: warning: unused variable 'e'
+    let e = *&d
+        ~
 :9:5: error: left-hand side of assignment must be variable
     a = 2
     ~
@@ -43,15 +52,6 @@ ERROR
 :3:5: note: 'f' declared here
     fun f() -> char:
         ~
-:7:14: error: expected pointer type, got 'int'
-    let d = *a
-             ~
-:4:9: note: 'a' declared here
-    let a = 1
-        ~
-:8:9: warning: unused variable 'e'
-    let e = *&d
-        ~
 :13:7: error: types '() -> char' and 'int' in assignment are not compatible
     f = 7
       ~
@@ -64,4 +64,7 @@ ERROR
 :3:12: note: function return type declared here
     fun f() -> char:
                ~~~~
+:3:5: note: 'f' declared here
+    fun f() -> char:
+        ~
 ]#

@@ -54,6 +54,9 @@ ERROR
 :1:5: note: 'f' declared here
     fun f(x: int):
         ~
+:4:7: note: 'n' declared here
+    fun g(n: int) -> int:
+          ~
 :7:13: error: cannot use void value in expression
     let z = f(&n, &y)
             ~

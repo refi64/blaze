@@ -18,16 +18,25 @@ ERROR
 :4:5: note: previous definition is here
     mx: int
     ~~
-:9:9: error: identifier my cannot be accessed without @
+:9:9: error: identifier 'my' cannot be accessed without @
     my(x)
     ~~
-:10:16: error: identifier mx cannot be accessed without @
+:7:9: note: 'my' declared here
+    fun my -> int:
+        ~~
+:10:16: error: identifier 'mx' cannot be accessed without @
     return mx
            ~~
+:4:5: note: 'mx' declared here
+    mx: int
+    ~~
 :9:9: error: function expected 0 argument(s), not 1
     my(x)
     ~~
-:7:9: note: my declared here
+:7:9: note: 'my' declared here
     fun my -> int:
         ~~
+:3:8: error: struct must have a constructor
+    struct A:
+           ~
 #]
