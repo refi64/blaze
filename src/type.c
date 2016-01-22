@@ -32,6 +32,7 @@ static String* typestring(Type* t) {
         case Tchar: return string_new("char");
         case Tbyte: return string_new("byte");
         case Tsize: return string_new("size");
+        case Tbool: return string_new("bool");
         case Tbend: assert(0);
         }
     case Tptr:
@@ -425,23 +426,41 @@ void type(Node* n) {
     case Nop:
         type(n->sons[0]);
         type(n->sons[1]);
-        if (n->sons[0]->type->kind != Tbuiltin ||
-            n->sons[1]->type->kind != Tbuiltin)
-            n->type = NULL;
-        else if (typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1]))
-            n->type = n->sons[0]->type;
-        else if (typematch(n->sons[1]->type, n->sons[0]->type, n->sons[0]))
-            n->type = n->sons[1]->type;
+        if (n->op > Orelop) {
+            if (!typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1]) &&
+                !typematch(n->sons[1]->type, n->sons[0]->type, n->sons[0])) {
+                String* tl, *tr;
+                tl = typestring(n->sons[0]->type);
+                tr = typestring(n->sons[1]->type);
+                error(n->loc, "invalid types '%s' and '%s' in comparison "
+                              "expression", tl->str, tr->str);
+                string_free(tl);
+                string_free(tr);
+            }
 
-        if (!n->type) {
-            String* tl, *tr;
-            tl = typestring(n->sons[0]->type);
-            tr = typestring(n->sons[1]->type);
-            error(n->loc, "invalid types '%s' and '%s' in binary expression",
-                  tl->str, tr->str);
-            string_free(tl);
-            string_free(tr);
-            n->type = anytype->override;
+            n->type = builtin_types[Tbool]->override;
+        }
+        else {
+            if (n->sons[0]->type->kind != Tbuiltin ||
+                n->sons[1]->type->kind != Tbuiltin ||
+                n->sons[0]->type->bkind == Tbool ||
+                n->sons[1]->type->bkind == Tbool)
+                n->type = NULL;
+            else if (typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1]))
+                n->type = n->sons[0]->type;
+            else if (typematch(n->sons[1]->type, n->sons[0]->type, n->sons[0]))
+                n->type = n->sons[1]->type;
+
+            if (!n->type) {
+                String* tl, *tr;
+                tl = typestring(n->sons[0]->type);
+                tr = typestring(n->sons[1]->type);
+                error(n->loc, "invalid types '%s' and '%s' in binary expression",
+                      tl->str, tr->str);
+                string_free(tl);
+                string_free(tr);
+                n->type = anytype->override;
+            }
         }
         type_incref(n->type);
         break;

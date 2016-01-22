@@ -1,6 +1,7 @@
 #include "blaze.h"
 
-const char* typenames[] = {"int", "char", "unsigned char", "unsigned long"};
+const char* typenames[] = {"int", "char", "unsigned char", "unsigned long",
+                           "int"};
 int type_id=0;
 
 #define CNAME(x) ((x)?(x)->d.cname->str:"void")

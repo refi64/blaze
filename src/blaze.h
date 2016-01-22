@@ -107,6 +107,7 @@ struct Type {
             Tbyte,
             Tchar,
             Tsize,
+            Tbool,
             Tbend
         } bkind; // Tbuiltin
         struct {
