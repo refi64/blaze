@@ -130,7 +130,8 @@ LexerContext parse_string(const char* file, const char* module,
 prog : tstmt {
     N(ctx->result, Nmodule, yylloc)
     list_append(ctx->result->sons, $1);
-}    | prog sep tstmt { list_append(ctx->result->sons, $3); }
+}   | prog sep tstmt { list_append(ctx->result->sons, $3); }
+    | prog sep {}
 
 tstmt : struct | fun | global
 
