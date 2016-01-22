@@ -72,7 +72,10 @@ static int typematch(Type* a, Type* b, Node* ctx) {
     if (a->kind == Tany || b->kind == Tany) return 1;
     if (a->kind != b->kind) return 0;
     switch (a->kind) {
-    case Tbuiltin: return (ctx && ctx->kind == Nint) || (a->bkind == b->bkind);
+    case Tbuiltin:
+        if (ctx && ctx->kind == Nint && a->bkind != Tbool && b->bkind != Tbool)
+            return 1;
+        else return a->bkind == b->bkind;
     case Tptr: return typematch(a->sons[0], b->sons[0], NULL);
     case Tfun:
         if (list_len(a->sons) != list_len(b->sons)) return 0;
@@ -458,9 +461,7 @@ void type(Node* n) {
         }
         else {
             if (n->sons[0]->type->kind != Tbuiltin ||
-                n->sons[1]->type->kind != Tbuiltin ||
-                n->sons[0]->type->bkind == Tbool ||
-                n->sons[1]->type->bkind == Tbool)
+                n->sons[1]->type->kind != Tbuiltin)
                 n->type = NULL;
             else if (typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1]))
                 n->type = n->sons[0]->type;
