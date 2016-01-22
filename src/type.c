@@ -269,6 +269,19 @@ void type(Node* n) {
         force_type_context(n->sons[0]);
         n->type = n->sons[0]->type;
         type_incref(n->type);
+
+        if (n->sons[1]) {
+            type(n->sons[1]);
+            force_typed_expr_context(n->sons[1]);
+            if (!typematch(n->type, n->sons[1]->type, n->sons[1])) {
+                String* expects, *givens;
+                expects = typestring(n->type);
+                givens = typestring(n->sons[1]->type);
+                error(n->sons[1]->loc, "types '%s' and '%s' in assignment are not"
+                                       " compatible", expects->str, givens->str);
+                declared_here(n->sons[1]);
+            }
+        }
         break;
     case Nptr:
         type(n->sons[0]);

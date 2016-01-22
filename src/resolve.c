@@ -80,6 +80,10 @@ static void resolve0(Node* n) {
         resolve0(n->sons[0]);
         e = stentry_new(n, n->s, NULL);
         symtab_add(n->tab, n->s, e);
+        if (n->sons[1]) {
+            n->sons[1]->parent = n;
+            resolve0(n->sons[1]);
+        }
         break;
     case Nbody:
         for (i=0; i<list_len(n->sons); ++i) {
@@ -133,12 +137,9 @@ static void resolve1(Node* n) {
     assert(n);
     switch (n->kind) {
     case Nmodule: case Nstruct: case Nconstr: case Nfun: case Narglist:
-    case Ncast:
+    case Ndecl: case Ncast:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
-        break;
-    case Ndecl:
-        resolve1(n->sons[0]);
         break;
     case Nbody:
         for (i=0; i<list_len(n->sons); ++i) resolve1(n->sons[i]);

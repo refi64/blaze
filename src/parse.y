@@ -111,6 +111,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> fun
 %type <n> funret
 %type <funbody> funbody
+%type <n> globalsuf
 %type <n> global
 %type <n> arglist
 %type <n> arglist2
@@ -210,7 +211,14 @@ arglist :         { N($$, Narglist, yylloc) }
 arglist2 : decl { N($$, Narglist, $1->loc); list_append($$->sons, $1); }
          | arglist2 TCOMMA decl { $$ = $1; list_append($$->sons, $3); }
 
-global : TGLOBAL modspec decl { $$ = $3; $$->flags |= $2; }
+globalsuf :          { $$ = NULL; }
+          | TEQ expr { $$ = $2; }
+
+global : TGLOBAL modspec decl globalsuf {
+    $$ = $3;
+    $$->flags |= $2;
+    list_append($$->sons, $4);
+}
 
 decl : id TCOLON texpr {
     N($$, Ndecl, $1->loc);
