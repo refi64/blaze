@@ -90,6 +90,9 @@ ERROR
 :13:13: note: 'x' declared here
     let var x = g(1)
             ~
+:13:13: note: 'x' declared here
+    let var x = g(1)
+            ~
 :15:12: error: function should not return a value
     return x
            ~

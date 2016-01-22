@@ -7,13 +7,13 @@ fun g() -> int:
 
 #[
 ERROR
-:1:24: error: undeclared identifier a
+:1:24: error: undeclared identifier 'a'
     fun f() -> int: return a
                            ~
-:4:13: error: identifier d cannot reference itself in its own declaration
+:4:13: error: identifier 'd' cannot reference itself in its own declaration
     let d = d
             ~
-:4:9: note: d declared here
+:4:9: note: 'd' declared here
     let d = d
         ~
 :5:9: warning: unused variable 'e'

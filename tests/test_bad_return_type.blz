@@ -16,7 +16,7 @@ fun m -> n:
     return
 #[
 ERROR
-:15:10: error: undeclared identifier n
+:15:10: error: undeclared identifier 'n'
     fun m -> n:
              ~
 :1:24: error: function was declared to return type 'int', not '() -> int'
@@ -25,22 +25,25 @@ ERROR
 :1:12: note: function return type declared here
     fun f() -> int: return f
                ~~~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f() -> int: return f
                            ~
 :2:10: error: expression is not a type
     fun g(a: f) -> int:
              ~
+:1:5: note: 'f' declared here
+    fun f() -> int: return f
+        ~
 :4:12: error: function was declared to return type 'int', not '() -> int'
      return x
             ~
 :2:16: note: function return type declared here
     fun g(a: f) -> int:
                    ~~~
-:3:9: note: x declared here
+:3:9: note: 'x' declared here
     let x = f
         ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f() -> int: return f
         ~
 :5:12: error: function was declared to return type 'int', not '() -> int'
@@ -49,12 +52,15 @@ ERROR
 :2:16: note: function return type declared here
     fun g(a: f) -> int:
                    ~~~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f() -> int: return f
         ~
 :6:10: error: expression is not a type
     fun h -> g: return f
                ~
+:2:5: note: 'g' declared here
+    fun g(a: f) -> int:
+        ~
 :8:12: error: function should not return a value
     return f
            ~
