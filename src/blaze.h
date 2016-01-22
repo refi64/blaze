@@ -139,6 +139,9 @@ enum Flags {
     Fstc =1<<9, // Is the var a constant method/constructor of a parent struct?
 };
 
+typedef enum Op { Oadd, Osub, Omul, Odiv } Op;
+static const char op_strings[] = "+-*/";
+
 struct Node {
     enum {
         Nid,
@@ -173,13 +176,14 @@ struct Node {
         }; // Nfun
         Node* constr; // Nstruct
         Node* attr; // Nattr
-        enum { Oadd, Osub, Omul, Odiv } op; // Nop
+        Op op; // Nop
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
     int typing; // Is this node being typed? (Used to locate recursion.)
     int flags;
     Location loc;
+    // Nop: expr, expr
     // Naddr: expr
     // Nderef: expr
     // Ncall: target, args...
@@ -333,8 +337,10 @@ struct Instr {
         Iconstr,
         Icall,
         Icast,
+        Iop,
         Iint
     } kind;
+    Op op; // Iop
     // Destination variable.
     Var* dst;
     // Argument variables.

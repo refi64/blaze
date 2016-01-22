@@ -171,6 +171,10 @@ static void cgen_ir(Instr* ir, FILE* output) {
         assert(ir->dst);
         fprintf(output, "(%s)(%s)", CNAME(ir->dst->type), CNAME(ir->v[0]));
         break;
+    case Iop:
+        fprintf(output, "%s %c %s", CNAME(ir->v[0]), op_strings[ir->op],
+                CNAME(ir->v[1]));
+        break;
     case Iint:
         fputs(ir->s->str, output);
         break;

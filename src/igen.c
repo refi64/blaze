@@ -126,7 +126,13 @@ static Var* igen_node(Decl* d, Node* n) {
         v = var_new(d, NULL, n->type, NULL);
         igen_attr_chain(d, v, n);
         return v;
-    case Nop: break;
+    case Nop:
+        ir->kind = Iop;
+        ir->dst = var_new(d, ir, n->type, NULL);
+        ir->op = n->op;
+        list_append(ir->v, igen_node(d, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[1]));
+        break;
     case Nid:
         assert(n->e && n->e->n && n->e->n->v);
         free(ir);
