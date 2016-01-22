@@ -139,8 +139,14 @@ enum Flags {
     Fstc =1<<9, // Is the var a constant method/constructor of a parent struct?
 };
 
-typedef enum Op { Oadd, Osub, Omul, Odiv } Op;
-static const char* op_strings[] = {"+", "-", "*", "/"};
+typedef enum Op {
+    Oadd, Osub, Omul, Odiv,
+    Orelop,
+    Oeq, One, Olt, Ogt,
+} Op;
+static const char* op_strings[] = {"+", "-", "*", "/",
+                                   NULL,
+                                   "==", "!=", "<", ">"};
 
 struct Node {
     enum {

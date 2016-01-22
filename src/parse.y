@@ -66,6 +66,11 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSEMIC
 %token <t> TEQ
 
+%token <t> TDEQ
+%token <t> TNE
+%token <t> TLT
+%token <t> TGT
+
 %token <t> TPLUS
 %token <t> TMINUS
 %token <t> TSLASH
@@ -90,6 +95,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSTRING
 
 %left TDCOLON
+%nonassoc TDEQ TNE TLT TGT
 %left TPLUS TMINUS
 %left TSTAR TSLASH
 %right UTAND UTSTAR
@@ -132,8 +138,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> attr
 %type <n> new
 %type <n> cast
-%type <n> binop
-%type <t> op
+%type <n> op
 
 %type <i> modspec
 
@@ -274,7 +279,7 @@ expr : name { $$ = $1; }
      | attr { $$ = $1; }
      | new  { $$ = $1; }
      | cast { $$ = $1; }
-     | binop { $$ = $1; }
+     | op { $$ = $1; }
 
 name : id   { $$ = $1; $$->flags |= Faddr; }
      | this { $$ = $1; $$->flags |= Faddr; }
@@ -353,10 +358,14 @@ cast : expr TDCOLON texpr {
     list_append($$->sons, $3);
 }
 
-binop : expr TPLUS expr { B($$, Oadd, $1, $2, $3) }
-      | expr TMINUS expr { B($$, Osub, $1, $2, $3) }
-      | expr TSTAR expr { B($$, Omul, $1, $2, $3) }
-      | expr TSLASH expr { B($$, Odiv, $1, $2, $3) }
+op : expr TPLUS expr { B($$, Oadd, $1, $2, $3) }
+   | expr TMINUS expr { B($$, Osub, $1, $2, $3) }
+   | expr TSTAR expr { B($$, Omul, $1, $2, $3) }
+   | expr TSLASH expr { B($$, Odiv, $1, $2, $3) }
+   | expr TDEQ expr { B($$, Oeq, $1, $2, $3) }
+   | expr TNE expr { B($$, One, $1, $2, $3) }
+   | expr TLT expr { B($$, Olt, $1, $2, $3) }
+   | expr TGT expr { B($$, Ogt, $1, $2, $3) }
 
 ws : | ws TNEWL
 /* eof : TEOF */
