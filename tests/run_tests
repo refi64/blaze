@@ -17,7 +17,7 @@ run_test() {
         data=`cat $test | awk '/#\[/,/\]#/' | tail -n +2 | head -n -1`
         kind=`echo "$data" | head -1`
         expected=`echo "$data" | tail -n +2 | sed "s#^:#$test:#"`
-        output=`run_test1 $test`
+        output=`run_test1 $test | perl -pe 's/\e\[?.*?[\@-~]//g'`
         diff -u -B -b <(echo "$expected") <(echo "$output")
     fi
 }
