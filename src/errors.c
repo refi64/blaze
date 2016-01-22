@@ -61,7 +61,8 @@ Node* declared_here(Node* n) {
         break;
     case Nid:
         if (n->e && n->e->n && n->e->n->loc.file) {
-            note(n->e->n->loc, "'%s' declared here", n->s->str);
+            if (n->e->n->kind != Nfun && n->e->n->kind != Ndecl)
+                note(n->e->n->loc, "'%s' declared here", n->s->str);
             t = declared_here(n->e->n);
         }
         break;
