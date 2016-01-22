@@ -140,7 +140,7 @@ enum Flags {
 };
 
 typedef enum Op { Oadd, Osub, Omul, Odiv } Op;
-static const char op_strings[] = "+-*/";
+static const char* op_strings[] = {"+", "-", "*", "/"};
 
 struct Node {
     enum {

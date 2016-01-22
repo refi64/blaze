@@ -62,7 +62,7 @@ void instr_dump(Instr* ir) {
     case Iconstr: printf("Iconstr"); break;
     case Icall: printf("Icall"); break;
     case Icast: printf("Icast"); break;
-    case Iop: printf("Iop (op:%c)", op_strings[ir->op]); break;
+    case Iop: printf("Iop (op:%s)", op_strings[ir->op]); break;
     case Iint: printf("Iint (i:%s)", ir->s->str); break;
     }
 
