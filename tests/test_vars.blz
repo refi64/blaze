@@ -19,7 +19,7 @@ ERROR
 :9:5: error: left-hand side of assignment must be variable
     a = 2
     ~
-:4:9: note: a declared here
+:4:9: note: 'a' declared here
     let a = 1
         ~
 :4:9: note: add 'var' to make it variable
@@ -28,7 +28,7 @@ ERROR
 :10:5: error: left-hand side of assignment must be variable
     b = 3
     ~
-:5:13: note: b declared here
+:5:13: note: 'b' declared here
     let mut b = 2
             ~
 :5:13: note: change 'mut' to 'var' to make it variable
@@ -40,13 +40,13 @@ ERROR
 :13:5: error: left-hand side of assignment cannot be constant
     f = 7
     ~
-:3:5: note: f declared here
+:3:5: note: 'f' declared here
     fun f() -> char:
         ~
 :7:14: error: expected pointer type, got 'int'
     let d = *a
              ~
-:4:9: note: a declared here
+:4:9: note: 'a' declared here
     let a = 1
         ~
 :8:9: warning: unused variable 'e'
@@ -55,7 +55,7 @@ ERROR
 :13:7: error: types '() -> char' and 'int' in assignment are not compatible
     f = 7
       ~
-:3:5: note: f declared here
+:3:5: note: 'f' declared here
     fun f() -> char:
         ~
 :15:12: error: function was declared to return type 'char', not '*(() -> char)'

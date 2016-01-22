@@ -21,43 +21,43 @@ ERROR
 :5:13: error: function expected 1 argument(s), not 0
     let x = f()
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :5:13: error: cannot use void value in expression
     let x = f()
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :6:13: error: function expected 1 argument(s), not 2
     let y = f(1, 2)
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :6:13: error: cannot use void value in expression
     let y = f(1, 2)
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :7:13: error: function expected 1 argument(s), not 2
     let z = f(&n, &y)
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :7:15: error: function expected argument of type 'int', not '*int'
     let z = f(&n, &y)
               ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :7:13: error: cannot use void value in expression
     let z = f(&n, &y)
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :7:9: warning: unused variable 'z'
@@ -66,7 +66,7 @@ ERROR
 :8:13: error: cannot use void value in expression
     let a = f(1)
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :8:9: warning: unused variable 'a'
@@ -75,7 +75,7 @@ ERROR
 :9:13: error: cannot use void value in expression
     let b = f(n)
             ~
-:1:5: note: f declared here
+:1:5: note: 'f' declared here
     fun f(x: int):
         ~
 :9:9: warning: unused variable 'b'
@@ -84,7 +84,7 @@ ERROR
 :14:7: error: types 'int' and '*int' in assignment are not compatible
     x = &x
       ~
-:13:13: note: x declared here
+:13:13: note: 'x' declared here
     let var x = g(1)
             ~
 :15:12: error: function should not return a value

@@ -8,7 +8,7 @@ struct A:
         let x = 1
         my(x)
         return mx
-    ;mz: int # XXX: The ; here is due to a lexer bug.
+    mz: int
 
 #[
 ERROR

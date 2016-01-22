@@ -10,10 +10,10 @@ ERROR
 :2:27: note: function return type declared here
     fun g(a: int, b: char) -> typeof(f):
                               ~~~~~~
-:3:9: note: d declared here
+:3:9: note: 'd' declared here
     let d = a
         ~
-:2:7: note: a declared here
+:2:7: note: 'a' declared here
     fun g(a: int, b: char) -> typeof(f):
           ~
 ]#
