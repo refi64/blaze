@@ -425,7 +425,24 @@ void type(Node* n) {
     case Nop:
         type(n->sons[0]);
         type(n->sons[1]);
-        n->type = n->sons[0]->type;
+        if (n->sons[0]->type->kind != Tbuiltin ||
+            n->sons[1]->type->kind != Tbuiltin)
+            n->type = NULL;
+        else if (typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1]))
+            n->type = n->sons[0]->type;
+        else if (typematch(n->sons[1]->type, n->sons[0]->type, n->sons[0]))
+            n->type = n->sons[1]->type;
+
+        if (!n->type) {
+            String* tl, *tr;
+            tl = typestring(n->sons[0]->type);
+            tr = typestring(n->sons[1]->type);
+            error(n->loc, "invalid types '%s' and '%s' in binary expression",
+                  tl->str, tr->str);
+            string_free(tl);
+            string_free(tr);
+            n->type = anytype->override;
+        }
         type_incref(n->type);
         break;
     case Nid:
