@@ -4,7 +4,7 @@
 
 #define YY_EXTRA_TYPE LexerContext*
 
-int cur=0, level=0, sp=0;
+int cur=0, level=0, sp=0, sep=0;
 
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line = yylineno;\
     yylloc->first_column = yycolumn;\
@@ -144,8 +144,12 @@ void lex_free() { ds_hfree(kw); }
                 int i;
                 for (i=0; i<sp; ++i) unput(' ');
             }
+            sep = 1;
             return TUNINDENT;
         }
+    } else if (sep) {
+        sep = 0;
+        return TSEP;
     } else {
         cur = 0;
         BEGIN INITIAL;

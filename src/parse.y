@@ -43,6 +43,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TINDENT
 %token <t> TUNINDENT
 %token <t> TNEWL
+%token <t> TSEP
 %token <t> TERROR
 %token <t> TINDERROR
 
@@ -126,8 +127,10 @@ LexerContext parse_string(const char* file, const char* module,
 
 %%
 
-prog : ws { N(ctx->result, Nmodule, yylloc) }
-     | prog tstmt ws { list_append(ctx->result->sons, $2); }
+prog : tstmt {
+    N(ctx->result, Nmodule, yylloc)
+    list_append(ctx->result->sons, $1);
+}    | prog sep tstmt { list_append(ctx->result->sons, $3); }
 
 tstmt : struct | fun | global
 
@@ -201,7 +204,7 @@ body : indent body2 unindent { $$ = $2; }
 body2 : stmt { N($$, Nbody, $1->loc); list_append($$->sons, $1); }
       | body2 sep stmt { $$ = $1; list_append($$->sons, $3); }
 
-sep : TSEMIC | TNEWL
+sep : TSEMIC | TNEWL | TSEP
 
 stmt : let    { $$ = $1; }
      | assign { $$ = $1; }
