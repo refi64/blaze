@@ -93,6 +93,10 @@ void lex_free() { ds_hfree(kw); }
 ";" { return TSEMIC; }
 "=" { return TEQ; }
 
+"+" { return TPLUS; }
+"-" { return TMINUS; }
+"/" { return TSLASH; }
+
 "*" { return TSTAR; }
 "&" { return TAND; }
 

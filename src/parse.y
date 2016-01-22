@@ -18,6 +18,13 @@ LexerContext parse_string(const char* file, const char* module,
 #define scanner ctx->scanner
 
 #define N(x,k,l) x = new(Node); x->kind = k; x->loc = l;
+
+#define B(x,o,l,t,r) {\
+    N(x, Nop, t.loc)\
+    list_append(x->sons, l);\
+    list_append(x->sons, r);\
+    x->op = o;\
+}
 %}
 
 %union {
@@ -59,6 +66,10 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSEMIC
 %token <t> TEQ
 
+%token <t> TPLUS
+%token <t> TMINUS
+%token <t> TSLASH
+
 %token <t> TSTAR
 %token <t> TAND
 
@@ -78,8 +89,10 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TINT
 %token <t> TSTRING
 
-%right UTAND UTSTAR
 %left TDCOLON
+%left TPLUS TMINUS
+%left TSTAR TSLASH
+%right UTAND UTSTAR
 %left TNEW
 %left TDOT TLP TLBK
 
@@ -119,6 +132,8 @@ LexerContext parse_string(const char* file, const char* module,
 %type <n> attr
 %type <n> new
 %type <n> cast
+%type <n> binop
+%type <t> op
 
 %type <i> modspec
 
@@ -259,6 +274,7 @@ expr : name { $$ = $1; }
      | attr { $$ = $1; }
      | new  { $$ = $1; }
      | cast { $$ = $1; }
+     | binop { $$ = $1; }
 
 name : id   { $$ = $1; $$->flags |= Faddr; }
      | this { $$ = $1; $$->flags |= Faddr; }
@@ -336,6 +352,11 @@ cast : expr TDCOLON texpr {
     list_append($$->sons, $1);
     list_append($$->sons, $3);
 }
+
+binop : expr TPLUS expr { B($$, Oadd, $1, $2, $3) }
+      | expr TMINUS expr { B($$, Osub, $1, $2, $3) }
+      | expr TSTAR expr { B($$, Omul, $1, $2, $3) }
+      | expr TSLASH expr { B($$, Odiv, $1, $2, $3) }
 
 ws : | ws TNEWL
 /* eof : TEOF */

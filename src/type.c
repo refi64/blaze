@@ -422,6 +422,12 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
+    case Nop:
+        type(n->sons[0]);
+        type(n->sons[1]);
+        n->type = n->sons[0]->type;
+        type_incref(n->type);
+        break;
     case Nid:
         if (n->e) {
             if (n->e->n) {

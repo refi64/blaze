@@ -146,6 +146,7 @@ struct Node {
 
         Nsons,
 
+        Nop,
         Naddr,
         Nderef,
         Ncall,
@@ -172,6 +173,7 @@ struct Node {
         }; // Nfun
         Node* constr; // Nstruct
         Node* attr; // Nattr
+        enum { Oadd, Osub, Omul, Odiv } op; // Nop
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
