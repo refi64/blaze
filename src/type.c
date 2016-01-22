@@ -15,6 +15,9 @@ static void force_typed_expr_context(Node* n) {
     if (n->flags & Ftype) {
         error(n->loc, "expected expression, not type");
         if (n->e && n->e->n) declared_here(n->e->n);
+        type_decref(n->type);
+        n->type = anytype->override;
+        type_incref(n->type);
     } else if (n->flags & Fvoid) {
         error(n->loc, "cannot use void value in expression");
         if (n->kind == Ncall) declared_here(n->sons[0]);
