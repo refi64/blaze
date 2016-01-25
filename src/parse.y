@@ -289,6 +289,8 @@ expr : name { $$ = $1; }
      | cast { $$ = $1; }
      | op { $$ = $1; }
 
+     | TLP expr TRP { $$ = $2; }
+
 name : id   { $$ = $1; $$->flags |= Faddr; }
      | this { $$ = $1; $$->flags |= Faddr; }
 
