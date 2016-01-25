@@ -174,6 +174,7 @@ struct Node {
         Nptr,
         Nstruct,
         Nconstr,
+        Ndestr,
         Nfun,
         Narglist,
         Ndecl,
@@ -204,7 +205,7 @@ struct Node {
     // Ntypeof: expr
     // Nptr: expr
     // Nstruct: members...
-    // Nconstr, Nfun: ret | NULL (always NULL for Nconstr), args...
+    // Nconstr, Ndestr, Nfun: ret | NULL (always NULL for Nconstr, Ndestr), args, body
     // Narglist: Narg...
     // Ndecl: type
     // Nbody: stmts...

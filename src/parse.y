@@ -112,6 +112,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TGLOBAL
 %token <t> TSTRUCT
 %token <t> TNEW
+%token <t> TDELETE
 %token <t> TID
 %token <t> TINT
 %token <t> TSTRING
@@ -130,6 +131,7 @@ LexerContext parse_string(const char* file, const char* module,
 %type <l> members2
 %type <n> member
 %type <n> constr
+%type <n> destr
 %type <n> fun
 %type <n> funret
 %type <funbody> funbody
@@ -192,14 +194,21 @@ members : indent members2 unindent { $$ = $2; }
 members2 : member { $$ = NULL; list_append($$, $1); }
          | members2 sep member { $$ = $1; list_append($$, $3); }
 
-member : constr | fun
+member : constr | destr | fun
        | modspec decl { $$ = $2; $$->flags |= $1; }
 
 constr : TNEW arglist TCOLON body {
-    N($$, Nconstr, $1.loc);
+    N($$, Nconstr, $1.loc)
     list_append($$->sons, NULL);
     list_append($$->sons, $2);
     list_append($$->sons, $4);
+}
+
+destr : TDELETE TCOLON body {
+    N($$, Ndestr, $1.loc)
+    list_append($$->sons, NULL);
+    list_append($$->sons, NULL);
+    list_append($$->sons, $3);
 }
 
 fun : TFUN id arglist funret funbody {

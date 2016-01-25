@@ -144,8 +144,8 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->s = string_clone(n->s);
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
-    case Nmodule: case Ntypeof: case Nstruct: case Nconstr: case Nfun:
-    case Narglist: case Ndecl: case Nsons: case Nptr: assert(0);
+    case Nmodule: case Ntypeof: case Nstruct: case Nconstr: case Ndestr:
+    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr: assert(0);
     }
 
     return instr_result(d, ir);

@@ -47,7 +47,7 @@ static void resolve0(Node* n) {
         symtab_add(n->parent->tab, n->s, e);
 
     // Fall though.
-    case Nconstr:
+    case Nconstr: case Ndestr:
         n->tab = symtab_sub(n->parent->tab);
 
         if (n->parent->kind == Nstruct) {
@@ -132,7 +132,7 @@ static void resolve1(Node* n) {
     int i;
     assert(n);
     switch (n->kind) {
-    case Nmodule: case Nstruct: case Nconstr: case Nfun: case Narglist:
+    case Nmodule: case Nstruct: case Nconstr: case Ndestr: case Nfun: case Narglist:
     case Ndecl: case Ncast:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);

@@ -168,12 +168,12 @@ void type(Node* n) {
         if (!n->constr)
             error(n->loc, "struct must have a constructor");
         break;
-    case Nconstr: case Nfun:
+    case Nconstr: case Ndestr: case Nfun:
         if (n->sons[0]) {
             type(n->sons[0]);
             force_type_context(n->sons[0]);
         }
-        type(n->sons[1]);
+        if (n->sons[1]) type(n->sons[1]);
         n->type = new(Type);
         n->type->kind = Tfun;
         type_incref(n->type);
@@ -181,7 +181,7 @@ void type(Node* n) {
             list_append(n->type->sons, n->sons[0]->type);
             type_incref(n->sons[0]->type);
         } else list_append(n->type->sons, NULL);
-        for (i=0; i<list_len(n->sons[1]->sons); ++i) {
+        if (n->sons[1]) for (i=0; i<list_len(n->sons[1]->sons); ++i) {
             list_append(n->type->sons, n->sons[1]->sons[i]->type);
             type_incref(n->sons[1]->sons[i]->type);
         }
