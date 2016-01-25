@@ -30,6 +30,7 @@ static void node_dump2(Node* n, int indent) {
     case Nmodule: put("Nmodule"); break;
     case Nsons: assert(0);
     }
+    if (n->export) printf(" exported");
     printf(" @ lines %d-%d, cols %d-%d", n->loc.first_line, n->loc.last_line,
            n->loc.first_column, n->loc.last_column);
     #define FLAG(f) if (n->flags & f) printf( ", " #f );

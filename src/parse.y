@@ -113,6 +113,7 @@ LexerContext parse_string(const char* file, const char* module,
 %token <t> TSTRUCT
 %token <t> TNEW
 %token <t> TDELETE
+%token <t> TEXPORT
 %token <t> TID
 %token <t> TINT
 %token <t> TSTRING
@@ -126,6 +127,7 @@ LexerContext parse_string(const char* file, const char* module,
 %left TDOT TLP TLBK
 
 %type <n> tstmt
+%type <n> tstmt2
 %type <n> struct
 %type <l> members
 %type <l> members2
@@ -178,7 +180,10 @@ prog : tstmt {
 }   | prog sep tstmt { list_append(ctx->result->sons, $3); }
     | prog sep {}
 
-tstmt : struct | fun | global
+tstmt2 : struct | fun | global
+
+tstmt : tstmt2         { $$ = $1; }
+      | TEXPORT tstmt2 { $$ = $2; $$->export = 1; }
 
 struct : TSTRUCT id TCOLON members {
     int i;

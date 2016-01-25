@@ -218,6 +218,7 @@ struct Node {
     Symtab* tab; // NOTE: Only Nmodule, Nfun free their symbol tables.
     Var* v;
     Decl* d;
+    int export;
 };
 void node_dump(Node* n);
 void node_free(Node* n);

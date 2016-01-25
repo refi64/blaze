@@ -39,6 +39,7 @@ void lex_init() {
     KW(struct, TSTRUCT)
     KW(new, TNEW)
     KW(delete, TDELETE)
+    KW(export, TEXPORT)
 }
 
 void lex_context_init(LexerContext* ctx, const char* file, const char* module,
