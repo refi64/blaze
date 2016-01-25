@@ -239,7 +239,7 @@ globalsuf :          { $$ = NULL; }
 global : TGLOBAL modspec decl globalsuf {
     $$ = $3;
     $$->flags |= $2;
-    list_append($$->sons, $4);
+    $$->sons[1] = $4;
 }
 
 decl : id TCOLON texpr {
@@ -247,6 +247,7 @@ decl : id TCOLON texpr {
     $$->s = string_clone($1->s);
     node_free($1);
     list_append($$->sons, $3);
+    list_append($$->sons, NULL);
 }
 
 body : indent body2 unindent { $$ = $2; }

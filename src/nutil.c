@@ -60,10 +60,8 @@ void node_free(Node* n) {
     case Nmodule:
         symtab_free(n->tab);
         break;
-    case Nstruct:
-        node_free(n->this);
-        // Fallthough.
-    case Nid: case Nint: case Nfun: case Nlet: case Ndecl: case Nattr:
+    case Nstruct: case Nid: case Nint: case Nfun: case Nlet: case Ndecl:
+    case Nattr:
         if (n->s) string_free(n->s);
         if (n->kind == Nfun) {
             if (n->import) string_free(n->import);
@@ -74,5 +72,6 @@ void node_free(Node* n) {
     default: break;
     }
     if (n->type) type_decref(n->type);
+    node_free(n->this);
     free(n);
 }
