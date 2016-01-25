@@ -230,8 +230,14 @@ static void cgen_decl1(Decl* d, FILE* output) {
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, d->sons[i], output);
     fputs("R:\n", output);
-    if (d->rv)
-        fprintf(output, "    return %s;\n", CNAME(d->rv));
+    for (i=0; i<list_len(d->vars); ++i) {
+        Node* destr;
+        if (d->vars[i]->type && d->vars[i]->type->kind == Tstruct &&
+            (destr = d->vars[i]->type->n->destr))
+            fprintf(output, "    %s(&(%s));\n", CNAME(destr->v),
+                    CNAME(d->vars[i]));
+    }
+    if (d->rv) fprintf(output, "    return %s;\n", CNAME(d->rv));
     fputs("}\n\n", output);
 }
 
