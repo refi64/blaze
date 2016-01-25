@@ -185,7 +185,9 @@ struct Node {
         struct {
             String* import, *exportc; // C import name and export name.
         }; // Nfun
-        Node* constr; // Nstruct
+        struct {
+            Node* constr, *destr;
+        }; // Nstruct
         Node* attr; // Nattr
         Op op; // Nop
     };
@@ -309,6 +311,8 @@ struct Decl {
             List(Var*) args;
             // Return type.
             Type* ret;
+            // Return variable.
+            Var* rv;
         }; // Dfun
     };
     String* name, *import, *exportc;

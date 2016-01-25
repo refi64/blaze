@@ -155,6 +155,12 @@ void type(Node* n) {
                     error(n->sons[i]->loc, "duplicate constructor");
                     note(n->constr->loc, "previous constructor here");
                 }
+            } else if (n->sons[i]->kind == Ndestr) {
+                if (!n->destr) n->destr = n->sons[i];
+                else {
+                    error(n->sons[i]->loc, "duplicate destructor");
+                    note(n->destr->loc, "previous destructor here");
+                }
             }
 
             if (n->sons[i]->this) {

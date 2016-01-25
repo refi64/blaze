@@ -161,9 +161,8 @@ static void igen_sons(Decl* d, Node* n) {
 static void igen_func(Module* m, Decl* d, Node* n) {
     int i;
 
-    assert(n->kind == Nconstr || n->kind == Nfun);
+    assert(n->kind == Nconstr || n->kind == Ndestr || n->kind == Nfun);
     d->kind = Dfun;
-    assert(n->sons[1]->kind == Narglist);
     d->v = n->v = var_new(d, NULL, n->type, n->s);
     if (n->kind == Nconstr) n->parent->v = n->v;
 
@@ -189,15 +188,21 @@ static void igen_func(Module* m, Decl* d, Node* n) {
         n->this->v = v;
     }
 
-    for (i=0; i<list_len(n->sons[1]->sons); ++i) {
-        Node* arg = n->sons[1]->sons[i];
-        assert(arg->kind == Ndecl);
-        Var* v = var_new(d, NULL, arg->type, arg->s);
-        list_append(d->args, v);
-        arg->v = v;
+    if (n->sons[1]) {
+        assert(n->sons[1]->kind == Narglist);
+        for (i=0; i<list_len(n->sons[1]->sons); ++i) {
+            Node* arg = n->sons[1]->sons[i];
+            assert(arg->kind == Ndecl);
+            Var* v = var_new(d, NULL, arg->type, arg->s);
+            list_append(d->args, v);
+            arg->v = v;
+        }
     }
 
-    if (n->sons[0]) d->ret = n->sons[0]->type;
+    if (n->sons[0]) {
+        d->ret = n->sons[0]->type;
+        d->rv = var_new(d, NULL, n->sons[0]->type, NULL);
+    }
     if (!n->import) igen_node(d, n->sons[2]);
     else d->import = n->import;
 
@@ -234,7 +239,7 @@ static Decl* igen_decl(Module* m, Node* n) {
     d->m = m;
 
     switch (n->kind) {
-    case Nconstr: case Nfun:
+    case Nconstr: case Ndestr: case Nfun:
         igen_func(m, d, n);
         break;
     case Ndecl:
