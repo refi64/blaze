@@ -226,7 +226,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
     }
     if (d->rv) {
         generate_varname(d->rv);
-        fprintf(output, "    %s %s;", CNAME(d->ret), CNAME(d->rv));
+        fprintf(output, "    %s %s;\n", CNAME(d->ret), CNAME(d->rv));
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, d->sons[i], output);
     fputs("R:\n", output);
@@ -238,6 +238,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
                     CNAME(d->vars[i]));
     }
     if (d->rv) fprintf(output, "    return %s;\n", CNAME(d->rv));
+    else fputs("    return;\n", output);
     fputs("}\n\n", output);
 }
 
