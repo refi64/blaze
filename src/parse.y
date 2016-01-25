@@ -7,6 +7,28 @@ void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
     error(*yylloc, "%s", msg);
 }
 
+LexerContext parse_file(const char* file, const char* module) {
+    LexerContext nullctx;
+    nullctx.result = NULL;
+    nullctx.scanner = NULL;
+    nullctx.fcont = NULL;
+    size_t sz;
+    FILE* fp = fopen(file, "r");
+    if (!fp) {
+        fprintf(stderr, "error opening %s: %s\n", file, strerror(errno));
+        return nullctx;
+    }
+    char* data = readall(fp, &sz);
+    if (data == NULL) {
+        if (ferror(fp))
+            fprintf(stderr, "error reading %s: %s\n", file, strerror(errno));
+        fclose(fp);
+        return nullctx;
+    }
+    fclose(fp);
+    return parse_string(file, module, data);
+}
+
 LexerContext parse_string(const char* file, const char* module,
     const char* fcont) {
     LexerContext ctx;

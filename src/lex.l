@@ -54,7 +54,7 @@ void lex_context_init(LexerContext* ctx, const char* file, const char* module,
 }
 
 void lex_context_free(LexerContext* ctx) {
-    yylex_destroy(ctx->scanner);
+    if (ctx->scanner) yylex_destroy(ctx->scanner);
 }
 
 void lex_free() { ds_hfree(kw); }

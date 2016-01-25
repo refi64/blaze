@@ -31,6 +31,7 @@ typedef struct GData GData;
 
 void fatal(const char*);
 int min(int a, int b);
+char* readall(FILE* f, size_t* sz);
 #define IS_MAIN(n) ((n)->kind == Nfun && strcmp((n)->loc.module, "__main__") == 0\
                     && strcmp((n)->s->str, "main") == 0)
 
