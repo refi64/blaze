@@ -134,6 +134,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     case Iret:
         if (ir->v)
             fprintf(output, "%s = %s; goto R", CNAME(d->rv), CNAME(ir->v[0]));
+        else fputs("goto R", output);
         break;
     case Iset:
         if (ir->v[0]->ir->kind == Iaddr) fputs(CNAME(ir->v[0]->ir->v[0]), output);
