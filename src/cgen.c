@@ -187,7 +187,7 @@ static void cgen_proto(Decl* d, FILE* output) {
     int i;
 
     assert(d->kind == Dfun);
-    if (!d->exportc && !d->import && d != d->m->init) fputs("static ", output);
+    if (!d->exportc && !d->import && !d->export) fputs("static ", output);
     fprintf(output, "%s %s(", d->v->type ? CNAME(d->v->type->sons[0]) : "void",
             CNAME(d->v));
     for (i=0; i<list_len(d->args); ++i) {

@@ -322,6 +322,7 @@ struct Decl {
     // The decl's module.
     Module* m;
     int flags;
+    int export;
 };
 
 struct Var {

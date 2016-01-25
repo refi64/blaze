@@ -236,6 +236,7 @@ static void igen_global(Module* m, Decl* d, Node* n) {
 static Decl* igen_decl(Module* m, Node* n) {
     Decl* d = new(Decl);
     if (n->s) d->name = string_clone(n->s);
+    if (n->export) d->export = 1;
     d->m = m;
 
     switch (n->kind) {
@@ -265,6 +266,7 @@ Module* igen(Node* n) {
     // Initializers are hidden, so they have no type.
     res->init->v = var_new(res->init, NULL, NULL, NULL);
     res->init->m = res;
+    res->init->export = 1;
 
     list_append(res->decls, res->init);
 
