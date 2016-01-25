@@ -126,7 +126,6 @@ void type(Node* n) {
     else if (n->typing) {
         error(n->loc, "type is recursive");
         n->type = anytype->override;
-        type_incref(n->type);
         n->typing = 0;
         return;
     } else n->typing = 1;
