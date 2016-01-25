@@ -208,6 +208,24 @@ static void igen_global(Module* m, Decl* d, Node* n) {
     assert(n->kind == Ndecl);
     d->kind = Dglobal;
     d->v = n->v = var_new(d, NULL, n->type, n->s);
+    ++d->v->uses;
+
+    if (n->sons[1]) {
+        Instr* set = new(Instr), *addr = new(Instr);
+
+        addr->kind = Iaddr;
+        list_append(addr->v, d->v);
+        // XXX: cgen optimizations must remove this variable to avoid void errors!
+        addr->dst = var_new(m->init, addr, NULL, NULL);
+        list_append(m->init->sons, addr);
+
+        set->kind = Iset;
+        list_append(set->v, addr->dst);
+        list_append(set->v, igen_node(m->init, n->sons[1]));
+        ++set->v[1]->uses;
+
+        list_append(m->init->sons, set);
+    }
 }
 
 static Decl* igen_decl(Module* m, Node* n) {
@@ -236,6 +254,14 @@ Module* igen(Node* n) {
     Module* res = new(Module);
     int i;
     assert(n && n->kind == Nmodule);
+
+    res->init = new(Decl);
+    res->init->kind = Dfun;
+    // Initializers are hidden, so they have no type.
+    res->init->v = var_new(res->init, NULL, NULL, NULL);
+    res->init->m = res;
+
+    list_append(res->decls, res->init);
 
     for (i=0; i<list_len(n->sons); ++i) {
         Node* ns = n->sons[i];

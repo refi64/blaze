@@ -289,7 +289,7 @@ LexerContext parse_file(const char* file, const char* module);
 struct Module {
     List(Decl*) decls;
     List(Type*) types;
-    Decl* main;
+    Decl* main, *init;
 };
 
 struct Decl {

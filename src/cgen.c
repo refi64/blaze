@@ -188,7 +188,8 @@ static void cgen_proto(Decl* d, FILE* output) {
 
     assert(d->kind == Dfun);
     if (!d->exportc && !d->import) fputs("static ", output);
-    fprintf(output, "%s %s(", CNAME(d->v->type->sons[0]), CNAME(d->v));
+    fprintf(output, "%s %s(", d->v->type ? CNAME(d->v->type->sons[0]) : "void",
+            CNAME(d->v));
     for (i=0; i<list_len(d->args); ++i) {
         generate_argname(d->args[i]);
         if (i) fputs(", ", output);
@@ -258,8 +259,12 @@ void cgen(Module* m, FILE* output) {
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);
 
-    if (m->main)
-        fprintf(output, "int main() { return %s(); }\n", CNAME(m->main->v));
+    if (m->main) {
+        fputs("int main() {\n", output);
+        fprintf(output, "    %s();\n", CNAME(m->init->v));
+        fprintf(output, "    return %s();\n", CNAME(m->main->v));
+        fputs("}\n", output);
+    }
 
     for (i=0; i<list_len(m->types); ++i) free_type_cnames(m->types[i]);
     for (i=0; i<list_len(m->decls); ++i) {
