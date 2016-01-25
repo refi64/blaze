@@ -46,10 +46,6 @@ static void resolve0(Node* n) {
         e = stentry_new(n, n->s, NULL);
         symtab_add(n->parent->tab, n->s, e);
 
-        if (strcmp(n->loc.module, "__main__") == 0 &&
-            strcmp(n->s->str, "main") == 0)
-            n->exportc = string_new("main");
-
     // Fall though.
     case Nconstr:
         n->tab = symtab_sub(n->parent->tab);

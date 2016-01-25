@@ -242,7 +242,13 @@ Module* igen(Node* n) {
         if (ns->kind == Nstruct) igen_struct(res, ns);
         else {
             Decl* d = igen_decl(res, n->sons[i]);
-            if (d) list_append(res->decls, d);
+            if (d) {
+                list_append(res->decls, d);
+                if (IS_MAIN(n->sons[i])) {
+                    assert(!res->main);
+                    res->main = d;
+                }
+            }
         }
     }
 

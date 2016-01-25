@@ -258,6 +258,9 @@ void cgen(Module* m, FILE* output) {
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);
 
+    if (m->main)
+        fprintf(output, "int main() { return %s(); }\n", CNAME(m->main->v));
+
     for (i=0; i<list_len(m->types); ++i) free_type_cnames(m->types[i]);
     for (i=0; i<list_len(m->decls); ++i) {
         int j;

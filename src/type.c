@@ -187,6 +187,14 @@ void type(Node* n) {
             type_incref(n->sons[1]->sons[i]->type);
         }
         if (!n->import) type(n->sons[2]);
+
+        if (IS_MAIN(n) && !(
+            // This LONG condition just makes sure the given main is valid.
+            list_len(n->type->sons) == 1
+            && n->type->sons[0]
+            && typematch(n->type->sons[0],
+                         builtin_types[Tint]->override, NULL)))
+            error(n->loc, "invalid main signature");
         break;
     case Nlet:
         type(n->sons[0]);

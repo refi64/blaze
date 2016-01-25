@@ -31,6 +31,8 @@ typedef struct GData GData;
 
 void fatal(const char*);
 int min(int a, int b);
+#define IS_MAIN(n) ((n)->kind == Nfun && strcmp((n)->loc.module, "__main__") == 0\
+                    && strcmp((n)->s->str, "main") == 0)
 
 
 struct String {
@@ -287,6 +289,7 @@ LexerContext parse_file(const char* file, const char* module);
 struct Module {
     List(Decl*) decls;
     List(Type*) types;
+    Decl* main;
 };
 
 struct Decl {
