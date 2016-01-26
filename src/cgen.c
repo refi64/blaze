@@ -30,7 +30,7 @@ static void generate_argname(Var* v) {
 static void generate_varname(Var* v) {
     if (v->deref) {
         String* s = string_newz("(*", 2);
-        assert(v->base);
+        bassert(v->base, "var deref has null base");
         generate_varname(v->base);
         string_merge(s, v->base->d.cname);
         string_mergec(s, ')');
@@ -42,7 +42,7 @@ static void generate_varname(Var* v) {
         } else generate_basename('v', &v->d, v->name, v->id);
         if (v->av) {
             Var* last = *v->av[list_len(v->av)-1];
-            assert(!v->iv);
+            bassert(!v->iv, "attribute var also has indexes");
             if (last->flags & Fstc) {
                 string_free(v->d.cname);
                 v->d.cname = string_clone(last->d.cname);
@@ -76,13 +76,13 @@ static void generate_declname(Decl* d) {
 
 static void cgen_typedef(Type* t, FILE* output) {
     int i;
-    assert(t);
+    bassert(t, "expected non-null type");
     if (t->d.cname) return;
     generate_typename(t);
     for (i=0; i<list_len(t->sons); ++i)
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
     switch (t->kind) {
-    case Tany: assert(0);
+    case Tany: fatal("unexpected type kind Tany");
     case Tbuiltin: break;
     case Tptr:
         fprintf(output, "typedef %s* %s;\n", CNAME(t->sons[0]), CNAME(t));
@@ -130,7 +130,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         fprintf(output, "%s = ", CNAME(ir->dst));
 
     switch (ir->kind) {
-    case Inull: assert(0);
+    case Inull: fatal("unexpected ir kind Inull");
     case Iret:
         if (ir->v)
             fprintf(output, "%s = %s; goto R", CNAME(d->rv), CNAME(ir->v[0]));
@@ -170,7 +170,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         else fprintf(output, "&%s", CNAME(ir->v[0]));
         break;
     case Icast:
-        assert(ir->dst);
+        bassert(ir->dst, "cast without destination");
         fprintf(output, "(%s)(%s)", CNAME(ir->dst->type), CNAME(ir->v[0]));
         break;
     case Iop:
@@ -187,7 +187,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
 static void cgen_proto(Decl* d, FILE* output) {
     int i;
 
-    assert(d->kind == Dfun);
+    bassert(d->kind == Dfun, "unexpected decl kind %d", d->kind);
     if (!d->exportc && !d->import && !d->export) fputs("static ", output);
     fprintf(output, "%s %s(", d->v->type ? CNAME(d->v->type->sons[0]) : "void",
             CNAME(d->v));

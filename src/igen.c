@@ -10,7 +10,7 @@ static Decl* igen_decl(Module* m, Node* n);
 static void igen_struct(Module* m, Node* n) {
     int i;
 
-    assert(n->kind == Nstruct);
+    bassert(n->kind == Nstruct, "unexpected node kind %d", n->kind);
     for (i=0; i<list_len(n->sons); ++i) {
         Decl* d = igen_decl(m, n->sons[i]);
         if (d) {
@@ -28,7 +28,7 @@ static Var* instr_result(Decl* d, Instr* ir) {
         int i;
         list_append(d->sons, ir);
         for (i=0; i<list_len(ir->v); ++i) {
-            assert(ir->v[i]);
+            bassert(ir->v[i], "null variable at index %d", i);
             ++ir->v[i]->uses;
         }
         return ir->dst;
@@ -37,7 +37,7 @@ static Var* instr_result(Decl* d, Instr* ir) {
 
 static Var* igen_address(Decl* d, Node* n) {
     Instr* ir = new(Instr);
-    assert(n->sons[0]->flags & Faddr);
+    bassert(n->sons[0]->flags & Faddr, "expected addressable node");
     ir->kind = Iaddr;
     list_append(ir->v, igen_node(d, n->sons[0]));
     ir->flags |= PUREFLAGS(ir->v[0]);
@@ -134,7 +134,8 @@ static Var* igen_node(Decl* d, Node* n) {
         list_append(ir->v, igen_node(d, n->sons[1]));
         break;
     case Nid:
-        assert(n->e && n->e->n && n->e->n->v);
+        bassert(n->e && n->e->n && n->e->n->v,
+                "node of kind Nid has no corresponding entry");
         free(ir);
         ++n->e->n->v->uses;
         return n->e->n->v;
@@ -145,7 +146,8 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
     case Nmodule: case Ntypeof: case Nstruct: case Nconstr: case Ndestr:
-    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr: assert(0);
+    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr:
+        fatal("unexpected node kind %d", n->kind);
     }
 
     return instr_result(d, ir);
@@ -153,7 +155,8 @@ static Var* igen_node(Decl* d, Node* n) {
 
 static void igen_sons(Decl* d, Node* n) {
     int i;
-    assert(n && n->kind > Nsons);
+    bassert(n && n->kind > Nsons, "unexpected son-less node kind %d",
+            n?n->kind:-1);
     for (i=0; i<list_len(n->sons); ++i)
         igen_node(d, n->sons[i]);
 }
@@ -161,7 +164,8 @@ static void igen_sons(Decl* d, Node* n) {
 static void igen_func(Module* m, Decl* d, Node* n) {
     int i;
 
-    assert(n->kind == Nconstr || n->kind == Ndestr || n->kind == Nfun);
+    bassert(n->kind == Nconstr || n->kind == Ndestr || n->kind == Nfun,
+            "unexpected node kind %d", n->kind);
     d->kind = Dfun;
     d->v = n->v = var_new(d, NULL, n->type, n->s);
     if (n->kind == Nconstr) n->parent->v = n->v;
@@ -169,7 +173,7 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (n->flags & Fmemb) {
         Var* v;
         Type* orig;
-        assert(n->this);
+        bassert(n->this, "member without corresponding this");
         n->this->v = var_new(d, NULL, n->this->type, NULL);
         n->this->v->uses = 1;
 
@@ -189,10 +193,11 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     }
 
     if (n->sons[1]) {
-        assert(n->sons[1]->kind == Narglist);
+        bassert(n->sons[1]->kind == Narglist, "unexpected node kind %d",
+                n->sons[1]->kind);
         for (i=0; i<list_len(n->sons[1]->sons); ++i) {
             Node* arg = n->sons[1]->sons[i];
-            assert(arg->kind == Ndecl);
+            bassert(arg->kind == Ndecl, "unexpected node kind %d", arg->kind);
             Var* v = var_new(d, NULL, arg->type, arg->s);
             list_append(d->args, v);
             arg->v = v;
@@ -210,7 +215,7 @@ static void igen_func(Module* m, Decl* d, Node* n) {
 }
 
 static void igen_global(Module* m, Decl* d, Node* n) {
-    assert(n->kind == Ndecl);
+    bassert(n->kind == Ndecl, "unexpected node kind %d", n->kind);
     d->kind = Dglobal;
     d->v = n->v = var_new(d, NULL, n->type, n->s);
     ++d->v->uses;
@@ -259,7 +264,7 @@ static Decl* igen_decl(Module* m, Node* n) {
 Module* igen(Node* n) {
     Module* res = new(Module);
     int i;
-    assert(n && n->kind == Nmodule);
+    bassert(n && n->kind == Nmodule, "unexpected node kind %d", n?n->kind:-1);
 
     res->init = new(Decl);
     res->init->kind = Dfun;
@@ -278,7 +283,7 @@ Module* igen(Node* n) {
             if (d) {
                 list_append(res->decls, d);
                 if (IS_MAIN(n->sons[i])) {
-                    assert(!res->main);
+                    bassert(!res->main, "duplicate mains in module");
                     res->main = d;
                 }
             }

@@ -26,7 +26,7 @@ void init_builtin_types() {
         builtin_types[bkinds[i]] = e;
     }
 
-    assert(!anytype);
+    bassert(!anytype, "anytype is already initialized");
     t = new(Type);
     t->kind = Tany;
     t->name = string_new("_any");
@@ -72,7 +72,7 @@ STEntry* symtab_find(Symtab* tab, const char* name) {
 }
 STEntry* symtab_finds(Symtab* tab, String* name) {
     STEntry* init = NULL;
-    assert(name);
+    bassert(name, "expected non-null name");
 
     while (tab) {
         STEntry* e = symtab_findl(tab, name);
@@ -85,7 +85,7 @@ STEntry* symtab_finds(Symtab* tab, String* name) {
     return init;
 }
 STEntry* symtab_findl(Symtab* tab, String* name) {
-    assert(name);
+    bassert(name, "expected non-null name");
     return (STEntry*)ds_hget(tab->tab, name);
 }
 
@@ -127,9 +127,9 @@ void symtab_free(Symtab* tab) {
     String** keys = (String**)ds_hkeys(tab->tab);
     STEntry** values = (STEntry**)ds_hvals(tab->tab);
     for (i=0; i<kc; ++i) {
-        assert(keys[i]);
+        bassert(keys[i], "null key in symbol table at index %d", i);
         STEntry* e = values[i];
-        assert(e);
+        bassert(e, "null value in symbol table at index %d", i);
         stentry_free(e);
         string_free(keys[i]);
     }

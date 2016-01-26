@@ -80,7 +80,7 @@ Node* declared_here(Node* n) {
 
 void make_mutvar(Node* n, int flag, int curflags) {
     if (!n) return;
-    assert(flag == Fmut || flag == Fvar);
+    bassert(flag == Fmut || flag == Fvar, "unexpected flag %d", flag);
     if (flag & Fvar && curflags & Fmut)
         note(n->loc, "change 'mut' to 'var' to make it variable");
     else {

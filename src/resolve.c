@@ -17,7 +17,7 @@ static void make_magic_this(Node* n) {
 static void resolve0(Node* n) {
     STEntry* e;
     int i;
-    assert(n && (n->kind == Nmodule || n->parent));
+    bassert(n && (n->kind == Nmodule || n->parent), "node has no parent");
     if (n->kind != Nmodule && n->kind != Nfun && !n->tab) n->tab = n->parent->tab;
     switch (n->kind) {
     case Nmodule:
@@ -66,7 +66,8 @@ static void resolve0(Node* n) {
         break;
     case Narglist:
         for (i=0; i<list_len(n->sons); ++i) {
-            assert(n->sons[i]->kind == Ndecl);
+            bassert(n->sons[i]->kind == Ndecl, "Narglist has son of kind %d",
+                    n->sons[i]->kind);
             n->sons[i]->parent = n;
             resolve0(n->sons[i]);
         }
@@ -124,16 +125,16 @@ static void resolve0(Node* n) {
         break;
     case Nid: break;
     case Nint: break;
-    case Nsons: assert(0);
+    case Nsons: fatal("unexpected node kind Nsons");
     }
 }
 
 static void resolve1(Node* n) {
     int i;
-    assert(n);
+    bassert(n, "expected non-null node");
     switch (n->kind) {
-    case Nmodule: case Nstruct: case Nconstr: case Ndestr: case Nfun: case Narglist:
-    case Ndecl: case Ncast:
+    case Nmodule: case Nstruct: case Nconstr: case Ndestr: case Nfun:
+    case Narglist: case Ndecl: case Ncast:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;
@@ -185,7 +186,7 @@ static void resolve1(Node* n) {
         }
         break;
     case Nint: break;
-    case Nsons: assert(0);
+    case Nsons: fatal("unexpected node kind Nsons");
     }
 }
 

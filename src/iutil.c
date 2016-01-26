@@ -16,7 +16,7 @@ Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
 }
 
 void var_dump(Var* v) {
-    assert(v);
+    bassert(v, "expected non-null var");
     printf("Var ");
     printf("%d", v->id);
     if (v->deref) {
@@ -52,9 +52,9 @@ void var_free(Var* v) {
 
 void instr_dump(Instr* ir) {
     int i;
-    assert(ir);
+    bassert(ir, "expected non-null ir");
     switch (ir->kind) {
-    case Inull: assert(0);
+    case Inull: fatal("unexpected ir kind Inull");
     case Iret: printf("Iret"); break;
     case Inew: printf("Inew"); break;
     case Iset: printf("Iset"); break;

@@ -2,7 +2,6 @@
 #define BLAZE_H
 
 #include <inttypes.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -29,7 +28,23 @@ typedef struct Instr Instr;
 typedef struct GData GData;
 
 
-void fatal(const char*);
+#define wprintf(fm,...) printf()
+
+#define fatal(...) do {\
+    fprintf(stderr, "INTERNAL ERROR at %s:%d (%s): ", __FILE__,\
+            __LINE__, __func__);\
+    fprintf(stderr, __VA_ARGS__);\
+    fputc('\n', stderr);\
+    abort();\
+} while (0)
+
+
+#define bassert(cond, ...) do {\
+    if (!(cond))\
+        fatal("assertion '" #cond "' failed: " __VA_ARGS__);\
+} while (0)
+
+
 int min(int a, int b);
 char* readall(FILE* f, size_t* sz);
 #define IS_MAIN(n) ((n)->kind == Nfun && strcmp((n)->loc.module, "__main__") == 0\

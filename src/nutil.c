@@ -2,7 +2,7 @@
 
 static void node_dump2(Node* n, int indent) {
     int i;
-    assert(n);
+    bassert(n, "expected non-null node");
     #define put(...) for (i=0; i<indent; ++i) printf("  "); printf(__VA_ARGS__);
     switch (n->kind) {
     case Nid: put("Nid (s:%s)", n->s->str); break;
@@ -28,7 +28,7 @@ static void node_dump2(Node* n, int indent) {
     case Ndecl: put("Ndecl (s:%s)", n->s->str); break;
     case Nbody: put("Nbody"); break;
     case Nmodule: put("Nmodule"); break;
-    case Nsons: assert(0);
+    case Nsons: fatal("unexpected node kind Nsons");
     }
     if (n->export) printf(" exported");
     printf(" @ lines %d-%d, cols %d-%d", n->loc.first_line, n->loc.last_line,
@@ -70,7 +70,7 @@ void node_free(Node* n) {
             if (n->exportc) string_free(n->exportc);
         }
         break;
-    case Nsons: assert(0);
+    case Nsons: fatal("unexpected node kind Nsons");
     default: break;
     }
     if (n->type) type_decref(n->type);

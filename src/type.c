@@ -36,7 +36,7 @@ static String* typestring(Type* t) {
         case Tbyte: return string_new("byte");
         case Tsize: return string_new("size");
         case Tbool: return string_new("bool");
-        case Tbend: assert(0);
+        case Tbend: fatal("unexpected builtin type kind Tbend");
         }
     case Tptr:
         res = string_newz("*", 1);
@@ -62,13 +62,13 @@ static String* typestring(Type* t) {
         }
         return res;
     case Tstruct: return string_clone(t->name);
-    case Tany: assert(0);
+    case Tany: fatal("unexpected type kind Tany");
     }
 }
 
 static int typematch(Type* a, Type* b, Node* ctx) {
     int i;
-    assert(a && b);
+    bassert(a && b, "expected non-null types");
     if (a->kind == Tany || b->kind == Tany) return 1;
     if (a->kind != b->kind) return 0;
     switch (a->kind) {
@@ -83,7 +83,7 @@ static int typematch(Type* a, Type* b, Node* ctx) {
             if (!typematch(a->sons[i], b->sons[i], NULL)) return 0;
         return 1;
     case Tstruct: return a == b;
-    case Tany: assert(0);
+    case Tany: fatal("unexpected type kind Tany");
     }
 }
 
@@ -95,18 +95,18 @@ static List(Type*) arguments_of(Type* t) {
     switch (t->kind) {
     case Tstruct: return (*t->constr)->sons;
     case Tfun: return t->sons;
-    default: assert(0);
+    default: fatal("unexpected type kind %d", t->kind);
     }
 }
 
 void type_incref(Type* t) {
-    assert(t);
+    bassert(t, "expected non-null type");
     ++t->rc;
 }
 
 void type_decref(Type* t) {
     int i;
-    assert(t && t->rc);
+    bassert(t && t->rc, "unbalanced reference count");
     if (--t->rc) return;
     switch (t->kind) {
     case Tany: case Tbuiltin: case Tstruct: string_free(t->name); break;
@@ -121,7 +121,7 @@ void type(Node* n) {
     Node* f;
     int i;
 
-    assert(n);
+    bassert(n, "expected non-null node");
     if (n->type) return;
     else if (n->typing) {
         error(n->loc, "type is recursive");
@@ -243,7 +243,7 @@ void type(Node* n) {
         break;
     case Nreturn:
         f = n->func;
-        assert(f);
+        bassert(f, "return without function");
         if (n->sons) {
             type(n->sons[0]);
             force_typed_expr_context(n->sons[0]);
@@ -410,7 +410,7 @@ void type(Node* n) {
                 }
             if (expected && expected[0]) n->type = expected[0];
             else if (n->kind == Nnew) {
-                assert(n->sons[0]->flags & Ftype);
+                bassert(n->sons[0]->flags & Ftype, "expected type as first son");
                 n->type = n->sons[0]->type;
             } else {
                 n->type = anytype->override;
@@ -445,7 +445,7 @@ void type(Node* n) {
             } else {
                 int flags = 0;
 
-                assert(e->n);
+                bassert(e->n, "attribute node has no corresponding entry");
                 n->type = e->n->type;
                 n->attr = e->n;
                 if (n->sons[0]->flags & Fmv) flags |= Fvar;
@@ -511,7 +511,7 @@ void type(Node* n) {
         n->type = builtin_types[Tint]->override;
         type_incref(n->type);
         break;
-    case Nsons: assert(0);
+    case Nsons: fatal("unexpected node kind Nsons");
     }
 
     n->typing = 0;

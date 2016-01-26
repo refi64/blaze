@@ -2,7 +2,7 @@
 
 String* string_new(const char* str) { return string_newz(str, strlen(str)); }
 String* string_newz(const char* str, size_t len) {
-    assert(str);
+    bassert(str, "expected non-null string");
     String* res = new(String);
     res->str = alloc(len+1);
     res->len = len;
@@ -12,7 +12,7 @@ String* string_newz(const char* str, size_t len) {
 }
 
 String* string_clone(String* str) {
-    assert(str);
+    bassert(str, "expected non-null string");
     return string_newz(str->str, str->len);
 }
 
@@ -22,7 +22,7 @@ void string_free(String* str) {
 }
 
 String* string_add(String* lhs, String* rhs) {
-    assert(lhs && rhs);
+    bassert(lhs && rhs, "expected non-null strings");
     String* res = new(String);
     res->str = alloc(lhs->len+rhs->len+1);
     res->len = lhs->len+rhs->len;
@@ -33,7 +33,7 @@ String* string_add(String* lhs, String* rhs) {
 }
 
 void string_merge(String* base, String* rhs) {
-    assert(base && rhs);
+    bassert(base && rhs, "expected non-null strings");
     base->str = ralloc(base->str, base->len+rhs->len+1);
     memcpy(base->str+base->len, rhs->str, rhs->len);
     base->str[base->len+rhs->len] = 0;
