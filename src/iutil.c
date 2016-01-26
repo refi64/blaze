@@ -50,6 +50,8 @@ void var_dump(Var* v) {
 
 void var_free(Var* v) {
     if (v->name) string_free(v->name);
+    list_free(v->av);
+    list_free(v->iv);
     free(v);
 }
 
@@ -133,6 +135,7 @@ void decl_free(Decl* d) {
     for (i=0; i<list_len(d->args); ++i) var_free(d->args[i]);
     list_free(d->sons);
     list_free(d->vars);
+    list_free(d->mvars);
     list_free(d->args);
     if (d->name) string_free(d->name);
     if (d->v) var_free(d->v);
