@@ -1,5 +1,7 @@
 #include "blaze.h"
 
+Instr magic;
+
 static void igen_sons(Decl* d, Node* n);
 static Var* igen_node(Decl* d, Node* n);
 
@@ -96,7 +98,7 @@ static Var* igen_node(Decl* d, Node* n) {
         break;
     case Nderef:
         free(ir);
-        v = var_new(d, NULL, n->type, NULL);
+        v = var_new(d, &magic, n->type, NULL);
         v->deref = 1;
         v->base = igen_node(d, n->sons[0]);
         ++v->base->uses;
@@ -106,7 +108,7 @@ static Var* igen_node(Decl* d, Node* n) {
         return igen_address(d, n);
     case Nindex:
         free(ir);
-        v = var_new(d, NULL, n->type, NULL);
+        v = var_new(d, &magic, n->type, NULL);
         igen_index_chain(d, v, n);
         return v;
     case Nnew: case Ncall:
@@ -123,7 +125,7 @@ static Var* igen_node(Decl* d, Node* n) {
         break;
     case Nattr:
         free(ir);
-        v = var_new(d, NULL, n->type, NULL);
+        v = var_new(d, &magic, n->type, NULL);
         igen_attr_chain(d, v, n);
         return v;
     case Nop:
@@ -186,7 +188,7 @@ static void igen_func(Module* m, Decl* d, Node* n) {
         list_append(d->m->types, n->this->type);
         list_append(d->args, n->this->v);
 
-        v = var_new(d, NULL, n->this->type, NULL);
+        v = var_new(d, &magic, n->this->type, NULL);
         v->base = n->this->v;
         v->deref = 1;
         n->this->v = v;
@@ -265,6 +267,8 @@ Module* igen(Node* n) {
     Module* res = new(Module);
     int i;
     bassert(n && n->kind == Nmodule, "unexpected node kind %d", n?n->kind:-1);
+
+    memset(&magic, 0, sizeof(magic));
 
     res->init = new(Decl);
     res->init->kind = Dfun;

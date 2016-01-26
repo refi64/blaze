@@ -9,7 +9,10 @@ Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
     res->owner = owner;
     res->ir = ir;
     res->type = type;
-    if (ir) list_append(owner->vars, res);
+    if (ir) {
+        if (ir == &magic) list_append(owner->mvars, res);
+        else list_append(owner->vars, res);
+    }
     if (name) res->name = string_clone(name);
     if (type) list_append(owner->m->types, type);
     return res;
@@ -126,12 +129,14 @@ void decl_free(Decl* d) {
     for (i=0; i<list_len(d->sons); ++i) instr_free(d->sons[i]);
     for (i=0; i<list_len(d->vars); ++i)
         if (d->vars[i]->owner == d && d->vars[i]->ir) var_free(d->vars[i]);
+    for (i=0; i<list_len(d->mvars); ++i) var_free(d->mvars[i]);
     for (i=0; i<list_len(d->args); ++i) var_free(d->args[i]);
     list_free(d->sons);
     list_free(d->vars);
     list_free(d->args);
     if (d->name) string_free(d->name);
     if (d->v) var_free(d->v);
+    if (d->rv) var_free(d->rv);
     free(d);
 }
 

@@ -323,6 +323,8 @@ struct Decl {
             List(Instr*) sons;
             // The variables the function declares.
             List(Var*) vars;
+            // Magic variables.
+            List(Var*) mvars;
             // The function arguments.
             List(Var*) args;
             // Return type.
@@ -381,6 +383,8 @@ struct Instr {
     String* s;
     int flags;
 };
+
+extern Instr magic; // Used to represent "magic" vars.
 
 Var* var_new(Decl* owner, Instr* ir, Type* type, String* name);
 void var_dump(Var* var);
