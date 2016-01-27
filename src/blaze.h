@@ -50,6 +50,8 @@ char* readall(FILE* f, size_t* sz);
 #define IS_MAIN(n) ((n)->kind == Nfun && strcmp((n)->loc.module, "__main__") == 0\
                     && strcmp((n)->s->str, "main") == 0)
 
+uint32_t strhash(String* str);
+int streq(String* a, String* b);
 
 struct String {
     char* str;
@@ -302,6 +304,8 @@ LexerContext* lex_context_init(const char* file, const char* module,
 void lex_context_free(LexerContext* ctx);
 void lex_free();
 
+void modtab_init();
+void modtab_free();
 LexerContext* parse_string(const char* file, const char* module,
                            const char* fcont);
 LexerContext* parse_file(const char* file, const char* module);

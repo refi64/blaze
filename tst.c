@@ -5,6 +5,7 @@
 int main(int argc, char** argv) {
     assert(argc == 2);
     lex_init();
+    modtab_init();
     init_builtin_types();
     LexerContext* ctx = parse_file(argv[1], "__main__");
     if (ctx) {
@@ -26,11 +27,9 @@ int main(int argc, char** argv) {
 
             node_free(ctx->result);
         }
-
-        free((void*)ctx->fcont);
-        lex_context_free(ctx);
     }
     lex_free();
+    modtab_free();
     free_builtin_types();
     printf("%d\n", errors);
 

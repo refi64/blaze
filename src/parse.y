@@ -9,6 +9,26 @@ void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
     error(*yylloc, "%s", msg);
 }
 
+void modtab_init() {
+    modules = ds_hnew((DSHashFn)strhash, (DSCmpFn)streq);
+}
+
+void modtab_free() {
+    int i, kc = ds_hcount(modules);
+    String** keys = (String**)ds_hkeys(modules);
+    LexerContext **values = (LexerContext**)ds_hvals(modules);
+    for (i=0; i<kc; ++i) {
+        bassert(keys[i], "null key in module table at index %d", i);
+        string_free(keys[i]);
+        bassert(values[i], "null value in module table at index %d", i);
+        free((void*)values[i]->fcont);
+        lex_context_free(values[i]);
+    }
+    free(keys);
+    free(values);
+    ds_hfree(modules);
+}
+
 LexerContext* parse_file(const char* file, const char* module) {
     size_t sz;
     FILE* fp = fopen(file, "r");
@@ -29,9 +49,17 @@ LexerContext* parse_file(const char* file, const char* module) {
 
 LexerContext* parse_string(const char* file, const char* module,
                            const char* fcont) {
-    LexerContext* ctx = lex_context_init(file, module, fcont);
-    yyparse(ctx);
-    return ctx;
+    String* s = string_new(module);
+    LexerContext* ctx = ds_hget(modules, s);
+    if (ctx) {
+        string_free(s);
+        return ctx;
+    } else {
+        ctx = lex_context_init(file, module, fcont);
+        yyparse(ctx);
+        ds_hput(modules, s, ctx);
+        return ctx;
+    }
 }
 
 #define scanner ctx->scanner

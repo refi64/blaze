@@ -1,8 +1,5 @@
 #include "blaze.h"
 
-static uint32_t strhash(String* str) { return ds_strhash(str->str); }
-static int streq(String* a, String* b) { return ds_streq(a->str, b->str); }
-
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
 STEntry* anytype=NULL;

@@ -24,3 +24,7 @@ char* readall(FILE* fp, size_t* sz) {
     res[*sz] = 0;
     return res;
 }
+
+
+uint32_t strhash(String* str) { return ds_strhash(str->str); }
+int streq(String* a, String* b) { return ds_streq(a->str, b->str); }
