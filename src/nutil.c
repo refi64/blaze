@@ -61,7 +61,7 @@ void node_free(Node* n) {
     switch (n->kind) {
     case Nmodule:
         symtab_free(n->tab);
-        break;
+        // Fallthrough.
     case Nstruct: case Nid: case Nint: case Nfun: case Nlet: case Ndecl:
     case Nattr:
         if (n->s) string_free(n->s);

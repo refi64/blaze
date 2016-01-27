@@ -12,6 +12,7 @@
 #define ralloc ds_xrealloc
 #define new(t) alloc(sizeof(t))
 
+#define LIBDIR "/home/ryan/blaze/lib/"
 
 typedef struct String String;
 typedef struct Location Location;

@@ -58,6 +58,7 @@ LexerContext* parse_string(const char* file, const char* module,
     } else {
         ctx = lex_context_init(file, module, fcont);
         yyparse(ctx);
+        ctx->result->s = string_clone(s);
         ds_hput(modules, s, ctx);
         return ctx;
     }

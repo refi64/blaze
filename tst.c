@@ -7,6 +7,7 @@ int main(int argc, char** argv) {
     lex_init();
     modtab_init();
     init_builtin_types();
+    assert(parse_file(LIBDIR "builtins.blz", "builtins"));
     LexerContext* ctx = parse_file(argv[1], "__main__");
     if (ctx) {
         if (errors == 0) {
@@ -14,14 +15,18 @@ int main(int argc, char** argv) {
             LexerContext** ctxs = (LexerContext**)ds_hvals(modules);
 
             for (i=0; i<kc; ++i) {
-                node_dump(ctxs[i]->result);
-                resolve(ctxs[i]->result);
-                type(ctxs[i]->result);
+                Node* n = ctxs[i]->result;
+                printf("##########Module %s:\n", n->s->str);
+                /* node_dump(n); */
+                resolve(n);
+                type(n);
             }
 
             if (errors == 0)
                 for (i=0; i<kc; ++i) {
-                    Module* m = igen(ctxs[i]->result);
+                    Node* n = ctxs[i]->result;
+                    Module* m = igen(n);
+                    printf("##########Module %s:\n", n->s->str);
                     puts("*****Unoptimized*****");
                     module_dump(m);
                     iopt(m);
