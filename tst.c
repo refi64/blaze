@@ -24,7 +24,8 @@ int main(int argc, char** argv) {
                 type(n);
             }
 
-            if (errors == 0)
+            if (errors == 0) {
+                List(Module*) mods = NULL;
                 for (i=0; i<kc; ++i) {
                     Node* n = ctxs[i]->result;
                     Module* m = igen(n);
@@ -35,8 +36,12 @@ int main(int argc, char** argv) {
                     puts("*****Optimized*****");
                     module_dump(m);
                     cgen(m, stderr);
-                    module_free(m);
+                    list_append(mods, m);
                 }
+
+                for (i=0; i<list_len(mods); ++i) module_free(mods[i]);
+                list_free(mods);
+            }
 
             free(ctxs);
         }
