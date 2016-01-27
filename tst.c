@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     lex_init();
     init_builtin_types();
     LexerContext ctx = parse_file(argv[1], "__main__");
-    if (ctx.result) {
+    if (errors == 0) {
         node_dump(ctx.result);
         resolve(ctx.result);
         type(ctx.result);
