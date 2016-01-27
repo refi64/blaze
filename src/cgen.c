@@ -253,6 +253,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
 
 static void free_decl_cnames(Decl* d) {
     int i;
+    FREE_CNAME(d->v);
     for (i=0; i<list_len(d->args); ++i) FREE_CNAME(d->args[i]);
     for (i=0; i<list_len(d->vars); ++i) FREE_CNAME(d->vars[i]);
     for (i=0; i<list_len(d->mvars); ++i) FREE_CNAME(d->mvars[i]);
