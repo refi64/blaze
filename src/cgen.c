@@ -269,6 +269,17 @@ static void free_type_cnames(Type* t) {
         for (i=0; i<list_len(t->d.sons); ++i) free_decl_cnames(t->d.sons[i]);
 }
 
+void cgen_free(Module* m) {
+    int i;
+    for (i=0; i<list_len(m->types); ++i) free_type_cnames(m->types[i]);
+    for (i=0; i<list_len(m->decls); ++i) {
+        if (m->decls[i]->flags & Fmemb) continue;
+        free_decl_cnames(m->decls[i]);
+    }
+}
+
+#undef FREE_CNAME
+
 void cgen(Module* m, FILE* output) {
     int i;
 
@@ -293,12 +304,4 @@ void cgen(Module* m, FILE* output) {
         fprintf(output, "    return %s();\n", CNAME(m->main->v));
         fputs("}\n", output);
     }
-
-    for (i=0; i<list_len(m->types); ++i) free_type_cnames(m->types[i]);
-    for (i=0; i<list_len(m->decls); ++i) {
-        if (m->decls[i]->flags & Fmemb) continue;
-        free_decl_cnames(m->decls[i]);
-    }
 }
-
-#undef FREE_CNAME

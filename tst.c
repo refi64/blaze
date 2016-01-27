@@ -42,7 +42,10 @@ int main(int argc, char** argv) {
                     printf("##########Module %s:\n", ctxs[i]->result->s->str);
                     cgen(mods[i], stderr);
                 }
-                for (i=0; i<list_len(mods); ++i) module_free(mods[i]);
+                for (i=0; i<list_len(mods); ++i) {
+                    cgen_free(mods[i]);
+                    module_free(mods[i]);
+                }
                 list_free(mods);
             }
 

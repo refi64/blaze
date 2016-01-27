@@ -411,5 +411,6 @@ void module_free(Module* m);
 
 
 void cgen(Module* m, FILE* output);
+void cgen_free(Module* m);
 
 #endif
