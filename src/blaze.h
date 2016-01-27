@@ -293,17 +293,18 @@ struct LexerContext {
     const char* file, *module, *fcont;
 };
 
+extern DSHtab* modules;
 int yyparse(LexerContext* ctx);
 
 void lex_init();
-void lex_context_init(LexerContext* ctx, const char* file, const char* module,
-    const char* fcont);
+LexerContext* lex_context_init(const char* file, const char* module,
+                               const char* fcont);
 void lex_context_free(LexerContext* ctx);
 void lex_free();
 
-LexerContext parse_string(const char* file, const char* module,
-    const char* fcont);
-LexerContext parse_file(const char* file, const char* module);
+LexerContext* parse_string(const char* file, const char* module,
+                           const char* fcont);
+LexerContext* parse_file(const char* file, const char* module);
 
 
 struct Module {

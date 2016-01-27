@@ -42,8 +42,9 @@ void lex_init() {
     KW(export, TEXPORT)
 }
 
-void lex_context_init(LexerContext* ctx, const char* file, const char* module,
-    const char* fcont) {
+LexerContext* lex_context_init(const char* file, const char* module,
+                               const char* fcont) {
+    LexerContext* ctx = new(LexerContext);
     ctx->file = file;
     ctx->module = module;
     ctx->fcont = fcont;
@@ -53,10 +54,12 @@ void lex_context_init(LexerContext* ctx, const char* file, const char* module,
     yy_scan_string(fcont, ctx->scanner);
     yyset_lineno(1, ctx->scanner);
     yyset_column(1, ctx->scanner);
+    return ctx;
 }
 
 void lex_context_free(LexerContext* ctx) {
     if (ctx->scanner) yylex_destroy(ctx->scanner);
+    free(ctx);
 }
 
 void lex_free() { ds_hfree(kw); }
