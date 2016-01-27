@@ -35,10 +35,13 @@ int main(int argc, char** argv) {
                     iopt(m);
                     puts("*****Optimized*****");
                     module_dump(m);
-                    cgen(m, stderr);
                     list_append(mods, m);
                 }
 
+                for (i=0; i<list_len(mods); ++i) {
+                    printf("##########Module %s:\n", ctxs[i]->result->s->str);
+                    cgen(mods[i], stderr);
+                }
                 for (i=0; i<list_len(mods); ++i) module_free(mods[i]);
                 list_free(mods);
             }
