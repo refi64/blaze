@@ -150,10 +150,13 @@ void module_dump(Module* m) {
 
 void module_free(Module* m) {
     int i;
-    for (i=0; i<list_len(m->decls); ++i) decl_free(m->decls[i]);
+    for (i=0; i<list_len(m->decls); ++i)
+        if (!(m->decls[i]->flags & Fmemb)) decl_free(m->decls[i]);
     list_free(m->decls);
     for (i=0; i<list_len(m->types); ++i) {
+        int j;
         Type* t = m->types[i];
+        for (j=0; j<list_len(t->d.sons); ++j) decl_free(t->d.sons[j]);
         list_free(t->d.sons);
         t->d.sons = NULL;
     }

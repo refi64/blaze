@@ -28,6 +28,8 @@ static void generate_argname(Var* v) {
 }
 
 static void generate_varname(Var* v) {
+    if (v->d.cname) return;
+
     if (v->deref) {
         String* s = string_newz("(*", 2);
         bassert(v->base, "var deref has null base");
@@ -249,11 +251,21 @@ static void cgen_decl1(Decl* d, FILE* output) {
         *p = NULL;\
     } while (0)
 
+static void free_decl_cnames(Decl* d) {
+    int i;
+    for (i=0; i<list_len(d->args); ++i) FREE_CNAME(d->args[i]);
+    for (i=0; i<list_len(d->vars); ++i) FREE_CNAME(d->vars[i]);
+    for (i=0; i<list_len(d->mvars); ++i) FREE_CNAME(d->mvars[i]);
+    if (d->rv) FREE_CNAME(d->rv);
+}
+
 static void free_type_cnames(Type* t) {
     int i;
     if (!t) return;
     FREE_CNAME(t);
     for (i=0; i<list_len(t->sons); ++i) free_type_cnames(t->sons[i]);
+    if (t->kind == Tstruct)
+        for (i=0; i<list_len(t->d.sons); ++i) free_decl_cnames(t->d.sons[i]);
 }
 
 void cgen(Module* m, FILE* output) {
@@ -283,11 +295,8 @@ void cgen(Module* m, FILE* output) {
 
     for (i=0; i<list_len(m->types); ++i) free_type_cnames(m->types[i]);
     for (i=0; i<list_len(m->decls); ++i) {
-        int j;
-        Decl* d = m->decls[i];
-        string_free(d->v->d.cname);
-        for (j=0; j<list_len(d->args); ++j) FREE_CNAME(d->args[j]);
-        for (j=0; j<list_len(d->vars); ++j) FREE_CNAME(d->vars[j]);
+        if (m->decls[i]->flags & Fmemb) continue;
+        free_decl_cnames(m->decls[i]);
     }
 }
 
