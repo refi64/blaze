@@ -22,6 +22,7 @@ void modtab_free() {
         string_free(keys[i]);
         bassert(values[i], "null value in module table at index %d", i);
         free((void*)values[i]->fcont);
+        if (values[i]->result) node_free(values[i]->result);
         lex_context_free(values[i]);
     }
     free(keys);

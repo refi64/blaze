@@ -10,22 +10,28 @@ int main(int argc, char** argv) {
     LexerContext* ctx = parse_file(argv[1], "__main__");
     if (ctx) {
         if (errors == 0) {
-            node_dump(ctx->result);
-            resolve(ctx->result);
-            type(ctx->result);
+            int i, kc = ds_hcount(modules);
+            LexerContext** ctxs = (LexerContext**)ds_hvals(modules);
 
-            if (errors == 0) {
-                Module* m = igen(ctx->result);
-                puts("*****Unoptimized*****");
-                module_dump(m);
-                iopt(m);
-                puts("*****Optimized*****");
-                module_dump(m);
-                cgen(m, stderr);
-                module_free(m);
+            for (i=0; i<kc; ++i) {
+                node_dump(ctxs[i]->result);
+                resolve(ctxs[i]->result);
+                type(ctxs[i]->result);
             }
 
-            node_free(ctx->result);
+            if (errors == 0)
+                for (i=0; i<kc; ++i) {
+                    Module* m = igen(ctxs[i]->result);
+                    puts("*****Unoptimized*****");
+                    module_dump(m);
+                    iopt(m);
+                    puts("*****Optimized*****");
+                    module_dump(m);
+                    cgen(m, stderr);
+                    module_free(m);
+                }
+
+            free(ctxs);
         }
     }
     lex_free();
