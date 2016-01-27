@@ -21,7 +21,10 @@ static void resolve0(Node* n) {
     if (n->kind != Nmodule && n->kind != Nfun && !n->tab) n->tab = n->parent->tab;
     switch (n->kind) {
     case Nmodule:
-        n->tab = symtab_new();
+        if (strcmp(n->s->str, BUILTINS) == 0) {
+            n->tab = symtab_new();
+            n->tab->level = 0;
+        } else n->tab = symtab_sub(builtins_module->tab);
         for (i=0; i<list_len(n->sons); ++i) {
             n->sons[i]->parent = n;
             resolve0(n->sons[i]);

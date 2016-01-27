@@ -13,6 +13,7 @@
 #define new(t) alloc(sizeof(t))
 
 #define LIBDIR "/home/ryan/blaze/lib/"
+#define BUILTINS "builtins"
 
 typedef struct String String;
 typedef struct Location Location;
@@ -297,6 +298,7 @@ struct LexerContext {
 };
 
 extern DSHtab* modules;
+Node* builtins_module;
 int yyparse(LexerContext* ctx);
 
 void lex_init();

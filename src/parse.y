@@ -4,6 +4,7 @@
 #include "lex.h"
 
 DSHtab* modules;
+Node* builtins_module;
 
 void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
     error(*yylloc, "%s", msg);
@@ -58,8 +59,9 @@ LexerContext* parse_string(const char* file, const char* module,
     } else {
         ctx = lex_context_init(file, module, fcont);
         yyparse(ctx);
-        ctx->result->s = string_clone(s);
+        if (ctx->result) ctx->result->s = string_clone(s);
         ds_hput(modules, s, ctx);
+        if (strcmp(module, BUILTINS) == 0) builtins_module = ctx->result;
         return ctx;
     }
 }

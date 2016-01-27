@@ -3,12 +3,14 @@
 #include <assert.h>
 
 int main(int argc, char** argv) {
+    LexerContext* ctx;
     assert(argc == 2);
     lex_init();
     modtab_init();
     init_builtin_types();
-    assert(parse_file(LIBDIR "builtins.blz", "builtins"));
-    LexerContext* ctx = parse_file(argv[1], "__main__");
+    assert(parse_file(LIBDIR BUILTINS ".blz", BUILTINS));
+
+    ctx = parse_file(argv[1], "__main__");
     if (ctx) {
         if (errors == 0) {
             int i, kc = ds_hcount(modules);
