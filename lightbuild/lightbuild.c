@@ -19,7 +19,7 @@ struct Options {
 
 static void fatal(const char* msg) {
     fprintf(stderr, "fatal error: %s\n", msg);
-    abort();
+    exit(EXIT_SUCCESS);
 }
 
 static void* alloc(size_t sz) {
@@ -42,8 +42,14 @@ static void spawn(spawn_func f, Thread* t, void* arg) {
 }
 
 static void stop(Thread t) {
-    assert(!pthread_kill(t, SIGKILL));
-    pthread_join(t, NULL);
+    void* ret;
+    assert(pthread_cancel(t) == 0);
+    assert(pthread_join(t, &ret) == 0);
+    assert(ret == PTHREAD_CANCELED);
+}
+
+static void thread_setup() {
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 }
 
 #define MAX_PROCESSING 10
@@ -146,6 +152,7 @@ static void parse(const char* path) {
 static void* dirty_thread(void* fv) {
     File** ptr = fv;
     File* f = NULL;
+    thread_setup();
     for (;;) {
         while (!(f = atomic_load(ptr)));
         f->dirty = 1;
