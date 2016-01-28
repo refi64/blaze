@@ -1,7 +1,8 @@
+from fbuild.config.c import posix, openssl
+from fbuild.builders.pkg_config import PkgConfig
 from fbuild.builders.bison import Bison
 from fbuild.builders.c import guess_static
 from fbuild.builders import find_program
-from fbuild.config.c import posix
 from fbuild.record import Record
 from fbuild.path import Path
 import fbuild.db
@@ -43,8 +44,15 @@ def configure(ctx):
             ({'gcc'}, {'flags+': ['-Wno-return-type', '-Wno-unused-function']}),
         ])
     pthread = posix.pthread_h(c)
-    pthread.header
-    return Record(flex=flex, bison=bison, c=c, pthread=pthread)
+    pthread.header # Force the check.
+
+    if not (openssl.ssl_h(c).header and openssl.sha_h(c).header):
+        raise fbuild.ConfigFailed('OpenSSL is required.')
+
+    openssl_pkg = PkgConfig(ctx, 'openssl')
+
+    return Record(flex=flex, bison=bison, c=c, pthread=pthread,
+                  ldlibs=openssl_pkg.libs().split(' '))
 
 def build(ctx):
     rec = configure(ctx)
@@ -52,6 +60,7 @@ def build(ctx):
     bison = rec.bison
     c = rec.c
     pthread = rec.pthread
+    ldlibs = rec.ldlibs
     lex, hdr = flex('src/lex.l', 'lex.h')
     yacc = bison('src/parse.y', defines=True)
     c.build_exe('tst', ['tst.c', lex, yacc]+Path.glob('src/*.c'),
@@ -61,4 +70,5 @@ def build(ctx):
     if pthread.header:
         lightbuild_opts['macros'] = ['HAVE_PTHREAD_H=1']
         lightbuild_opts['external_libs'] = pthread.external_libs
-    c.build_exe('lightbuild', ['lightbuild/lightbuild.c'], **lightbuild_opts)
+    c.build_exe('lightbuild', ['lightbuild/lightbuild.c'], ldlibs=ldlibs,
+                **lightbuild_opts)

@@ -1,3 +1,4 @@
+#include <openssl/sha.h>
 #include <assert.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -17,14 +18,15 @@ struct Options {
     char* compiler, *cflags, *lflags;
 };
 
-static void fatal(const char* msg) {
-    fprintf(stderr, "fatal error: %s\n", msg);
+static void fatal(const char* msg, const char* file) {
+    fprintf(stderr, "fatal error%s%s: %s\n", file==NULL?"":" ",
+            file==NULL?"":file, msg);
     exit(EXIT_SUCCESS);
 }
 
 static void* alloc(size_t sz) {
     void* res = calloc(sz, 1);
-    if (!res) fatal("out of memory");
+    if (!res) fatal("out of memory", NULL);
     return res;
 }
 
@@ -38,7 +40,7 @@ typedef pthread_t Thread;
 static void spawn(spawn_func f, Thread* t, void* arg) {
     int err;
     if ((err = pthread_create(t, NULL, f, arg)))
-        fatal(strerror(err));
+        fatal(strerror(err), NULL);
 }
 
 static void stop(Thread t) {
@@ -112,7 +114,7 @@ static void parse(const char* path) {
     FILE* f;
     memset(&opts, 0, sizeof(Options));
 
-    if (!(f = fopen(path, "r"))) fatal(strerror(errno));
+    if (!(f = fopen(path, "r"))) fatal(strerror(errno), path);
 
     while (fgets(buf, sizeof(buf), f)) {
         size_t bufsz = strlen(buf);
@@ -143,7 +145,7 @@ static void parse(const char* path) {
         }
     }
 
-    if (!feof(f)) fatal(strerror(errno));
+    if (!feof(f)) fatal(strerror(errno), path);
     fclose(f);
 
     assert(all_files);
@@ -152,13 +154,59 @@ static void parse(const char* path) {
     assert(opts.lflags);
 }
 
+static void hash(unsigned char* tgt, const char* path) {
+    char buf[1024];
+    SHA_CTX ctx;
+    size_t read;
+    FILE* f = fopen(path, "r");
+    if (f == NULL) fatal(strerror(errno), path);
+
+    SHA1_Init(&ctx);
+    while ((read = fread(buf, 1, sizeof(buf), f)))
+        SHA1_Update(&ctx, buf, read);
+    if (!feof(f)) fatal(strerror(errno), path);
+    SHA1_Final(tgt, &ctx);
+}
+
+static int is_dirty(const char* path) {
+    int dirty = 0;
+    unsigned char curhash[SHA_DIGEST_LENGTH], oldhash[SHA_DIGEST_LENGTH];
+    FILE* f;
+    size_t l;
+    char* p2;
+
+    hash(curhash, path);
+
+    l = strlen(path);
+    p2 = alloc(l+6); // 1 + ".hash"
+    memcpy(p2, path, l);
+    memcpy(p2+l, ".hash", 6);
+
+    f = fopen(p2, "r");
+    free(p2);
+    if (f) {
+        fread(oldhash, 1, SHA_DIGEST_LENGTH, f);
+        fclose(f);
+        if (memcmp(curhash, oldhash, SHA_DIGEST_LENGTH) != 0) dirty = 1;
+    } else dirty = 1;
+
+    if (dirty) {
+        f = fopen(p2, "w");
+        if (!f) fatal(strerror(errno), p2);
+        fwrite(curhash, 1, SHA_DIGEST_LENGTH, f);
+        fclose(f);
+    }
+
+    return dirty;
+}
+
 static void* dirty_thread(void* fv) {
     File** ptr = fv;
     File* f = NULL;
     thread_setup();
     for (;;) {
         while (!(f = atomic_load(ptr)));
-        f->dirty = 1;
+        f->dirty = is_dirty(f->path);
         atomic_store(ptr, NULL);
     }
 }
@@ -184,7 +232,7 @@ static void free_all() {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 2) fatal("usage: lightbuild <build script>");
+    if (argc != 2) fatal("usage: lightbuild <build script>", NULL);
     parse(argv[1]);
     dirty_tests();
     free_all();
