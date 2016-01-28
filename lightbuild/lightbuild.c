@@ -1,6 +1,7 @@
 #include <openssl/sha.h>
-#include <assert.h>
 #include <signal.h>
+#include <unistd.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -177,7 +178,7 @@ static void hash(unsigned char* tgt, const char* path) {
     SHA1_Final(tgt, &ctx);
 }
 
-static int is_dirty(const char* path) {
+static int is_dirty(const char* path, const char* dst) {
     int dirty = 0;
     unsigned char curhash[SHA_DIGEST_LENGTH], oldhash[SHA_DIGEST_LENGTH];
     FILE* f;
@@ -191,12 +192,19 @@ static int is_dirty(const char* path) {
     memcpy(p2, path, l);
     memcpy(p2+l, ".hash", 6);
 
+    if (access(dst, F_OK) == -1) {
+        dirty = 1;
+        goto end;
+    }
+
     f = fopen(p2, "r");
     if (f) {
         fread(oldhash, 1, SHA_DIGEST_LENGTH, f);
         fclose(f);
         if (memcmp(curhash, oldhash, SHA_DIGEST_LENGTH) != 0) dirty = 1;
     } else dirty = 1;
+
+end:
 
     if (dirty) {
         f = fopen(p2, "w");
@@ -216,7 +224,7 @@ static void* dirty_thread(void* fv) {
     thread_setup();
     for (;;) {
         while (!(f = atomic_load(ptr)));
-        f->dirty = is_dirty(f->path);
+        f->dirty = is_dirty(f->path, f->obj);
         atomic_store(ptr, NULL);
     }
 }
@@ -235,20 +243,24 @@ static void dirty_tests() {
 static void compile(File* f) {
     char* buf;
     size_t total = 0, pathlen = strlen(f->path), objlen = pathlen + 2;
-    buf = alloc(opts.compiler_l + 1 + opts.cflags_l + 1 + pathlen + 1 +
+    buf = alloc(opts.compiler_l + 1 + 2 + 1 + opts.cflags_l + 1 + pathlen + 1 +
                 opts.objflag_l + 1 + objlen + 1);
     #define P(s,l,c) memcpy(buf+total, s, l); total += l; buf[total++] = c;
     P(opts.compiler, opts.compiler_l, ' ')
+    P("-c", 2, ' ')
     P(opts.cflags, opts.cflags_l, ' ')
     P(f->path, pathlen, ' ')
     P(opts.objflag, opts.objflag_l, ' ')
     P(f->obj, objlen, 0)
-    puts(buf);
+    printf("CC %s -> %s\n", f->path, f->obj);
+    if (system(buf)) fatal("command returned non-zero exit status", buf);
     free(buf);
 }
 
-static void link() {
-    ;
+static void link_objects() {
+    size_t total = 0;
+    int i;
+    for (i=0; i<nfiles; ++i) total += strlen(all_files[i].obj);
 }
 
 static void build() {
@@ -256,7 +268,7 @@ static void build() {
 
     for (i=0; i<nfiles; ++i)
         if (all_files[i].dirty) compile(&all_files[i]);
-    link();
+    link_objects();
 }
 
 static void free_all() {
