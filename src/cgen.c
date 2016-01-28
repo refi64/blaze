@@ -104,7 +104,7 @@ static void cgen_typedef(Type* t, FILE* output) {
     }
 }
 
-static void cgen_decl0(Decl* d, FILE* output);
+static void cgen_decl0(Decl* d, FILE* output, int external);
 
 static void cgen_typeimpl(Type* t, FILE* output) {
     int i;
@@ -115,7 +115,7 @@ static void cgen_typeimpl(Type* t, FILE* output) {
         Decl* d = t->d.sons[i];
         if (d->kind != Dglobal) continue;
         fputs("    ", output);
-        cgen_decl0(d, output);
+        cgen_decl0(d, output, 0);
     }
     fputs("};\n", output);
     t->d.done = 1;
@@ -201,7 +201,7 @@ static void cgen_proto(Decl* d, FILE* output) {
     fputc(')', output);
 }
 
-static void cgen_decl0(Decl* d, FILE* output) {
+static void cgen_decl0(Decl* d, FILE* output, int external) {
     generate_declname(d);
     switch (d->kind) {
     case Dfun:
@@ -209,6 +209,7 @@ static void cgen_decl0(Decl* d, FILE* output) {
         fputs(";\n", output);
         break;
     case Dglobal:
+        if (external) fputs("extern ", output);
         fprintf(output, "%s %s;\n", CNAME(d->v->type), CNAME(d->v));
         break;
     }
@@ -280,7 +281,7 @@ void cgen_free(Module* m) {
 
 #undef FREE_CNAME
 
-void cgen(Module* m, FILE* output) {
+static void cgen_header(Module* m, FILE* output, int external) {
     int i;
 
     for (i=0; i<list_len(m->types); ++i)
@@ -288,12 +289,20 @@ void cgen(Module* m, FILE* output) {
     fputs("\n\n", output);
 
     for (i=0; i<list_len(m->decls); ++i)
-        cgen_decl0(m->decls[i], output);
+        cgen_decl0(m->decls[i], output, external);
     fputs("\n\n", output);
 
     for (i=0; i<list_len(m->types); ++i)
         cgen_typeimpl(m->types[i], output);
     fputs("\n\n", output);
+}
+
+void cgen(Module* m, FILE* output) {
+    int i;
+
+    for (i=0; i<list_len(m->imports); ++i) cgen_header(m->imports[i], output, 1);
+
+    cgen_header(m, output, 0);
 
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);

@@ -206,6 +206,7 @@ struct Node {
         }; // Nstruct
         Node* attr; // Nattr
         Op op; // Nop
+        Module* m; // Nmodule
     };
     String* s;
     Type* type; // If Ftype is a flag, this is the referenced type.
@@ -314,6 +315,7 @@ LexerContext* parse_file(const char* file, const char* module);
 struct Module {
     List(Decl*) decls;
     List(Type*) types;
+    List(Module*) imports;
     Decl* main, *init;
 };
 

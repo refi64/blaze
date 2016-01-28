@@ -264,11 +264,14 @@ static Decl* igen_decl(Module* m, Node* n) {
 }
 
 Module* igen(Node* n) {
-    Module* res = new(Module);
+    Module* res;
     int i;
     bassert(n && n->kind == Nmodule, "unexpected node kind %d", n?n->kind:-1);
 
     memset(&magic, 0, sizeof(magic));
+
+    res = n->m = new(Module);
+    if (n != builtins_module) list_append(res->imports, builtins_module->m);
 
     res->init = new(Decl);
     res->init->kind = Dfun;
