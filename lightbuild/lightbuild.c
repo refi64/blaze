@@ -240,9 +240,6 @@ static void dirty_tests() {
         spawn(dirty_thread, &threads[i], &processing[i]);
     for (i=0; i<nfiles; ++i) queue_file(&all_files[i]);
     wait_all();
-
-    for (i=0; i<nfiles; ++i)
-        printf("%s: %d\n", all_files[i].path, all_files[i].dirty);
 }
 
 #define P(s,l,c) do {\
