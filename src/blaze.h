@@ -30,8 +30,6 @@ typedef struct Instr Instr;
 typedef struct GData GData;
 
 
-#define wprintf(fm,...) printf()
-
 #define fatal(...) do {\
     fprintf(stderr, "INTERNAL ERROR at %s:%d (%s): ", __FILE__,\
             __LINE__, __func__);\
@@ -42,8 +40,7 @@ typedef struct GData GData;
 
 
 #define bassert(cond, ...) do {\
-    if (!(cond))\
-        fatal("assertion '" #cond "' failed: " __VA_ARGS__);\
+    if (!(cond)) fatal("assertion '" #cond "' failed: " __VA_ARGS__);\
 } while (0)
 
 
