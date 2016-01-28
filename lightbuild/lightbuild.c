@@ -10,12 +10,13 @@ typedef struct File File;
 typedef struct Options Options;
 
 struct File {
-    char* path;
+    char* path, *obj;
     int dirty;
 };
 
 struct Options {
-    char* compiler, *cflags, *lflags;
+    char* compiler, *cflags, *lflags, *target, *objflag;
+    size_t compiler_l, cflags_l, lflags_l, target_l, objflag_l;
 };
 
 static void fatal(const char* msg, const char* file) {
@@ -123,16 +124,22 @@ static void parse(const char* path) {
         if (all_files) {
             all_files[i].path = alloc(bufsz+1);
             memcpy(all_files[i].path, buf, bufsz+1);
+            all_files[i].obj = alloc(bufsz+3); // 1 + ".o"
+            memcpy(all_files[i].obj, all_files[i].path, bufsz);
+            memcpy(all_files[i].obj+bufsz, ".o", 3);
             ++i;
         } else switch (buf[0]) {
         #define C(c,t)\
         case c:\
             opts.t = alloc(bufsz+1);\
-            memcpy(opts.t, buf, bufsz+1);\
+            memcpy(opts.t, buf+1, bufsz);\
+            opts.t##_l = bufsz-1;\
             break;
         C('C', compiler)
         C('F', cflags)
         C('L', lflags)
+        C('T', target)
+        C('O', objflag)
         #undef C
         case ':':
             nfiles = atoi(buf+1);
@@ -152,6 +159,8 @@ static void parse(const char* path) {
     assert(opts.compiler);
     assert(opts.cflags);
     assert(opts.lflags);
+    assert(opts.target);
+    assert(opts.objflag);
 }
 
 static void hash(unsigned char* tgt, const char* path) {
@@ -223,6 +232,33 @@ static void dirty_tests() {
         printf("%s: %d\n", all_files[i].path, all_files[i].dirty);
 }
 
+static void compile(File* f) {
+    char* buf;
+    size_t total = 0, pathlen = strlen(f->path), objlen = pathlen + 2;
+    buf = alloc(opts.compiler_l + 1 + opts.cflags_l + 1 + pathlen + 1 +
+                opts.objflag_l + 1 + objlen + 1);
+    #define P(s,l,c) memcpy(buf+total, s, l); total += l; buf[total++] = c;
+    P(opts.compiler, opts.compiler_l, ' ')
+    P(opts.cflags, opts.cflags_l, ' ')
+    P(f->path, pathlen, ' ')
+    P(opts.objflag, opts.objflag_l, ' ')
+    P(f->obj, objlen, 0)
+    puts(buf);
+    free(buf);
+}
+
+static void link() {
+    ;
+}
+
+static void build() {
+    int i;
+
+    for (i=0; i<nfiles; ++i)
+        if (all_files[i].dirty) compile(&all_files[i]);
+    link();
+}
+
 static void free_all() {
     int i;
     for (i=0; i<nfiles; ++i) free(all_files[i].path);
@@ -230,11 +266,14 @@ static void free_all() {
     free(opts.compiler);
     free(opts.cflags);
     free(opts.lflags);
+    free(opts.target);
+    free(opts.objflag);
 }
 
 int main(int argc, char** argv) {
     if (argc != 2) fatal("usage: lightbuild <build script>", NULL);
     parse(argv[1]);
     dirty_tests();
+    build();
     free_all();
 }
