@@ -302,6 +302,8 @@ static void cgen_header(Module* m, FILE* output, int external) {
 void cgen(Module* m, FILE* output) {
     int i;
 
+    static List(const char*) all_inits = NULL;
+
     for (i=0; i<list_len(m->imports); ++i) cgen_header(m->imports[i], output, 1);
 
     cgen_header(m, output, 0);
@@ -310,9 +312,12 @@ void cgen(Module* m, FILE* output) {
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);
 
+    list_append(all_inits, CNAME(m->init->v));
+
     if (m->main) {
         fputs("int main() {\n", output);
-        fprintf(output, "    %s();\n", CNAME(m->init->v));
+        for (i=0; i<list_len(all_inits); ++i)
+            fprintf(output, "    %s();\n", all_inits[i]);
         fprintf(output, "    return %s();\n", CNAME(m->main->v));
         fputs("}\n", output);
     }
