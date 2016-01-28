@@ -116,7 +116,7 @@ static void parse(const char* path) {
 
     while (fgets(buf, sizeof(buf), f)) {
         size_t bufsz = strlen(buf);
-        if (buf[bufsz-1] == '\n') buf[bufsz--] = 0;
+        if (buf[bufsz-1] == '\n') buf[--bufsz] = 0;
         if (bufsz == 0) continue;
         if (all_files) {
             all_files[i].path = alloc(bufsz+1);
