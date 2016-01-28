@@ -183,7 +183,6 @@ static int is_dirty(const char* path) {
     memcpy(p2+l, ".hash", 6);
 
     f = fopen(p2, "r");
-    free(p2);
     if (f) {
         fread(oldhash, 1, SHA_DIGEST_LENGTH, f);
         fclose(f);
@@ -196,6 +195,8 @@ static int is_dirty(const char* path) {
         fwrite(curhash, 1, SHA_DIGEST_LENGTH, f);
         fclose(f);
     }
+
+    free(p2);
 
     return dirty;
 }
