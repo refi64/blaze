@@ -97,8 +97,10 @@ static void wait_all() {
                 cont = 1;
                 break;
             }
-        if (!cont)
+        if (!cont) {
             for (i=0; i<MAX_PROCESSING; ++i) stop(threads[i]);
+            return;
+        }
     }
 }
 
