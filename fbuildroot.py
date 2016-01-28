@@ -1,6 +1,7 @@
 from fbuild.builders.bison import Bison
 from fbuild.builders.c import guess_static
 from fbuild.builders import find_program
+from fbuild.config.c import posix
 from fbuild.record import Record
 from fbuild.path import Path
 import fbuild.db
@@ -41,14 +42,23 @@ def configure(ctx):
             ({'clang'}, {'flags+': ['-Wno-unneeded-internal-declaration']}),
             ({'gcc'}, {'flags+': ['-Wno-return-type', '-Wno-unused-function']}),
         ])
-    return Record(flex=flex, bison=bison, c=c)
+    pthread = posix.pthread_h(c)
+    pthread.header
+    return Record(flex=flex, bison=bison, c=c, pthread=pthread)
 
 def build(ctx):
     rec = configure(ctx)
     flex = rec.flex
     bison = rec.bison
     c = rec.c
+    pthread = rec.pthread
     lex, hdr = flex('src/lex.l', 'lex.h')
     yacc = bison('src/parse.y', defines=True)
     c.build_exe('tst', ['tst.c', lex, yacc]+Path.glob('src/*.c'),
         includes=['src', hdr.parent])
+
+    lightbuild_opts = {}
+    if pthread.header:
+        lightbuild_opts['macros'] = ['HAVE_PTHREAD_H=1']
+        lightbuild_opts['external_libs'] = pthread.external_libs
+    c.build_exe('lightbuild', ['lightbuild/lightbuild.c'], **lightbuild_opts)
