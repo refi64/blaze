@@ -264,6 +264,17 @@ static void compile(File* f) {
     free(buf);
 }
 
+static void* compile_thread(void* fv) {
+    File** ptr = fv;
+    File* f;
+    thread_setup();
+    for (;;) {
+        while (!(f = atomic_load(ptr)));
+        compile(f);
+        atomic_store(ptr, NULL);
+    }
+}
+
 static void link_objects() {
     size_t pos = 0, total = opts.compiler_l + 1 + opts.lflags_l + 1 +
                             opts.exeflag_l + 1 + opts.target_l + 1;
@@ -288,8 +299,12 @@ static void build() {
 
     if (!target_dirty) return;
 
+    for (i=0; i<MAX_PROCESSING; ++i)
+        spawn(compile_thread, &threads[i], &processing[i]);
     for (i=0; i<nfiles; ++i)
-        if (all_files[i].dirty) compile(&all_files[i]);
+        if (all_files[i].dirty) queue_file(&all_files[i]);
+    wait_all();
+
     link_objects();
 }
 
