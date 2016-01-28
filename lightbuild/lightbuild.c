@@ -16,8 +16,8 @@ struct File {
 };
 
 struct Options {
-    char* compiler, *cflags, *lflags, *target, *objflag;
-    size_t compiler_l, cflags_l, lflags_l, target_l, objflag_l;
+    char* compiler, *cflags, *lflags, *target, *objflag, *exeflag;
+    size_t compiler_l, cflags_l, lflags_l, target_l, objflag_l, exeflag_l;
 };
 
 static void fatal(const char* msg, const char* file) {
@@ -141,6 +141,7 @@ static void parse(const char* path) {
         C('L', lflags)
         C('T', target)
         C('O', objflag)
+        C('X', exeflag)
         #undef C
         case ':':
             nfiles = atoi(buf+1);
@@ -162,6 +163,7 @@ static void parse(const char* path) {
     assert(opts.lflags);
     assert(opts.target);
     assert(opts.objflag);
+    assert(opts.exeflag);
 }
 
 static void hash(unsigned char* tgt, const char* path) {
@@ -177,6 +179,8 @@ static void hash(unsigned char* tgt, const char* path) {
     if (!feof(f)) fatal(strerror(errno), path);
     SHA1_Final(tgt, &ctx);
 }
+
+static int target_dirty = 0;
 
 static int is_dirty(const char* path, const char* dst) {
     int dirty = 0;
@@ -207,6 +211,7 @@ static int is_dirty(const char* path, const char* dst) {
 end:
 
     if (dirty) {
+        target_dirty = 1;
         f = fopen(p2, "w");
         if (!f) fatal(strerror(errno), p2);
         fwrite(curhash, 1, SHA_DIGEST_LENGTH, f);
@@ -240,31 +245,51 @@ static void dirty_tests() {
         printf("%s: %d\n", all_files[i].path, all_files[i].dirty);
 }
 
+#define P(s,l,c) do {\
+    memcpy(buf+pos, s, l);\
+    pos += l;\
+    buf[pos++] = c;\
+} while (0)
+
 static void compile(File* f) {
     char* buf;
-    size_t total = 0, pathlen = strlen(f->path), objlen = pathlen + 2;
+    size_t pos = 0, pathlen = strlen(f->path), objlen = pathlen + 2;
     buf = alloc(opts.compiler_l + 1 + 2 + 1 + opts.cflags_l + 1 + pathlen + 1 +
                 opts.objflag_l + 1 + objlen + 1);
-    #define P(s,l,c) memcpy(buf+total, s, l); total += l; buf[total++] = c;
-    P(opts.compiler, opts.compiler_l, ' ')
-    P("-c", 2, ' ')
-    P(opts.cflags, opts.cflags_l, ' ')
-    P(f->path, pathlen, ' ')
-    P(opts.objflag, opts.objflag_l, ' ')
-    P(f->obj, objlen, 0)
+    P(opts.compiler, opts.compiler_l, ' ');
+    P("-c", 2, ' ');
+    P(opts.cflags, opts.cflags_l, ' ');
+    P(f->path, pathlen, ' ');
+    P(opts.objflag, opts.objflag_l, ' ');
+    P(f->obj, objlen, 0);
     printf("CC %s -> %s\n", f->path, f->obj);
     if (system(buf)) fatal("command returned non-zero exit status", buf);
     free(buf);
 }
 
 static void link_objects() {
-    size_t total = 0;
+    size_t pos = 0, total = opts.compiler_l + 1 + opts.lflags_l + 1 +
+                            opts.exeflag_l + 1 + opts.target_l + 1;
+    char* buf;
     int i;
     for (i=0; i<nfiles; ++i) total += strlen(all_files[i].obj);
+    buf = alloc(total+1);
+    P(opts.compiler, opts.compiler_l, ' ');
+    for (i=0; i<nfiles; ++i) P(all_files[i].obj, strlen(all_files[i].obj), ' ');
+    P(opts.lflags, opts.lflags_l, ' ');
+    P(opts.exeflag, opts.exeflag_l, ' ');
+    P(opts.target, opts.target_l, 0);
+    printf("LD %s\n", opts.target);
+    if (system(buf)) fatal("command returned non-zero exit status", buf);
+    free(buf);
 }
+
+#undef P
 
 static void build() {
     int i;
+
+    if (!target_dirty) return;
 
     for (i=0; i<nfiles; ++i)
         if (all_files[i].dirty) compile(&all_files[i]);
