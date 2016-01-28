@@ -15,6 +15,8 @@ struct File {
     int dirty;
 };
 
+const char* script;
+
 struct Options {
     char* compiler, *cflags, *lflags, *target, *objflag, *exeflag;
     size_t compiler_l, cflags_l, lflags_l, target_l, objflag_l, exeflag_l;
@@ -110,13 +112,13 @@ static void wait_all() {
 
 static Options opts;
 
-static void parse(const char* path) {
+static void parse() {
     char buf[128];
     int i=0;
     FILE* f;
     memset(&opts, 0, sizeof(Options));
 
-    if (!(f = fopen(path, "r"))) fatal(strerror(errno), path);
+    if (!(f = fopen(script, "r"))) fatal(strerror(errno), script);
 
     while (fgets(buf, sizeof(buf), f)) {
         size_t bufsz = strlen(buf);
@@ -154,7 +156,7 @@ static void parse(const char* path) {
         }
     }
 
-    if (!feof(f)) fatal(strerror(errno), path);
+    if (!feof(f)) fatal(strerror(errno), script);
     fclose(f);
 
     assert(all_files);
@@ -196,7 +198,7 @@ static int is_dirty(const char* path, const char* dst) {
     memcpy(p2, path, l);
     memcpy(p2+l, ".hash", 6);
 
-    if (access(dst, F_OK) == -1) {
+    if (dst && access(dst, F_OK) == -1) {
         dirty = 1;
         goto end;
     }
@@ -229,13 +231,15 @@ static void* dirty_thread(void* fv) {
     thread_setup();
     for (;;) {
         while (!(f = atomic_load(ptr)));
-        f->dirty = is_dirty(f->path, f->obj);
+        f->dirty = is_dirty(f->path, f->obj) || f->dirty;
         atomic_store(ptr, NULL);
     }
 }
 
 static void dirty_tests() {
     int i;
+    if (is_dirty(script, NULL))
+        for (i=0; i<nfiles; ++i) all_files[i].dirty = 1;
     for (i=0; i<MAX_PROCESSING; ++i)
         spawn(dirty_thread, &threads[i], &processing[i]);
     for (i=0; i<nfiles; ++i) queue_file(&all_files[i]);
@@ -321,7 +325,8 @@ static void free_all() {
 
 int main(int argc, char** argv) {
     if (argc != 2) fatal("usage: lightbuild <build script>", NULL);
-    parse(argv[1]);
+    script = argv[1];
+    parse();
     dirty_tests();
     build();
     free_all();
