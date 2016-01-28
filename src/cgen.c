@@ -79,7 +79,7 @@ static void generate_declname(Decl* d) {
 static void cgen_typedef(Type* t, FILE* output) {
     int i;
     bassert(t, "expected non-null type");
-    if (t->d.cname) return;
+    if (t->d.put_typedef || t->d.done) return;
     generate_typename(t);
     for (i=0; i<list_len(t->sons); ++i)
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
@@ -102,6 +102,7 @@ static void cgen_typedef(Type* t, FILE* output) {
         fprintf(output, "typedef struct %s %s;\n", CNAME(t), CNAME(t));
         break;
     }
+    t->d.put_typedef = 1;
 }
 
 static void cgen_decl0(Decl* d, FILE* output, int external);
@@ -286,6 +287,7 @@ static void cgen_header(Module* m, FILE* output, int external) {
 
     for (i=0; i<list_len(m->types); ++i)
         cgen_typedef(m->types[i], output);
+    for (i=0; i<list_len(m->types); ++i) m->types[i]->d.put_typedef = 0;
     fputs("\n\n", output);
 
     for (i=0; i<list_len(m->decls); ++i)
@@ -303,6 +305,7 @@ void cgen(Module* m, FILE* output) {
     for (i=0; i<list_len(m->imports); ++i) cgen_header(m->imports[i], output, 1);
 
     cgen_header(m, output, 0);
+    for (i=0; i<list_len(m->types); ++i) m->types[i]->d.done = 0;
 
     for (i=0; i<list_len(m->decls); ++i)
         cgen_decl1(m->decls[i], output);

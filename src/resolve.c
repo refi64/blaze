@@ -8,6 +8,7 @@ static void make_magic_this(Node* n) {
 
     n->this = new(Node);
     n->this->kind = Nid;
+    n->this->module = n->module;
 
     e = stentry_new(n->this, s, NULL);
     symtab_add(n->tab, s, e);
@@ -19,6 +20,7 @@ static void resolve0(Node* n) {
     int i;
     bassert(n && (n->kind == Nmodule || n->parent), "node has no parent");
     if (n->kind != Nmodule && n->kind != Nfun && !n->tab) n->tab = n->parent->tab;
+    if (n->parent && n->parent->module) n->module = n->parent->module;
     switch (n->kind) {
     case Nmodule:
         if (strcmp(n->s->str, BUILTINS) == 0) {
@@ -26,7 +28,7 @@ static void resolve0(Node* n) {
             n->tab->level = 0;
         } else n->tab = symtab_sub(builtins_module->tab);
         for (i=0; i<list_len(n->sons); ++i) {
-            n->sons[i]->parent = n;
+            n->sons[i]->parent = n->sons[i]->module = n;
             resolve0(n->sons[i]);
         }
         break;
@@ -183,6 +185,12 @@ static void resolve1(Node* n) {
                   n->s->str);
             if (n->e->n) declared_here(n->e->n);
         } else if (n->e->n) {
+            bassert(n->module && n->e->n->module, "node has no module");
+            if (!n->e->n->export && n->e->n->module != n->module) {
+                error(n->loc, "attempt to access unexported identifier '%s'",
+                      n->s->str);
+                declared_here(n->e->n);
+            }
             n->flags |= n->e->n->flags & SVFLAGS;
             n->e->n->flags |= Fused;
             n->flags |= Fused;

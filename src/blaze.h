@@ -110,6 +110,7 @@ struct GData {
     String* cname;
     List(Decl*) sons;
     int done; // Has code for the item been generated yet? (Not always set!)
+    int put_typedef; // Similar to done.
 };
 
 struct Type {
@@ -230,7 +231,7 @@ struct Node {
     // Nbody: stmts...
     // Nmodule: tstmts...
     List(Node*) sons;
-    Node* parent, *func, *this;
+    Node* parent, *func, *this, *module;
     STEntry* e; // Only relevant on some kinds (e.g. Nid).
     Symtab* tab; // NOTE: Only Nmodule, Nfun free their symbol tables.
     Var* v;

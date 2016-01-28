@@ -21,6 +21,7 @@ static void igen_struct(Module* m, Node* n) {
                 d->v->flags |= Fstc;
             list_append(n->type->d.sons, d);
             if (d->kind == Dfun) list_append(m->decls, d);
+            if (n->export) d->export = 1;
         }
     }
 }

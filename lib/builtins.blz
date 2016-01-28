@@ -1,11 +1,11 @@
-global true: bool = 1 :: bool
-global false: bool = 0 :: bool
+export global true: bool = 1 :: bool
+export global false: bool = 0 :: bool
 
 fun calloc(n: size, sz: size) -> *mut byte "calloc"
 fun puts(s: *char) "puts"
 fun free(d: *byte) "free"
 
-struct str:
+export struct str:
     _data: *mut char
     var len: size
 
@@ -18,5 +18,5 @@ struct str:
         free(@_data :: *byte)
     fun at(i: size) -> char: return @_data[i]
 
-fun print(s: str):
+export fun print(s: str):
     puts(s._data)
