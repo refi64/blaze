@@ -144,6 +144,7 @@ static void parse(const char* path) {
     }
 
     if (!feof(f)) fatal(strerror(errno));
+    fclose(f);
 
     assert(all_files);
     assert(opts.compiler);
@@ -173,9 +174,18 @@ static void dirty_tests() {
         printf("%s: %d\n", all_files[i].path, all_files[i].dirty);
 }
 
+static void free_all() {
+    int i;
+    for (i=0; i<nfiles; ++i) free(all_files[i].path);
+    free(all_files);
+    free(opts.compiler);
+    free(opts.cflags);
+    free(opts.lflags);
+}
+
 int main(int argc, char** argv) {
     if (argc != 2) fatal("usage: lightbuild <build script>");
     parse(argv[1]);
     dirty_tests();
-    free(all_files);
+    free_all();
 }
