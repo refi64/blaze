@@ -115,6 +115,8 @@ File* processing[MAX_PROCESSING];
 
 #endif
 
+#define exists(f) (access(f, F_OK) != -1)
+
 static void queue_file(File* f) {
     int i;
     for (;;) for (i=0; i<MAX_PROCESSING; ++i) queue_test(i, f);
@@ -233,7 +235,7 @@ static int is_dirty(const char* path, const char* dst) {
     memcpy(p2, path, l);
     memcpy(p2+l, ".hash", 6);
 
-    if (dst && access(dst, F_OK) == -1) {
+    if (dst && !exists(dst)) {
         dirty = 1;
         goto end;
     }
@@ -336,7 +338,7 @@ static void link_objects() {
 static void build() {
     int i;
 
-    if (!target_dirty) return;
+    if (!target_dirty && exists(opts.target)) return;
 
     for (i=0; i<MAX_PROCESSING; ++i)
         spawn(compile_thread, &threads[i], &processing[i]);
