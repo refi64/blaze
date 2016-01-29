@@ -7,6 +7,24 @@ from fbuild.record import Record
 from fbuild.path import Path
 import fbuild.db
 
+from optparse import make_option
+
+def pre_options(parser):
+    group = parser.add_option_group('config options')
+    group.add_options((
+        make_option('--cc', help='Use the given C compiler'),
+        make_option('--cflag', help='Pass the given flag to the C compiler',
+                    action='append', default=[]),
+        make_option('--release', help='Build a release build',
+                    action='store_true'),
+        make_option('--threads', help='Build Lightbuild with threads',
+                    action='store_true', default=True),
+        make_option('--no-threads', help='Build Lightbuild without threads',
+                    action='store_false', dest='threads'),
+        make_option('--use-color', help='Force the C compiler to give colored' \
+                                        ' output', action='store_true'),
+    ))
+
 class Flex(fbuild.db.PersistentObject):
     def __init__(self, ctx, exe=None, flags=[], *, suffix='.c'):
         self.ctx = ctx
@@ -37,12 +55,23 @@ def configure(ctx):
     flex = Flex(ctx)
     bison = Bison(ctx, flags=['-Wno-other', '-v', '--report-file',
                               ctx.buildroot / 'report'])
-    c = guess_static(ctx, flags=['-fdiagnostics-color'], debug=True,
-        external_libs=['ds'], platform_options=[
+    opts = {}
+    flags = ctx.options.cflag
+    if ctx.options.release:
+        opts['optimize'] = True
+    else:
+        opts['debug'] = True
+    if not ctx.options.threads:
+        opts['macros'] = 'NO_THREADS'
+    if ctx.options.use_color:
+        flags.append('-fdiagnostics-color')
+
+    c = guess_static(ctx, external_libs=['ds'], exe=ctx.options.cc, flags=flags,
+        platform_options=[
             ({'posix'}, {'flags+': ['-Wall', '-Werror']}),
             ({'clang'}, {'flags+': ['-Wno-unneeded-internal-declaration']}),
             ({'gcc'}, {'flags+': ['-Wno-return-type', '-Wno-unused-function']}),
-        ])
+        ], **opts)
     pthread = posix.pthread_h(c)
     pthread.header # Force the check.
 
