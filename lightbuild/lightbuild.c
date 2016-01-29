@@ -147,7 +147,7 @@ static void wait_all() {
 static Options opts;
 
 static void parse() {
-    char buf[128];
+    char buf[1024];
     int i=0;
     FILE* f;
     memset(&opts, 0, sizeof(Options));
