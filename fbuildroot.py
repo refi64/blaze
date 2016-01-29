@@ -62,7 +62,7 @@ def configure(ctx):
     else:
         opts['debug'] = True
     if not ctx.options.threads:
-        opts['macros'] = 'NO_THREADS'
+        opts['macros'] = ['NO_THREADS']
     if ctx.options.use_color:
         flags.append('-fdiagnostics-color')
 

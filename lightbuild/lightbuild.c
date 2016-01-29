@@ -36,7 +36,23 @@ static void* alloc(size_t sz) {
 
 typedef void* (*spawn_func)(void* ptr);
 
-#ifdef HAVE_PTHREAD_H
+#ifdef NO_THREADS
+
+typedef struct {
+    spawn_func func;
+    void* arg;
+} Thread;
+#define MAX_PROCESSING 1
+
+static void spawn(spawn_func f, Thread* t, void* arg) {
+    t->func = f;
+    t->arg = arg;
+}
+
+static void stop(Thread t) {}
+static void thread_setup() {}
+
+#elif HAVE_PTHREAD_H
 #include <pthread.h>
 
 typedef pthread_t Thread;
@@ -69,7 +85,17 @@ File* all_files;
 int nfiles;
 File* processing[MAX_PROCESSING];
 
-#ifdef __GNUC__
+#ifdef NO_THREADS
+
+#define atomic_load(x) (*(x))
+#define atomic_store(x,v) do { *(x) = (v); return NULL; } while (0)
+#define queue_test(n,f) do {\
+    processing[n] = f;\
+    threads[n].func(threads[n].arg);\
+    return;\
+} while (0)
+
+#elif __GNUC__
 
 #ifdef __ATOMIC_SEQ_CST
 #define atomic_load(x) __atomic_load_n(x, __ATOMIC_SEQ_CST)
@@ -94,6 +120,12 @@ static void queue_file(File* f) {
     for (;;) for (i=0; i<MAX_PROCESSING; ++i) queue_test(i, f);
 }
 
+#ifdef NO_THREADS
+
+static void wait_all() {}
+
+#else
+
 static void wait_all() {
     int i, cont;
     for (;;) {
@@ -109,6 +141,8 @@ static void wait_all() {
         }
     }
 }
+
+#endif
 
 static Options opts;
 
@@ -179,6 +213,7 @@ static void hash(unsigned char* tgt, const char* path) {
     while ((read = fread(buf, 1, sizeof(buf), f)))
         SHA1_Update(&ctx, buf, read);
     if (!feof(f)) fatal(strerror(errno), path);
+    fclose(f);
     SHA1_Final(tgt, &ctx);
 }
 
