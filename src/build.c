@@ -24,13 +24,21 @@ static int write_module(Module* m) {
     return 1;
 }
 
+static void write_compiler_flags(Config config, FILE* f) {
+    fputc('F', f);
+    if (config.kind == Cclang)
+        fputs("-Wno-incompatible-library-redeclaration ", f);
+    fputc('\n', f);
+}
+
 static int write_lightbuild(const char* tgt, Config config, List(Module*) mods) {
     int i;
     FILE* f = open_write(".blaze/build");
     if (!f) return 0;
 
     fprintf(f, "C%s\n", config.compiler);
-    fputs("F\nL\n", f);
+    write_compiler_flags(config, f);
+    fputs("L\n", f);
     fprintf(f, "T%s\n", tgt);
     fputs("O-o\nX-o\n", f);
 

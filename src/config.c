@@ -12,6 +12,7 @@ static lua_State* setup_lua() {
         lua_settable(L, -3);\
     } while (0)
     F(compiler, "cc");
+    F(kind, "unix");
     F(lightbuild, "lightbuild");
     #undef F
     lua_setglobal(L, "config");
@@ -59,15 +60,26 @@ Config load_config() {
         printf("%s - %s\n", lua_tostring(config.L, -2),
                             lua_tostring(config.L, -1));
 
-        #define F(n) else if (strcmp(lua_tostring(config.L, -2), #n) == 0)\
-                         config.n = lua_tostring(config.L, -1);
+        #define F(n,x) else if (strcmp(lua_tostring(config.L, -2), #n) == 0)\
+                         config.n##x = lua_tostring(config.L, -1);
         // This should ALWAYS be false.
         if (!config.L) fatal("XXX");
-        F(compiler)
-        F(lightbuild)
+        F(compiler,)
+        F(kind,_string)
+        F(lightbuild,)
         #undef F
 
         lua_pop(config.L, 1);
+    }
+
+    #define K(k) else if (strcmp(config.kind_string, #k) == 0) config.kind = C##k;
+    // Again, always false.
+    if (!config.L) fatal("XXX");
+    K(unix)
+    K(clang)
+    else {
+        fprintf(stderr, "unknown compiler kind %s\n", config.kind_string);
+        config.kind = Cunix;
     }
 
     return config;
