@@ -61,9 +61,6 @@ int exists(const char* path);
 int pmkdir(const char* dir);
 
 
-lua_State* setup_lua();
-void run_lua_file(lua_State* L, const char* path);
-
 struct Config {
     lua_State* L;
     const char* compiler;
