@@ -4,10 +4,14 @@
 
 int main(int argc, char** argv) {
     LexerContext* ctx;
+    Config config;
     assert(argc == 2);
     lex_init();
     modtab_init();
     init_builtin_types();
+
+    config = load_config();
+
     assert(parse_file(LIBDIR BUILTINS ".blz", BUILTINS));
 
     ctx = parse_file(argv[1], "__main__");
@@ -52,11 +56,11 @@ int main(int argc, char** argv) {
             free(ctxs);
         }
     }
+    free_config(config);
     lex_free();
     modtab_free();
     free_builtin_types();
     printf("%d\n", errors);
-
 
     return 0;
 }

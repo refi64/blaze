@@ -1,4 +1,5 @@
 #include "blaze.h"
+#include <unistd.h>
 
 #define BZ 1024
 
@@ -28,3 +29,5 @@ char* readall(FILE* fp, size_t* sz) {
 
 uint32_t strhash(String* str) { return ds_strhash(str->str); }
 int streq(String* a, String* b) { return ds_streq(a->str, b->str); }
+
+int exists(const char* path) { return access(path, F_OK) != -1; }

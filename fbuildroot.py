@@ -79,9 +79,21 @@ def configure(ctx):
         raise fbuild.ConfigFailed('OpenSSL is required.')
 
     openssl_pkg = PkgConfig(ctx, 'openssl')
+    ldlibs = openssl_pkg.libs().split(' ')
 
-    return Record(flex=flex, bison=bison, c=c, pthread=pthread,
-                  ldlibs=openssl_pkg.libs().split(' '))
+    ctx.logger.check('checking for pkg-config package lua5.2')
+    try:
+        lua_pkg = PkgConfig(ctx, 'lua5.2')
+    except fbuild.ConfigFailed:
+        ctx.logger.failed()
+        cflags = []
+    else:
+        ctx.logger.passed()
+        cflags = lua_pkg.cflags()
+        ldlibs.extend(lua_pkg.libs().split(' '))
+
+    return Record(flex=flex, bison=bison, c=c, pthread=pthread, cflags=cflags,
+                  ldlibs=ldlibs)
 
 def build(ctx):
     rec = configure(ctx)
@@ -89,11 +101,13 @@ def build(ctx):
     bison = rec.bison
     c = rec.c
     pthread = rec.pthread
+    cflags = rec.cflags
     ldlibs = rec.ldlibs
+
     lex, hdr = flex('src/lex.l', 'lex.h')
     yacc = bison('src/parse.y', defines=True)
     c.build_exe('tst', ['tst.c', lex, yacc]+Path.glob('src/*.c'),
-        includes=['src', hdr.parent])
+        cflags=cflags, includes=['src', hdr.parent], ldlibs=ldlibs)
 
     lightbuild_opts = {}
     if pthread.header:

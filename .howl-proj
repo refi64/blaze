@@ -12,6 +12,8 @@ src/iutil.c
 src/util.c
 src/cgen.c
 src/iopt.c
+src/lua.c
+src/config.c
 tst.c
 tst.blz
 fbuildroot.py

@@ -7,6 +7,9 @@
 #include <stdio.h>
 
 #include <ds/ds.h>
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
 
 #define alloc ds_zmalloc
 #define ralloc ds_xrealloc
@@ -16,6 +19,7 @@
 #define BUILTINS "builtins"
 
 typedef struct String String;
+typedef struct Config Config;
 typedef struct Location Location;
 typedef struct Type Type;
 typedef struct Node Node;
@@ -51,6 +55,21 @@ char* readall(FILE* f, size_t* sz);
 
 uint32_t strhash(String* str);
 int streq(String* a, String* b);
+
+int exists(const char* path);
+
+
+lua_State* setup_lua();
+void run_lua_file(lua_State* L, const char* path);
+
+struct Config {
+    lua_State* L;
+    const char* compiler;
+};
+
+Config load_config();
+void free_config();
+
 
 struct String {
     char* str;
