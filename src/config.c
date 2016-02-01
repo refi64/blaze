@@ -1,13 +1,15 @@
 #include "blaze.h"
 
 static String* get_main_config() {
-    String* res;
-    const char* home = getenv("HOME");
-    if (!home) return NULL;
-    res = string_new(home);
-    string_mergec(res, '/');
-    string_merges(res, ".blaze.lua");
-    return res;
+    /* String* res; */
+    /* const char* home = getenv("HOME"); */
+    /* if (!home) return NULL; */
+    /* res = string_new(home); */
+    /* string_mergec(res, '/'); */
+    /* string_merges(res, ".blaze.lua"); */
+    /* return res; */
+
+    return string_new("/home/ryan/blaze/config.lua");
 }
 
 Config load_config() {
