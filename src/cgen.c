@@ -301,8 +301,12 @@ static void cgen_header(Module* m, FILE* output, int external) {
 
 void cgen(Module* m, FILE* output) {
     int i;
-
     static List(const char*) all_inits = NULL;
+
+    if (!m->main) fputs("extern ", output);
+    fputs("int __blaze_argc;\n", output);
+    if (!m->main) fputs("extern ", output);
+    fputs("char* __blaze_argv;\n", output);
 
     for (i=0; i<list_len(m->imports); ++i) cgen_header(m->imports[i], output, 1);
 
@@ -315,7 +319,9 @@ void cgen(Module* m, FILE* output) {
     list_append(all_inits, CNAME(m->init->v));
 
     if (m->main) {
-        fputs("int main() {\n", output);
+        fputs("int main(int argc, char** argv) {\n", output);
+        fputs("    __blaze_argc = argc;\n", output);
+        fputs("    __blaze_argv = argv;\n", output);
         for (i=0; i<list_len(all_inits); ++i)
             fprintf(output, "    %s();\n", all_inits[i]);
         fprintf(output, "    return %s();\n", CNAME(m->main->v));
