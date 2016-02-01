@@ -13,6 +13,7 @@ src/util.c
 src/cgen.c
 src/iopt.c
 src/config.c
+src/build.c
 tst.c
 tst.blz
 fbuildroot.py

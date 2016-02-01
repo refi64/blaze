@@ -43,20 +43,9 @@ int main(int argc, char** argv) {
                 }
 
                 if (!exists(".blaze")) assert(pmkdir(".blaze"));
+                build(config, mods);
 
-                for (i=0; i<list_len(mods); ++i) {
-                    String* s = string_new(".blaze/");
-                    string_merge(s, mods[i]->name);
-                    string_merges(s, ".c");
-                    FILE* f = fopen(s->str, "w");
-                    string_free(s);
-                    cgen(mods[i], f);
-                    fclose(f);
-                }
-                for (i=0; i<list_len(mods); ++i) {
-                    cgen_free(mods[i]);
-                    module_free(mods[i]);
-                }
+                for (i=0; i<list_len(mods); ++i) module_free(mods[i]);
                 list_free(mods);
             }
 
