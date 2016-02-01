@@ -12,6 +12,7 @@ static lua_State* setup_lua() {
         lua_settable(L, -3);\
     } while (0)
     F(compiler, string, "cc");
+    F(lightbuild, string, "lightbuild");
     #undef F
     lua_setglobal(L, "config");
     return L;
@@ -63,6 +64,7 @@ Config load_config() {
         // This should ALWAYS be false.
         if (!config.L) fatal("XXX");
         F(compiler)
+        F(lightbuild)
         #undef F
 
         lua_pop(config.L, 1);

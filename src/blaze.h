@@ -63,7 +63,7 @@ int pmkdir(const char* dir);
 
 struct Config {
     lua_State* L;
-    const char* compiler;
+    const char* compiler, *lightbuild;
 };
 
 Config load_config();

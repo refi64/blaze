@@ -1,4 +1,5 @@
 #include "blaze.h"
+#include <unistd.h>
 
 static FILE* open_write(const char* path) {
     FILE* f = fopen(path, "w");
@@ -10,15 +11,12 @@ static FILE* open_write(const char* path) {
 
 static int write_module(Module* m) {
     FILE* f;
-    String* s;
 
-    m->d.cname = string_clone(m->name);
+    m->d.cname = string_new(".blaze/");
+    string_merge(m->d.cname, m->name);
     string_merges(m->d.cname, ".c");
-    s = string_new(".blaze/");
-    string_merge(s, m->d.cname);
 
-    f = open_write(s->str);
-    string_free(s);
+    f = open_write(m->d.cname->str);
     if (!f) return 0;
 
     cgen(m, f);
@@ -43,6 +41,7 @@ static int write_lightbuild(const char* tgt, Config config, List(Module*) mods) 
 
 void build(const char* tgt, Config config, List(Module*) mods) {
     int i;
+    String* s = NULL;
     if (!exists(".blaze") && !pmkdir(".blaze")) return;
 
     for (i=0; i<list_len(mods); ++i)
@@ -50,9 +49,15 @@ void build(const char* tgt, Config config, List(Module*) mods) {
 
     if (!write_lightbuild(tgt, config, mods)) goto end;
 
+    s = string_new(config.lightbuild);
+    string_merges(s, " .blaze/build");
+    if (system(s->str)) fputs("C compilation failed!\n", stderr);
+
 end:
     for (i=0; i<list_len(mods); ++i) {
         cgen_free(mods[i]);
         string_free(mods[i]->d.cname);
     }
+
+    if (s) string_free(s);
 }
