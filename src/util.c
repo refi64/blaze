@@ -1,5 +1,6 @@
 #include "blaze.h"
 #include <unistd.h>
+#include <sys/stat.h>
 
 #define BZ 1024
 
@@ -31,3 +32,10 @@ uint32_t strhash(String* str) { return ds_strhash(str->str); }
 int streq(String* a, String* b) { return ds_streq(a->str, b->str); }
 
 int exists(const char* path) { return access(path, F_OK) != -1; }
+
+int pmkdir(const char* dir) {
+    if (mkdir(dir, 0775) == -1) {
+        fprintf(stderr, "error creating %s: %s\n", dir, strerror(errno));
+        return 0;
+    } else return 1;
+}

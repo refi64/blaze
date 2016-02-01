@@ -42,9 +42,16 @@ int main(int argc, char** argv) {
                     list_append(mods, m);
                 }
 
+                if (!exists(".blaze")) assert(pmkdir(".blaze"));
+
                 for (i=0; i<list_len(mods); ++i) {
-                    printf("##########Module %s:\n", ctxs[i]->result->s->str);
-                    cgen(mods[i], stderr);
+                    String* s = string_new(".blaze/");
+                    string_merge(s, mods[i]->name);
+                    string_merges(s, ".c");
+                    FILE* f = fopen(s->str, "w");
+                    string_free(s);
+                    cgen(mods[i], f);
+                    fclose(f);
                 }
                 for (i=0; i<list_len(mods); ++i) {
                     cgen_free(mods[i]);

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include <ds/ds.h>
 #include <lua.h>
@@ -57,6 +58,7 @@ uint32_t strhash(String* str);
 int streq(String* a, String* b);
 
 int exists(const char* path);
+int pmkdir(const char* dir);
 
 
 lua_State* setup_lua();
@@ -333,6 +335,7 @@ LexerContext* parse_file(const char* file, const char* module);
 
 
 struct Module {
+    String* name;
     List(Decl*) decls;
     List(Type*) types;
     List(Module*) imports;

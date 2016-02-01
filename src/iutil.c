@@ -161,5 +161,6 @@ void module_free(Module* m) {
         t->d.sons = NULL;
     }
     list_free(m->types);
+    string_free(m->name);
     free(m);
 }

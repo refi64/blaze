@@ -27,7 +27,7 @@ static void node_dump2(Node* n, int indent) {
     case Narglist: put("Narglist"); break;
     case Ndecl: put("Ndecl (s:%s)", n->s->str); break;
     case Nbody: put("Nbody"); break;
-    case Nmodule: put("Nmodule"); break;
+    case Nmodule: put("Nmodule %s\n", n->s->str); break;
     case Nsons: fatal("unexpected node kind Nsons");
     }
     if (n->export) printf(" exported");

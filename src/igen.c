@@ -274,6 +274,8 @@ Module* igen(Node* n) {
     res = n->m = new(Module);
     if (n != builtins_module) list_append(res->imports, builtins_module->m);
 
+    res->name = string_clone(n->s);
+
     res->init = new(Decl);
     res->init->kind = Dfun;
     // Initializers are hidden, so they have no type.
