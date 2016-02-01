@@ -6,13 +6,13 @@ static lua_State* setup_lua() {
     luaL_openlibs(L);
 
     lua_newtable(L);
-    #define F(f,t,...) do {\
+    #define F(f,s) do {\
         lua_pushstring(L, #f);\
-        lua_push##t(L, __VA_ARGS__);\
+        lua_pushstring(L, s);\
         lua_settable(L, -3);\
     } while (0)
-    F(compiler, string, "cc");
-    F(lightbuild, string, "lightbuild");
+    F(compiler, "cc");
+    F(lightbuild, "lightbuild");
     #undef F
     lua_setglobal(L, "config");
     return L;
