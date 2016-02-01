@@ -18,8 +18,8 @@ struct File {
 const char* script;
 
 struct Options {
-    char* compiler, *cflags, *lflags, *target, *objflag, *exeflag;
-    size_t compiler_l, cflags_l, lflags_l, target_l, objflag_l, exeflag_l;
+    char* compiler, *cflags, *lflags, *target, *objflag, *exeflag, *priv;
+    size_t compiler_l, cflags_l, lflags_l, target_l, objflag_l, exeflag_l, priv_l;
 };
 
 static void fatal(const char* msg, const char* file) {
@@ -180,6 +180,7 @@ static void parse() {
         C('T', target)
         C('O', objflag)
         C('X', exeflag)
+        C('P', priv)
         #undef C
         case ':':
             nfiles = atoi(buf+1);
@@ -202,6 +203,7 @@ static void parse() {
     assert(opts.target);
     assert(opts.objflag);
     assert(opts.exeflag);
+    assert(opts.priv);
 }
 
 static void hash(unsigned char* tgt, const char* path) {
@@ -231,9 +233,11 @@ static int is_dirty(const char* path, const char* dst) {
     hash(curhash, path);
 
     l = strlen(path);
-    p2 = alloc(l+6); // 1 + ".hash"
-    memcpy(p2, path, l);
-    memcpy(p2+l, ".hash", 6);
+    p2 = alloc(opts.priv_l+1+l+6); // priv_l + "/" + 1 + ".hash"
+    memcpy(p2, opts.priv, opts.priv_l);
+    p2[opts.priv_l] = '/';
+    memcpy(p2+opts.priv_l+1, path, l);
+    memcpy(p2+opts.priv_l+1+l, ".hash", 6);
 
     if (dst && !exists(dst)) {
         dirty = 1;
@@ -358,6 +362,7 @@ static void free_all() {
     free(opts.lflags);
     free(opts.target);
     free(opts.objflag);
+    free(opts.priv);
 }
 
 int main(int argc, char** argv) {
