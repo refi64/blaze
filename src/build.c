@@ -26,14 +26,14 @@ static int write_module(Module* m) {
     return 1;
 }
 
-static int write_lightbuild(Config config, List(Module*) mods) {
+static int write_lightbuild(const char* tgt, Config config, List(Module*) mods) {
     int i;
     FILE* f = open_write(".blaze/build");
     if (!f) return 0;
 
     fprintf(f, "C%s\n", config.compiler);
     fputs("F\nL\n", f);
-    fprintf(f, "T%s\n", "tst");
+    fprintf(f, "T%s\n", tgt);
     fputs("O-o\nX-o\n", f);
 
     fprintf(f, ":%zu\n", list_len(mods));
@@ -41,14 +41,14 @@ static int write_lightbuild(Config config, List(Module*) mods) {
     fclose(f);
 }
 
-void build(Config config, List(Module*) mods) {
+void build(const char* tgt, Config config, List(Module*) mods) {
     int i;
     if (!exists(".blaze") && !pmkdir(".blaze")) return;
 
     for (i=0; i<list_len(mods); ++i)
         if (!write_module(mods[i])) goto end;
 
-    if (!write_lightbuild(config, mods)) goto end;
+    if (!write_lightbuild(tgt, config, mods)) goto end;
 
 end:
     for (i=0; i<list_len(mods); ++i) {

@@ -5,7 +5,7 @@
 int main(int argc, char** argv) {
     LexerContext* ctx;
     Config config;
-    assert(argc == 2);
+    assert(argc == 3);
     lex_init();
     modtab_init();
     init_builtin_types();
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (!exists(".blaze")) assert(pmkdir(".blaze"));
-                build(config, mods);
+                build(argv[2], config, mods);
 
                 for (i=0; i<list_len(mods); ++i) module_free(mods[i]);
                 list_free(mods);

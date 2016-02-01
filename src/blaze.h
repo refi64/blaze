@@ -434,6 +434,6 @@ void cgen(Module* m, FILE* output);
 void cgen_free(Module* m);
 
 
-void build(Config config, List(Module*) mods);
+void build(const char* tgt, Config config, List(Module*) mods);
 
 #endif
