@@ -146,9 +146,10 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     switch (ir->kind) {
     case Inull: fatal("unexpected ir kind Inull");
     case Iret:
-        if (ir->v)
-            fprintf(output, "%s = %s(%s%s); goto R", CNAME(d->rv), copy(ir->v[0]),
-                    copy_addr(ir->v[0]), CNAME(ir->v[0]));
+        if (ir->v) {
+            fprintf(output, "%s = %s; goto R", CNAME(d->rv), CNAME(ir->v[0]));
+            ir->v[0]->no_destr = 1;
+        }
         else fputs("goto R", output);
         break;
     case Iset:
@@ -252,7 +253,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
     for (i=0; i<list_len(d->vars); ++i) {
         Node* destr;
         if (d->vars[i]->type && d->vars[i]->type->kind == Tstruct &&
-            (destr = d->vars[i]->type->n->destr))
+            !d->vars[i]->no_destr && (destr = d->vars[i]->type->n->destr))
             fprintf(output, "    %s(&(%s));\n", CNAME(destr->v),
                     CNAME(d->vars[i]));
     }
