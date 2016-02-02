@@ -97,7 +97,7 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
             note(p->n->loc, "previous definition is here");
             stentry_free(e);
             return;
-        } else {
+        } else if (p->n && (p->n->module == e->n->module || p->n->export)) {
             if (p->level == 0)
                 error(el, "redefinition of %s shadows builtin", name->str);
             else if (p->level > 0 && e->level > 0) {
