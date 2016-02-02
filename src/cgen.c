@@ -122,6 +122,17 @@ static void cgen_typeimpl(Type* t, FILE* output) {
     t->d.done = 1;
 }
 
+#define HAS_COPY(v) ((v)->type && (v)->type->kind == Tstruct && \
+                     (v)->type->n->magic[Mcopy])
+
+static const char* copy(Var* v) {
+    return HAS_COPY(v) ? CNAME(v->type->n->magic[Mcopy]->v) : "";
+}
+
+static const char* copy_addr(Var* v) {
+    return HAS_COPY(v) ? "&" : "";
+}
+
 static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     int i;
     for (i=0; i<list_len(ir->v); ++i) generate_varname(ir->v[i]);
@@ -136,16 +147,19 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     case Inull: fatal("unexpected ir kind Inull");
     case Iret:
         if (ir->v)
-            fprintf(output, "%s = %s; goto R", CNAME(d->rv), CNAME(ir->v[0]));
+            fprintf(output, "%s = %s(%s%s); goto R", CNAME(d->rv), copy(ir->v[0]),
+                    copy_addr(ir->v[0]), CNAME(ir->v[0]));
         else fputs("goto R", output);
         break;
     case Iset:
         if (ir->v[0]->ir->kind == Iaddr) fputs(CNAME(ir->v[0]->ir->v[0]), output);
         else fprintf(output, "*%s", CNAME(ir->v[0]));
-        fprintf(output, " = %s", CNAME(ir->v[1]));
+        fprintf(output, " = %s(%s%s)", copy(ir->v[0]), copy_addr(ir->v[0]),
+                CNAME(ir->v[1]));
         break;
     case Inew:
-        fputs(CNAME(ir->v[0]), output);
+        fprintf(output, "%s(%s%s)", copy(ir->v[0]), copy_addr(ir->v[0]),
+                CNAME(ir->v[0]));
         break;
     case Iconstr:
         fprintf(output, "%s(&(%s)", CNAME(ir->v[0]), CNAME(ir->dst));

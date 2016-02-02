@@ -200,6 +200,13 @@ void type(Node* n) {
             && typematch(n->type->sons[0],
                          builtin_types[Tint]->override, NULL)))
             error(n->loc, "invalid main signature");
+
+        if (n->kind == Nfun && n->parent->kind == Nstruct)
+            for (i=0; i<Mend; ++i)
+                if (strcmp(n->s->str, magic_strings[i]) == 0) {
+                    if (!n->parent->magic[i]) n->parent->magic[i] = n;
+                    break;
+                }
         break;
     case Nlet:
         type(n->sons[0]);

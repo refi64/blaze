@@ -188,6 +188,9 @@ static const char* op_strings[] = {"+", "-", "*", "/",
                                    NULL,
                                    "==", "!=", "<", ">"};
 
+typedef enum Magic { Mcopy, Mend } Magic;
+static const char* magic_strings[] = {"__copy__", NULL};
+
 struct Node {
     enum {
         Nid,
@@ -221,6 +224,7 @@ struct Node {
         String *exportc; // Nfun
         struct {
             Node* constr, *destr;
+            Node* magic[Mend];
         }; // Nstruct
         Node* attr; // Nattr
         Op op; // Nop

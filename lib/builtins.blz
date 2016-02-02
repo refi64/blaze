@@ -22,6 +22,12 @@ export struct str:
 
     delete:
         free(@_data :: *byte)
+
+    fun __copy__ -> str:
+        let s = new str(@len)
+        memcpy(s._data, @_data, @len+1)
+        return s
+
     fun at(i: size) -> char: return @_data[i]
 
 export fun print(s: str):
