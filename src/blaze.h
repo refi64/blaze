@@ -92,16 +92,16 @@ void string_merges(String* base, const char* rhs);
 #define list_var(b) list_cat(b,__LINE__)
 
 #define List(t) t*
-#define list_lenref(l) ((size_t*)l)[-1]
+#define list_lenref(l) ((size_t*)(l))[-1]
 #define list_len(l) (l?list_lenref(l):0)
 #define list_append(l,x) do {\
     size_t list_var(len) = list_len(l);\
-    l = ralloc(l?((void*)l)-sizeof(size_t):NULL,\
-               sizeof(void*)*(list_var(len)+1)+sizeof(size_t))+sizeof(size_t);\
+    (l) = ralloc((l)?((void*)(l))-sizeof(size_t):NULL,\
+                 sizeof(void*)*(list_var(len)+1)+sizeof(size_t))+sizeof(size_t);\
     list_lenref(l) = list_var(len)+1;\
-    l[list_lenref(l)-1] = x;\
+    (l)[list_lenref(l)-1] = (x);\
 } while (0)
-#define list_free(l) free(l?(void*)l-sizeof(size_t):NULL)
+#define list_free(l) free((l)?(void*)(l)-sizeof(size_t):NULL)
 
 
 struct Location {
@@ -413,6 +413,9 @@ struct Instr {
     Var* dst;
     // Argument variables.
     List(Var*) v;
+    // Is it a block statement, e.g. Iif?
+    int bstmt;
+    List(Instr*) sons; // Only if bstmt is true.
     String* s;
     int flags;
 };

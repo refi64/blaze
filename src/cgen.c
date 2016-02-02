@@ -133,13 +133,13 @@ static const char* copy_addr(Var* v) {
     return HAS_COPY(v) ? "&" : "";
 }
 
-static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
+static void cgen_ir(Decl* d, int depth, Instr* ir, FILE* output) {
     int i;
     for (i=0; i<list_len(ir->v); ++i) generate_varname(ir->v[i]);
     // The IR was optimized out by either iopt or cgen_decl1.
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0)) return;
 
-    fputs("    ", output);
+    for (i=0; i<depth; ++i) fputs("    ", output);
     if (ir->dst && ir->dst->type && ir->kind != Iconstr)
         fprintf(output, "%s = ", CNAME(ir->dst));
 
@@ -248,7 +248,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
         generate_varname(d->rv);
         fprintf(output, "    %s %s;\n", CNAME(d->ret), CNAME(d->rv));
     }
-    for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, d->sons[i], output);
+    for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, 1, d->sons[i], output);
     fputs("R:\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
         Node* destr;
