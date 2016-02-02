@@ -473,8 +473,10 @@ void type(Node* n) {
             n->type = builtin_types[Tbool]->override;
         }
         else {
-            if (n->sons[0]->type->kind != Tbuiltin ||
-                n->sons[1]->type->kind != Tbuiltin)
+            if (n->sons[0]->type->kind == Tany || n->sons[1]->type->kind == Tany)
+                n->type = anytype->override;
+            else if (n->sons[0]->type->kind != Tbuiltin ||
+                     n->sons[1]->type->kind != Tbuiltin)
                 n->type = NULL;
             else if (typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1]))
                 n->type = n->sons[0]->type;
