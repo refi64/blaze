@@ -19,6 +19,7 @@ static void node_dump2(Node* n, int indent) {
     case Nlet: put("Nlet (s:%s)", n->s->str); break;
     case Nassign: put("Nassign"); break;
     case Nreturn: put("Nreturn"); break;
+    case Nif: put("Nif"); break;
     case Ntypeof: put("Ntypeof"); break;
     case Nstruct: put("Nstruct (s:%s)", n->s->str); break;
     case Nconstr: put("Nconstr"); break;

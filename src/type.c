@@ -280,6 +280,17 @@ void type(Node* n) {
             note(f->loc, "%s declared here", k);
         }
         break;
+    case Nif:
+        type(n->sons[0]);
+        type(n->sons[1]);
+        if (!typematch(builtin_types[Tbool]->override, n->sons[0]->type,
+                       n->sons[0])) {
+            String* ts = typestring(n->sons[0]->type);
+            error(n->sons[0]->loc, "if statement condition must be of type 'bool'"
+                                   ", not '%s'", ts->str);
+            string_free(ts);
+        }
+        break;
     case Ntypeof:
         type(n->sons[0]);
         if (!n->sons[0]->type) {

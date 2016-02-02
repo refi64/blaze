@@ -209,6 +209,7 @@ struct Node {
         Nlet,
         Nassign,
         Nreturn,
+        Nif,
         Ntypeof,
         Nptr,
         Nstruct,

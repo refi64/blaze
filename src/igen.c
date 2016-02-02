@@ -149,7 +149,7 @@ static Var* igen_node(Decl* d, Node* n) {
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
     case Nmodule: case Ntypeof: case Nstruct: case Nconstr: case Ndestr:
-    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr:
+    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr: case Nif:
         fatal("unexpected node kind %d", n->kind);
     }
 

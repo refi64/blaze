@@ -114,6 +114,12 @@ static void resolve0(Node* n) {
             resolve0(n->sons[0]);
         }
         break;
+    case Nif:
+        n->sons[1]->func = n->func;
+        n->sons[0]->parent = n->sons[1]->parent = n;
+        resolve0(n->sons[0]);
+        resolve0(n->sons[1]);
+        break;
     case Ntypeof: case Nptr: case Nderef: case Naddr:
         n->sons[0]->parent = n;
         resolve0(n->sons[0]);
@@ -139,7 +145,7 @@ static void resolve1(Node* n) {
     bassert(n, "expected non-null node");
     switch (n->kind) {
     case Nmodule: case Nstruct: case Nconstr: case Ndestr: case Nfun:
-    case Narglist: case Ndecl: case Ncast:
+    case Narglist: case Ndecl: case Ncast: case Nif:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;
