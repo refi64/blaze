@@ -28,7 +28,7 @@ static void remove_useless_news(Decl* d) {
     for (i=0; i<list_len(d->sons); ++i) {
         Instr* ir = d->sons[i];
         if (ir->kind == Inew && ir->v[0]->uses == 1 && !ir->v[0]->name &&
-            ir->v[0]->ir) {
+            ir->v[0]->ir && ir->v[0]->ir != &magic) {
             ir->v[0]->ir->dst = ir->dst;
             ir->dst->ir = ir->v[0]->ir;
             ir->v[0]->type = NULL;
