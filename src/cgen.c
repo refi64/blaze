@@ -306,7 +306,7 @@ void cgen(Module* m, FILE* output) {
     if (!m->main) fputs("extern ", output);
     fputs("int __blaze_argc;\n", output);
     if (!m->main) fputs("extern ", output);
-    fputs("char* __blaze_argv;\n", output);
+    fputs("char** __blaze_argv;\n", output);
 
     for (i=0; i<list_len(m->imports); ++i) cgen_header(m->imports[i], output, 1);
 
