@@ -1,6 +1,6 @@
 #include "blaze.h"
 
-const char* typenames[] = {"int", "char", "unsigned char", "unsigned long",
+const char* typenames[] = {"int", "unsigned char", "char", "unsigned long",
                            "int"};
 int type_id=0;
 
