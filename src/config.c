@@ -12,6 +12,7 @@ static lua_State* setup_lua() {
         lua_settable(L, -3);\
     } while (0)
     F(compiler, "cc");
+    F(cflags, "");
     F(kind, "unix");
     F(lightbuild, "lightbuild");
     #undef F
@@ -65,6 +66,7 @@ Config load_config() {
         // This should ALWAYS be false.
         if (!config.L) fatal("XXX");
         F(compiler,)
+        F(cflags,)
         F(kind,_string)
         F(lightbuild,)
         #undef F

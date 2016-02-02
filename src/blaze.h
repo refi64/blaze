@@ -63,7 +63,7 @@ int pmkdir(const char* dir);
 
 struct Config {
     lua_State* L;
-    const char* compiler, *kind_string, *lightbuild;
+    const char* compiler, *cflags, *kind_string, *lightbuild;
     enum { Cunix, Cclang } kind;
 };
 

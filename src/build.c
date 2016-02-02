@@ -28,6 +28,7 @@ static void write_compiler_flags(Config config, FILE* f) {
     fputc('F', f);
     if (config.kind == Cclang)
         fputs("-Wno-incompatible-library-redeclaration ", f);
+    fputs(config.cflags, f);
     fputc('\n', f);
 }
 
