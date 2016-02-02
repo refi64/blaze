@@ -353,8 +353,8 @@ void type(Node* n) {
             error(n->loc, "only pointers can be indexed, not '%s'", ts->str);
             string_free(ts);
             n->type = anytype->override;
-        } else if (!typematch(builtin_types[Tsize]->override, n->sons[1]->type,
-                              n->sons[1])) {
+        } else if (n->sons[1]->type->kind != Tbuiltin ||
+                   n->sons[1]->type->bkind == Tbool) {
             String* ts = typestring(n->sons[1]->type);
             error(n->loc, "only integral types can be indices, not '%s'",
                   ts->str);
