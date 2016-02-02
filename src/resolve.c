@@ -140,6 +140,8 @@ static void resolve0(Node* n) {
     }
 }
 
+#define OVERLOAD(x) ((x)->kind == Ncall || (x)->kind == Nnew)
+
 static void resolve1(Node* n) {
     int i;
     bassert(n, "expected non-null node");
@@ -189,7 +191,7 @@ static void resolve1(Node* n) {
             return;
         }
 
-        if (n->e->overload) {
+        if (n->e->overload && !OVERLOAD(n->parent)) {
             if (list_len(n->e->overloads) > 1) {
                 int i;
                 error(n->loc, "ambiguous occurence of '%s'", n->s->str);
@@ -207,7 +209,7 @@ static void resolve1(Node* n) {
             error(n->loc, "identifier '%s' cannot be accessed without @",
                   n->s->str);
             if (n->e->n) declared_here(n->e->n);
-        } else if (n->e->n) {
+        } else if (!n->e->overload && n->e->n) {
             bassert(n->module && n->e->n->module, "node has no module");
             if (!n->e->n->export && n->e->n->module != n->module) {
                 error(n->loc, "attempt to access unexported identifier '%s'",

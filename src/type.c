@@ -389,7 +389,11 @@ void type(Node* n) {
             if (n->kind == Nnew && i == 0) force_type_context(n->sons[i]);
             else force_typed_expr_context(n->sons[i]);
         }
-        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
+        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload) {
+            ; // TODO
+            n->type = anytype->override;
+        } else if (n->sons[0]->type == anytype->override)
+            n->type = anytype->override;
         else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "cannot call non-callable type '%s'", ts->str);
@@ -516,7 +520,11 @@ void type(Node* n) {
         break;
     case Nid:
         if (n->e) {
-            if (n->e->n) {
+            if (n->e->overload) {
+                int i;
+                for (i=0; i<list_len(n->e->overloads); ++i)
+                    type(n->e->overloads[i]->n);
+            } else if (n->e->n) {
                 type(n->e->n);
                 n->type = n->e->n->type;
                 n->flags |= n->e->n->flags & Ftype;
@@ -525,7 +533,7 @@ void type(Node* n) {
                 n->flags |= Ftype;
             }
         } else n->type = anytype->override;
-        type_incref(n->type);
+        if (n->type) type_incref(n->type);
         break;
     case Nint:
         n->type = builtin_types[Tint]->override;
