@@ -218,9 +218,7 @@ struct Node {
         Nmodule
     } kind;
     union {
-        struct {
-            String* import, *exportc; // C import name and export name.
-        }; // Nfun
+        String *exportc; // Nfun
         struct {
             Node* constr, *destr;
         }; // Nstruct
@@ -228,7 +226,7 @@ struct Node {
         Op op; // Nop
         Module* m; // Nmodule
     };
-    String* s;
+    String* s, *import;
     Type* type; // If Ftype is a flag, this is the referenced type.
     int typing; // Is this node being typed? (Used to locate recursion.)
     int flags;

@@ -65,10 +65,8 @@ void node_free(Node* n) {
     case Nstruct: case Nid: case Nint: case Nfun: case Nlet: case Ndecl:
     case Nattr:
         if (n->s) string_free(n->s);
-        if (n->kind == Nfun) {
-            if (n->import) string_free(n->import);
-            if (n->exportc) string_free(n->exportc);
-        }
+        if (n->import) string_free(n->import);
+        if (n->kind == Nfun && n->exportc) string_free(n->exportc);
         break;
     case Nsons: fatal("unexpected node kind Nsons");
     default: break;

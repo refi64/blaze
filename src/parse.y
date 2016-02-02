@@ -286,6 +286,10 @@ global : TGLOBAL modspec decl globalsuf {
     $$ = $3;
     $$->flags |= $2;
     $$->sons[1] = $4;
+}      | TGLOBAL modspec decl TSTRING {
+    $$ = $3;
+    $$->flags |= $2;
+    $$->import = $4.s;
 }
 
 decl : id TCOLON texpr {

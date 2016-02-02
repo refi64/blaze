@@ -210,7 +210,7 @@ static void cgen_decl0(Decl* d, FILE* output, int external) {
         fputs(";\n", output);
         break;
     case Dglobal:
-        if (external) fputs("extern ", output);
+        if (external || d->import) fputs("extern ", output);
         fprintf(output, "%s %s;\n", CNAME(d->v->type), CNAME(d->v));
         break;
     }

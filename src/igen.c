@@ -238,7 +238,7 @@ static void igen_global(Module* m, Decl* d, Node* n) {
         ++set->v[1]->uses;
 
         list_append(m->init->sons, set);
-    }
+    } else if (n->import) d->import = n->import;
 }
 
 static Decl* igen_decl(Module* m, Node* n) {
