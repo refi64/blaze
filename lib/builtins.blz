@@ -1,8 +1,8 @@
 export global true: bool = 1 :: bool
 export global false: bool = 0 :: bool
 
-global c_argc: int "argc"
-global c_argv: **char "argv"
+global c_argc: int "__blaze_argc"
+global c_argv: **char "__blaze_argv"
 
 fun calloc(n: size, sz: size) -> *mut byte "calloc"
 fun puts(s: *char) "puts"
