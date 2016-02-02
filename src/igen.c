@@ -84,6 +84,12 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         ir->kind = Iret;
         if (n->sons) list_append(ir->v, igen_node(d, tgt, n->sons[0]));
         break;
+    case Nif:
+        ir->kind = Iif;
+        ir->bstmt = 1;
+        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+        igen_node(d, &ir->sons, n->sons[1]);
+        break;
     case Nlet:
         ir->kind = Inew;
         n->v = ir->dst = var_new(d, ir, n->type, n->s);
@@ -149,7 +155,7 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
     case Nmodule: case Ntypeof: case Nstruct: case Nconstr: case Ndestr:
-    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr: case Nif:
+    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr:
         fatal("unexpected node kind %d", n->kind);
     }
 

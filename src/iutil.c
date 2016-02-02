@@ -61,6 +61,7 @@ void instr_dump(Instr* ir) {
     switch (ir->kind) {
     case Inull: fatal("unexpected ir kind Inull");
     case Iret: printf("Iret"); break;
+    case Iif: printf("Iif"); break;
     case Inew: printf("Inew"); break;
     case Iset: printf("Iset"); break;
     case Iaddr: printf("Iaddr"); break;

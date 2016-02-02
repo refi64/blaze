@@ -401,6 +401,7 @@ struct Instr {
         Inew,
         Iset,
         Iret,
+        Iif,
         Iaddr,
         Iconstr,
         Icall,
