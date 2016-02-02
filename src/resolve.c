@@ -203,7 +203,8 @@ static void resolve1(Node* n) {
                 }
             }
             n->e = n->e->overloads[0];
-        }
+        } else if (n->e->overload && list_len(n->e->overloads) == 1)
+            n->e = n->e->overloads[0];
 
         if (n->e->level < 0) {
             error(n->loc, "identifier '%s' cannot be accessed without @",

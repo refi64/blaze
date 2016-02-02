@@ -424,7 +424,8 @@ void type(Node* n) {
             if (n->kind == Nnew && i == 0) force_type_context(n->sons[i]);
             else force_typed_expr_context(n->sons[i]);
         }
-        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload)
+        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload &&
+            !n->sons[0]->type)
             resolve_overload(n->sons);
 
         if (n->sons[0]->type == anytype->override)
