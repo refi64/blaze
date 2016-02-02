@@ -48,7 +48,7 @@ static void resolve0(Node* n) {
         }
         break;
     case Nfun:
-        e = stentry_new(n, n->s, NULL);
+        e = stentry_new_overload(n, n->s);
         symtab_add(n->parent->tab, n->s, e);
 
     // Fall though.
@@ -186,7 +186,24 @@ static void resolve1(Node* n) {
                 note(e->n->loc, "'%s' declared here", n->s->str);
             }
             else error(n->loc, "undeclared identifier '%s'", n->s->str);
-        } else if (n->e->level < 0) {
+            return;
+        }
+
+        if (n->e->overload) {
+            if (list_len(n->e->overloads) > 1) {
+                int i;
+                error(n->loc, "ambiguous occurence of '%s'", n->s->str);
+                for (i=0; i<list_len(n->e->overloads); ++i) {
+                    bassert(n->e->overloads[i]->n,
+                            "'%s' is overloaded with a compiler builtin",
+                            n->s->str);
+                    declared_here(n->e->overloads[i]->n);
+                }
+            }
+            n->e = n->e->overloads[0];
+        }
+
+        if (n->e->level < 0) {
             error(n->loc, "identifier '%s' cannot be accessed without @",
                   n->s->str);
             if (n->e->n) declared_here(n->e->n);

@@ -266,8 +266,14 @@ void node_free(Node* n);
 
 // Symbol table entry.
 struct STEntry {
-    Node* n; // Only null with builtin types.
-    Type* override; // Entry type override; only used for builtin types.
+    int overload;
+    union {
+        struct {
+            Node* n; // Only null with builtin types.
+            Type* override; // Entry type override; only used for builtin types.
+        }; // If !overload.
+        List(STEntry*) overloads; // If overload is true: function overloads.
+    };
     String* name;
     /* This is the depth of the given entry in the symbol tables. If it is
        negative, then it is an attribute, and the depth is its absolute value. */
@@ -288,6 +294,7 @@ void init_builtin_types();
 void free_builtin_types();
 
 STEntry* stentry_new(Node* n, String* name, Type* override);
+STEntry* stentry_new_overload(Node* n, String* name);
 void stentry_free(STEntry* e);
 Symtab* symtab_new();
 STEntry* symtab_find(Symtab* tab, const char* name);

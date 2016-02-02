@@ -39,8 +39,21 @@ STEntry* stentry_new(Node* n, String* name, Type* override) {
     return e;
 }
 
+STEntry* stentry_new_overload(Node* n, String* name) {
+    STEntry* x = stentry_new(n, name, NULL);
+    STEntry* e = new(STEntry);
+    e->overload = 1;
+    list_append(e->overloads, x);
+    e->name = string_clone(name);
+    return e;
+}
+
 void stentry_free(STEntry* e) {
-    if (e->override && !e->n) return;
+    if (e->overload) {
+        int i;
+        for (i=0; i<list_len(e->overloads); ++i) stentry_free(e->overloads[i]);
+        list_free(e->overloads);
+    } else if (e->override && !e->n) return;
     string_free(e->name);
     free(e);
 }
@@ -67,6 +80,7 @@ STEntry* symtab_find(Symtab* tab, const char* name) {
     string_free(sname);
     return e;
 }
+
 STEntry* symtab_finds(Symtab* tab, String* name) {
     STEntry* init = NULL;
     bassert(name, "expected non-null name");
@@ -81,10 +95,13 @@ STEntry* symtab_finds(Symtab* tab, String* name) {
     }
     return init;
 }
+
 STEntry* symtab_findl(Symtab* tab, String* name) {
     bassert(name, "expected non-null name");
     return (STEntry*)ds_hget(tab->tab, name);
 }
+
+#define USABLE_FROM(p,e) ((p)->n->module == (e)->n->module || (p)->n->export)
 
 void symtab_add(Symtab* tab, String* name, STEntry* e) {
     STEntry* p;
@@ -92,12 +109,18 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
     p = symtab_finds(tab, name);
     if (p) {
         Location el = e->n->loc;
-        if (ABS(p->level) == ABS(e->level)) {
+        if (p->overload && e->overload && USABLE_FROM(p->overloads[0],
+                                                      e->overloads[0])) {
+            bassert(p->overloads, "overloaded entry '%s' has no overloads",
+                    name->str);
+            list_append(p->overloads, e);
+            return;
+        } else if (ABS(p->level) == ABS(e->level)) {
             error(el, "duplicate definition of %s", name->str);
             note(p->n->loc, "previous definition is here");
             stentry_free(e);
             return;
-        } else if (p->n && (p->n->module == e->n->module || p->n->export)) {
+        } else if (!p->overload && !e->overload && p->n && USABLE_FROM(p, e)) {
             if (p->level == 0)
                 error(el, "redefinition of %s shadows builtin", name->str);
             else if (p->level > 0 && e->level > 0) {
@@ -107,6 +130,7 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
             }
         }
     }
+
     ds_hput(tab->tab, string_clone(name), e);
 }
 
