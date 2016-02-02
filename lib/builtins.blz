@@ -1,9 +1,15 @@
 export global true: bool = 1 :: bool
 export global false: bool = 0 :: bool
 
+global c_argc: int "argc"
+global c_argv: **char "argv"
+
 fun calloc(n: size, sz: size) -> *mut byte "calloc"
 fun puts(s: *char) "puts"
 fun free(d: *byte) "free"
+
+fun strlen(d: *char) -> size "strlen"
+fun memcpy(tgt: *mut char, src: *char, len: size) "memcpy"
 
 export struct str:
     _data: *mut char
@@ -20,3 +26,10 @@ export struct str:
 
 export fun print(s: str):
     puts(s._data)
+
+export fun argument(i: int) -> str:
+    let arg = c_argv[i]
+    let len = strlen(arg)
+    let mut s = new str(len)
+    memcpy(s._data, arg, len+1)
+    return s
