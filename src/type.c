@@ -117,6 +117,41 @@ void type_decref(Type* t) {
     free(t);
 }
 
+static List(STEntry*) rs0(List(Node*) sons, List(STEntry*) choices) {
+    return NULL;
+}
+
+static List(STEntry*) rs1(List(Node*) sons, List(STEntry*) choices) {
+    return NULL;
+}
+
+static void resolve_overload(List(Node*) sons) {
+    int i;
+    typedef List(STEntry*) (*Resolver)(List(Node*), List(STEntry*));
+    Resolver rs[] = {rs0, rs1};
+    Node* tgt = sons[0];
+    List(STEntry*) possibilities = tgt->e->overloads;
+
+    bassert(tgt->kind == Nid, "unexpected node kind %d", tgt->kind);
+    bassert(tgt->e->overload, "attempt to resolve non-overloaded node");
+    for (i=0; i<2; ++i) {
+        possibilities = rs[i](sons, possibilities);
+        if (list_len(possibilities) <= 1) break;
+    }
+
+    if (list_len(possibilities) != 1) {
+        if (!possibilities)
+            error(tgt->loc, "no overload of '%s' with given arguments available",
+                  tgt->s->str);
+        else error(tgt->loc, "ambiguous occurence of '%s'", tgt->s->str);
+        for (i=0; i<list_len(tgt->e->overloads); ++i)
+            declared_here(tgt->e->overloads[i]->n);
+        tgt->type = anytype->override;
+    } else tgt->type = possibilities[0]->n->type;
+
+    type_incref(tgt->type);
+}
+
 void type(Node* n) {
     Node* f;
     int i;
@@ -389,10 +424,10 @@ void type(Node* n) {
             if (n->kind == Nnew && i == 0) force_type_context(n->sons[i]);
             else force_typed_expr_context(n->sons[i]);
         }
-        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload) {
-            ; // TODO
-            n->type = anytype->override;
-        } else if (n->sons[0]->type == anytype->override)
+        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload)
+            resolve_overload(n->sons);
+
+        if (n->sons[0]->type == anytype->override)
             n->type = anytype->override;
         else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
