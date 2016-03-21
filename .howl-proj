@@ -18,5 +18,5 @@ tst.c
 tst.blz
 fbuildroot.py
 !:
-howl.config.clang_completion = true
+--howl.config.clang_completion = true
 howl.config.project_build_command = 'fbuild'
