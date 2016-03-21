@@ -24,40 +24,13 @@ ERROR
 :1:5: note: 'f' declared here
     fun f(x: int):
         ~
-:5:13: error: cannot use void value in expression
-    let x = f()
-            ~
-:1:5: note: 'f' declared here
-    fun f(x: int):
-        ~
 :6:13: error: function expected 1 argument(s), not 2
     let y = f(1, 2)
             ~
 :1:5: note: 'f' declared here
     fun f(x: int):
         ~
-:6:13: error: cannot use void value in expression
-    let y = f(1, 2)
-            ~
-:1:5: note: 'f' declared here
-    fun f(x: int):
-        ~
 :7:13: error: function expected 1 argument(s), not 2
-    let z = f(&n, &y)
-            ~
-:1:5: note: 'f' declared here
-    fun f(x: int):
-        ~
-:7:15: error: function expected argument of type 'int', not '*int'
-    let z = f(&n, &y)
-              ~
-:1:5: note: 'f' declared here
-    fun f(x: int):
-        ~
-:4:7: note: 'n' declared here
-    fun g(n: int) -> int:
-          ~
-:7:13: error: cannot use void value in expression
     let z = f(&n, &y)
             ~
 :1:5: note: 'f' declared here
