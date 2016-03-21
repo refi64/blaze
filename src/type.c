@@ -147,7 +147,6 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
         case Mnote:
             note(func->loc, "%s expected %d argument(s), not %d",
                  msgs[n->kind == Nconstr], nexpect, ngiven);
-            declared_here(func->sons[0]);
             break;
         case Mnothing: break;
         }
@@ -171,9 +170,9 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
                 error(n->sons[i]->loc, "%s expected argument of type '%s', "
                                        "not '%s'", msgs[n->kind == Nconstr],
                       expects->str, givens->str);
+                declared_here(func);
                 break;
             }
-            declared_here(func);
             declared_here(n->sons[i]);
             res = 0;
             string_free(expects);
