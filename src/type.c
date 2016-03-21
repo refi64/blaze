@@ -28,6 +28,7 @@ static String* typestring(Type* t) {
     String* res, *s;
     int i;
     char* p;
+    bassert(t, "expected non-null type");
     switch (t->kind) {
     case Tbuiltin:
         switch (t->bkind) {
@@ -186,13 +187,13 @@ static void resolve_overload(Node* n) {
     int i, j;
     List(STEntry*) possibilities = NULL;
     List(Type*) expected;
-    Node* tgt = n->sons[0];
+    Node* id = n->sons[0];
 
-    bassert(tgt->kind == Nid, "unexpected node kind %d", tgt->kind);
-    bassert(tgt->e->overload, "attempt to resolve non-overloaded node");
+    bassert(id->kind == Nid, "unexpected node kind %d", id->kind);
+    bassert(id->e->overload, "attempt to resolve non-overloaded node");
     for (i=0; i<2; ++i) {
         List(STEntry*) choices = possibilities ? possibilities :
-                                 tgt->e->overloads;
+                                 id->e->overloads;
         List(STEntry*) result = NULL;
         for (j=0; j<list_len(choices); ++j)
             if (funmatch(Mnothing, choices[j]->n, n, &expected, !i))
@@ -204,15 +205,18 @@ static void resolve_overload(Node* n) {
 
     if (list_len(possibilities) != 1) {
         if (!possibilities)
-            error(tgt->loc, "no overload of '%s' with given arguments available",
-                  tgt->s->str);
-        else error(tgt->loc, "ambiguous occurence of '%s'", tgt->s->str);
-        for (i=0; i<list_len(tgt->e->overloads); ++i)
-            funmatch(Mnote, tgt->e->overloads[i]->n, n, &expected, 0);
-        tgt->type = anytype->override;
-    } else tgt->type = possibilities[0]->n->type;
-
-    type_incref(tgt->type);
+            error(id->loc, "no overload of '%s' with given arguments available",
+                  id->s->str);
+        else error(id->loc, "ambiguous occurence of '%s'", id->s->str);
+        for (i=0; i<list_len(id->e->overloads); ++i)
+            funmatch(Mnote, id->e->overloads[i]->n, n, &expected, 0);
+        id->type = anytype->override;
+        type_incref(id->type);
+    } else {
+        n->sons[0]->e = possibilities[0];
+        n->sons[0]->type = possibilities[0]->n->type;
+        type_incref(n->sons[0]->type);
+    }
 }
 
 void type(Node* n) {
