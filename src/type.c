@@ -120,10 +120,11 @@ void type_decref(Type* t) {
 typedef enum Match {
     Mnothing,
     Merror,
-    Mwarn,
+    Mnote,
 } Match;
 
-static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected) {
+static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
+                    int strict) {
     const char* msgs[] = {"function", "constructor"};
     Type* ft = func->type;
     *expected = NULL;
@@ -142,9 +143,9 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected) {
                   msgs[n->kind == Nconstr], nexpect, ngiven);
             declared_here(n->sons[0]);
             break;
-        case Mwarn:
-            warning(n->loc, "%s expected %d argument(s), not %d",
-                    msgs[n->kind == Nconstr], nexpect, ngiven);
+        case Mnote:
+            note(func->loc, "%s expected %d argument(s), not %d",
+                 msgs[n->kind == Nconstr], nexpect, ngiven);
             declared_here(func->sons[0]);
             break;
         case Mnothing: break;
@@ -153,16 +154,17 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected) {
     }
 
     for (i=1; i<min(ngiven+1, nexpect+1); ++i)
-        if (!typematch((*expected)[i], n->sons[i]->type, n->sons[i])) {
+        if (!typematch((*expected)[i], n->sons[i]->type,
+                                       strict ? NULL : n->sons[i])) {
             String* expects, *givens;
             expects = typestring((*expected)[i]);
             givens = typestring(n->sons[i]->type);
             switch (kind) {
             case Mnothing: return 0;
-            case Mwarn:
-                warning(n->sons[i]->loc, "%s expected argument of type '%s', "
-                                         "not '%s'", msgs[n->kind == Nconstr],
-                        expects->str, givens->str);
+            case Mnote:
+                note(func->loc, "%s expected argument of type '%s', "
+                                "not '%s'", msgs[n->kind == Nconstr],
+                     expects->str, givens->str);
                 break;
             case Merror:
                 error(n->sons[i]->loc, "%s expected argument of type '%s', "
@@ -180,32 +182,38 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected) {
     return res;
 }
 
-/* static void resolve_overload(List(Node*) sons) { */
-/*     int i; */
-/*     typedef List(STEntry*) (*Resolver)(List(Node*), List(STEntry*)); */
-/*     Resolver rs[] = {rs0, rs1}; */
-/*     Node* tgt = sons[0]; */
-/*     List(STEntry*) possibilities = tgt->e->overloads; */
+static void resolve_overload(Node* n) {
+    int i, j;
+    List(STEntry*) possibilities = NULL;
+    List(Type*) expected;
+    Node* tgt = n->sons[0];
 
-/*     bassert(tgt->kind == Nid, "unexpected node kind %d", tgt->kind); */
-/*     bassert(tgt->e->overload, "attempt to resolve non-overloaded node"); */
-/*     for (i=0; i<2; ++i) { */
-/*         possibilities = rs[i](sons, possibilities); */
-/*         if (list_len(possibilities) <= 1) break; */
-/*     } */
+    bassert(tgt->kind == Nid, "unexpected node kind %d", tgt->kind);
+    bassert(tgt->e->overload, "attempt to resolve non-overloaded node");
+    for (i=0; i<2; ++i) {
+        List(STEntry*) choices = possibilities ? possibilities :
+                                 tgt->e->overloads;
+        List(STEntry*) result = NULL;
+        for (j=0; j<list_len(choices); ++j)
+            if (funmatch(Mnothing, choices[j]->n, n, &expected, !i))
+                list_append(result, choices[j]);
+        list_free(possibilities);
+        possibilities = result;
+        if (list_len(possibilities) <= 1) break;
+    }
 
-/*     if (list_len(possibilities) != 1) { */
-/*         if (!possibilities) */
-/*             error(tgt->loc, "no overload of '%s' with given arguments available", */
-/*                   tgt->s->str); */
-/*         else error(tgt->loc, "ambiguous occurence of '%s'", tgt->s->str); */
-/*         for (i=0; i<list_len(tgt->e->overloads); ++i) */
-/*             declared_here(tgt->e->overloads[i]->n); */
-/*         tgt->type = anytype->override; */
-/*     } else tgt->type = possibilities[0]->n->type; */
+    if (list_len(possibilities) != 1) {
+        if (!possibilities)
+            error(tgt->loc, "no overload of '%s' with given arguments available",
+                  tgt->s->str);
+        else error(tgt->loc, "ambiguous occurence of '%s'", tgt->s->str);
+        for (i=0; i<list_len(tgt->e->overloads); ++i)
+            funmatch(Mnote, tgt->e->overloads[i]->n, n, &expected, 0);
+        tgt->type = anytype->override;
+    } else tgt->type = possibilities[0]->n->type;
 
-/*     type_incref(tgt->type); */
-/* } */
+    type_incref(tgt->type);
+}
 
 void type(Node* n) {
     Node* f;
@@ -481,8 +489,7 @@ void type(Node* n) {
         }
         if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload &&
             !n->sons[0]->type)
-            /* resolve_overload(n->sons); */
-            bassert(0, "TODO");
+            resolve_overload(n);
 
         if (n->sons[0]->type == anytype->override)
             n->type = anytype->override;
@@ -494,7 +501,7 @@ void type(Node* n) {
             n->type = anytype->override;
         } else {
             List(Type*) expected;
-            if (funmatch(Merror, n->sons[0], n, &expected)) {
+            if (funmatch(Merror, n->sons[0], n, &expected, 0)) {
                 if (expected && expected[0]) n->type = expected[0];
                 else if (n->kind == Nnew) {
                     bassert(n->sons[0]->flags & Ftype,
