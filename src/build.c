@@ -46,6 +46,7 @@ static int write_lightbuild(const char* tgt, Config config, List(Module*) mods) 
     fprintf(f, ":%zu\n", list_len(mods));
     for (i=0; i<list_len(mods); ++i) fprintf(f, "%s\n", mods[i]->d.cname->str);
     fclose(f);
+    return 1;
 }
 
 void build(const char* tgt, Config config, List(Module*) mods) {
