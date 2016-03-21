@@ -68,6 +68,7 @@ end:
         cgen_free(mods[i]);
         string_free(mods[i]->d.cname);
     }
+    cgen_free(NULL);
 
     if (s) string_free(s);
 }

@@ -295,8 +295,17 @@ static void free_type_cnames(Type* t) {
         for (i=0; i<list_len(t->d.sons); ++i) free_decl_cnames(t->d.sons[i]);
 }
 
+static List(const char*) all_inits = NULL;
+
 void cgen_free(Module* m) {
     int i;
+
+    if (m == NULL) {
+        list_free(all_inits);
+        all_inits = NULL;
+        return;
+    }
+
     for (i=0; i<list_len(m->types); ++i) free_type_cnames(m->types[i]);
     for (i=0; i<list_len(m->decls); ++i) {
         if (m->decls[i]->flags & Fmemb) continue;
@@ -325,7 +334,6 @@ static void cgen_header(Module* m, FILE* output, int external) {
 
 void cgen(Module* m, FILE* output) {
     int i;
-    static List(const char*) all_inits = NULL;
 
     if (!m->main) fputs("extern ", output);
     fputs("int __blaze_argc;\n", output);

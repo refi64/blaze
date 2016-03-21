@@ -162,6 +162,7 @@ void module_free(Module* m) {
         t->d.sons = NULL;
     }
     list_free(m->types);
+    list_free(m->imports);
     string_free(m->name);
     free(m);
 }

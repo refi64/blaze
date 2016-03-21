@@ -160,7 +160,7 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
             expects = typestring((*expected)[i]);
             givens = typestring(n->sons[i]->type);
             switch (kind) {
-            case Mnothing: return 0;
+            case Mnothing: break;
             case Mnote:
                 note(func->loc, "%s expected argument of type '%s', "
                                 "not '%s'", msgs[n->kind == Nconstr],
@@ -173,7 +173,7 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
                 declared_here(func);
                 break;
             }
-            declared_here(n->sons[i]);
+            if (kind != Mnothing) declared_here(n->sons[i]);
             res = 0;
             string_free(expects);
             string_free(givens);
@@ -216,6 +216,8 @@ static void resolve_overload(Node* n) {
         n->sons[0]->type = possibilities[0]->n->type;
         type_incref(n->sons[0]->type);
     }
+
+    list_free(possibilities);
 }
 
 void type(Node* n) {
