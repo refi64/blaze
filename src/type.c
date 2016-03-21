@@ -117,40 +117,95 @@ void type_decref(Type* t) {
     free(t);
 }
 
-static List(STEntry*) rs0(List(Node*) sons, List(STEntry*) choices) {
-    return NULL;
-}
+typedef enum Match {
+    Mnothing,
+    Merror,
+    Mwarn,
+} Match;
 
-static List(STEntry*) rs1(List(Node*) sons, List(STEntry*) choices) {
-    return NULL;
-}
-
-static void resolve_overload(List(Node*) sons) {
-    int i;
-    typedef List(STEntry*) (*Resolver)(List(Node*), List(STEntry*));
-    Resolver rs[] = {rs0, rs1};
-    Node* tgt = sons[0];
-    List(STEntry*) possibilities = tgt->e->overloads;
-
-    bassert(tgt->kind == Nid, "unexpected node kind %d", tgt->kind);
-    bassert(tgt->e->overload, "attempt to resolve non-overloaded node");
-    for (i=0; i<2; ++i) {
-        possibilities = rs[i](sons, possibilities);
-        if (list_len(possibilities) <= 1) break;
+static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected) {
+    const char* msgs[] = {"function", "constructor"};
+    Type* ft = func->type;
+    *expected = NULL;
+    int ngiven = list_len(n->sons)-1, nexpect, i, res = 1;
+    if (ft->kind == Tstruct && !ft->constr) {
+        *expected = NULL;
+        nexpect = 0;
+    } else {
+        *expected = arguments_of(ft);
+        nexpect = list_len(*expected)-1;
+    }
+    if (ngiven != nexpect) {
+        switch (kind) {
+        case Merror:
+            error(n->loc, "%s expected %d argument(s), not %d",
+                  msgs[n->kind == Nconstr], nexpect, ngiven);
+            declared_here(n->sons[0]);
+            break;
+        case Mwarn:
+            warning(n->loc, "%s expected %d argument(s), not %d",
+                    msgs[n->kind == Nconstr], nexpect, ngiven);
+            declared_here(func->sons[0]);
+            break;
+        case Mnothing: break;
+        }
+        return 0;
     }
 
-    if (list_len(possibilities) != 1) {
-        if (!possibilities)
-            error(tgt->loc, "no overload of '%s' with given arguments available",
-                  tgt->s->str);
-        else error(tgt->loc, "ambiguous occurence of '%s'", tgt->s->str);
-        for (i=0; i<list_len(tgt->e->overloads); ++i)
-            declared_here(tgt->e->overloads[i]->n);
-        tgt->type = anytype->override;
-    } else tgt->type = possibilities[0]->n->type;
+    for (i=1; i<min(ngiven+1, nexpect+1); ++i)
+        if (!typematch((*expected)[i], n->sons[i]->type, n->sons[i])) {
+            String* expects, *givens;
+            expects = typestring((*expected)[i]);
+            givens = typestring(n->sons[i]->type);
+            switch (kind) {
+            case Mnothing: return 0;
+            case Mwarn:
+                warning(n->sons[i]->loc, "%s expected argument of type '%s', "
+                                         "not '%s'", msgs[n->kind == Nconstr],
+                        expects->str, givens->str);
+                break;
+            case Merror:
+                error(n->sons[i]->loc, "%s expected argument of type '%s', "
+                                       "not '%s'", msgs[n->kind == Nconstr],
+                      expects->str, givens->str);
+                break;
+            }
+            declared_here(func);
+            declared_here(n->sons[i]);
+            res = 0;
+            string_free(expects);
+            string_free(givens);
+        }
 
-    type_incref(tgt->type);
+    return res;
 }
+
+/* static void resolve_overload(List(Node*) sons) { */
+/*     int i; */
+/*     typedef List(STEntry*) (*Resolver)(List(Node*), List(STEntry*)); */
+/*     Resolver rs[] = {rs0, rs1}; */
+/*     Node* tgt = sons[0]; */
+/*     List(STEntry*) possibilities = tgt->e->overloads; */
+
+/*     bassert(tgt->kind == Nid, "unexpected node kind %d", tgt->kind); */
+/*     bassert(tgt->e->overload, "attempt to resolve non-overloaded node"); */
+/*     for (i=0; i<2; ++i) { */
+/*         possibilities = rs[i](sons, possibilities); */
+/*         if (list_len(possibilities) <= 1) break; */
+/*     } */
+
+/*     if (list_len(possibilities) != 1) { */
+/*         if (!possibilities) */
+/*             error(tgt->loc, "no overload of '%s' with given arguments available", */
+/*                   tgt->s->str); */
+/*         else error(tgt->loc, "ambiguous occurence of '%s'", tgt->s->str); */
+/*         for (i=0; i<list_len(tgt->e->overloads); ++i) */
+/*             declared_here(tgt->e->overloads[i]->n); */
+/*         tgt->type = anytype->override; */
+/*     } else tgt->type = possibilities[0]->n->type; */
+
+/*     type_incref(tgt->type); */
+/* } */
 
 void type(Node* n) {
     Node* f;
@@ -426,7 +481,8 @@ void type(Node* n) {
         }
         if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload &&
             !n->sons[0]->type)
-            resolve_overload(n->sons);
+            /* resolve_overload(n->sons); */
+            bassert(0, "TODO");
 
         if (n->sons[0]->type == anytype->override)
             n->type = anytype->override;
@@ -437,43 +493,18 @@ void type(Node* n) {
             declared_here(n->sons[0]);
             n->type = anytype->override;
         } else {
-            const char* msgs[] = {"function", "constructor"};
-            Type* ft = n->sons[0]->type;
-            List(Type*) expected = NULL;
-            int ngiven = list_len(n->sons)-1, nexpect;
-            if (ft->kind == Tstruct && !ft->constr) {
-                expected = NULL;
-                nexpect = 0;
-            } else {
-                expected = arguments_of(ft);
-                nexpect = list_len(expected)-1;
-            }
-            if (ngiven != nexpect) {
-                error(n->loc, "%s expected %d argument(s), not %d",
-                      msgs[n->kind == Nconstr], nexpect, ngiven);
-                declared_here(n->sons[0]);
-            }
-            for (i=1; i<min(ngiven+1, nexpect+1); ++i)
-                if (!typematch(expected[i], n->sons[i]->type, n->sons[i])) {
-                    String* expects, *givens;
-                    expects = typestring(expected[i]);
-                    givens = typestring(n->sons[i]->type);
-                    error(n->sons[i]->loc, "%s expected argument of type '%s', "
-                                           "not '%s'", msgs[n->kind == Nconstr],
-                                           expects->str, givens->str);
-                    declared_here(n->sons[0]);
-                    declared_here(n->sons[i]);
-                    string_free(expects);
-                    string_free(givens);
+            List(Type*) expected;
+            if (funmatch(Merror, n->sons[0], n, &expected)) {
+                if (expected && expected[0]) n->type = expected[0];
+                else if (n->kind == Nnew) {
+                    bassert(n->sons[0]->flags & Ftype,
+                            "expected type as first son");
+                    n->type = n->sons[0]->type;
+                } else {
+                    n->type = anytype->override;
+                    n->flags |= Fvoid;
                 }
-            if (expected && expected[0]) n->type = expected[0];
-            else if (n->kind == Nnew) {
-                bassert(n->sons[0]->flags & Ftype, "expected type as first son");
-                n->type = n->sons[0]->type;
-            } else {
-                n->type = anytype->override;
-                n->flags |= Fvoid;
-            }
+            } else n->type = anytype->override;
         }
         type_incref(n->type);
         break;
