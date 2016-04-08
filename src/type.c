@@ -188,7 +188,8 @@ static void resolve_overload(Node* n) {
     List(Type*) expected;
     Node* id = n->sons[0];
 
-    bassert(id->kind == Nid, "unexpected node kind %d", id->kind);
+    bassert(id->kind == Nid || id->kind == Nattr, "unexpected node kind %d",
+            id->kind);
     bassert(id->e->overload, "attempt to resolve non-overloaded node");
     for (i=0; i<2; ++i) {
         List(STEntry*) choices = possibilities ? possibilities :
@@ -491,9 +492,12 @@ void type(Node* n) {
             if (n->kind == Nnew && i == 0) force_type_context(n->sons[i]);
             else force_typed_expr_context(n->sons[i]);
         }
-        if (n->sons[0]->kind == Nid && n->sons[0]->e && n->sons[0]->e->overload &&
-            !n->sons[0]->type)
+        if ((n->sons[0]->kind == Nid || n->sons[0]->kind == Nattr) &&
+            !n->sons[0]->type && n->sons[0]->e && n->sons[0]->e->overload) {
             resolve_overload(n);
+
+            if (n->sons[0]->kind == Nattr) n->sons[0]->attr = n->sons[0]->e->n;
+        }
 
         if (n->sons[0]->type == anytype->override)
             n->type = anytype->override;
@@ -542,10 +546,21 @@ void type(Node* n) {
                 error(n->loc, "undefined attribute '%s'", n->s->str);
                 declared_here(n->sons[0]);
                 n->type = anytype->override;
+            } else if (e->overload) {
+                if (n->parent->kind == Ncall) {
+                    n->e = e;
+                    for (i=0; i<list_len(n->e->overloads); ++i)
+                        type(n->e->overloads[i]->n);
+                    n->type = NULL;
+                } else {
+                    error(n->loc, "cannot resolve overloaded method");
+                    n->type = anytype->override;
+                }
             } else {
                 int flags = 0;
 
                 bassert(e->n, "attribute node has no corresponding entry");
+                type(e->n);
                 n->type = e->n->type;
                 n->attr = e->n;
                 if (n->sons[0]->flags & Fmv) flags |= Fvar;
@@ -553,7 +568,7 @@ void type(Node* n) {
                 n->flags |= flags;
             }
         }
-        type_incref(n->type);
+        if (n->type) type_incref(n->type);
         break;
     case Nop:
         type(n->sons[0]);

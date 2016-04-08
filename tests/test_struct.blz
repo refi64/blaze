@@ -11,6 +11,10 @@ struct A:
         return mx
     mz: int
 
+fun f:
+    let a = new A
+    a.my()
+
 #[
 ERROR
 :6:5: error: duplicate definition of mx
