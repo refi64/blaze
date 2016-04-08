@@ -253,8 +253,7 @@ void type(Node* n) {
                 if (!n->constr) {
                     n->constr = n->sons[i];
                     n->type->constr = &n->constr->type;
-                }
-                else {
+                } else {
                     error(n->sons[i]->loc, "duplicate constructor");
                     note(n->constr->loc, "previous constructor here");
                 }

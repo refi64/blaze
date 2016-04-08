@@ -106,6 +106,11 @@ STEntry* symtab_findl(Symtab* tab, String* name) {
 void symtab_add(Symtab* tab, String* name, STEntry* e) {
     STEntry* p;
     e->level = tab->level;
+    if (e->overload) {
+        int i;
+        for (i=0; i<list_len(e->overloads); ++i)
+            e->overloads[i]->level = tab->level;
+    }
     p = symtab_finds(tab, name);
     if (p) {
         Location el = e->n->loc;
