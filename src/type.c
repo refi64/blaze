@@ -307,6 +307,16 @@ void type(Node* n) {
         if (n->kind == Nfun && n->parent->kind == Nstruct)
             for (i=0; i<Mend; ++i)
                 if (strcmp(n->s->str, magic_strings[i]) == 0) {
+                    switch (i) {
+                    case Mcopy:
+                        if (list_len(n->type->sons) != 1)
+                            error(n->loc, "__copy__ must take no arguments");
+                        if (n->type->sons[0] != n->parent->type)
+                            error(n->sons[0]->loc,
+                                  "__copy__ must return the parent's type");
+                        break;
+                    default: fatal("invalid magic kind %d", i);
+                    }
                     if (!n->parent->magic[i]) n->parent->magic[i] = n;
                     break;
                 }
