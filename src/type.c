@@ -312,7 +312,7 @@ void type(Node* n) {
                         if (list_len(n->type->sons) != 1)
                             error(n->loc, "__copy__ must take no arguments");
                         if (n->type->sons[0] != n->parent->type)
-                            error(n->sons[0]->loc,
+                            error(n->sons[0] ? n->sons[0]->loc : n->loc,
                                   "__copy__ must return the parent's type");
                         break;
                     default: fatal("invalid magic kind %d", i);
