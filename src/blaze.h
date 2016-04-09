@@ -379,6 +379,7 @@ struct Decl {
     Module* m;
     int flags;
     int export;
+    int labels;
 };
 
 struct Var {
@@ -408,7 +409,8 @@ struct Instr {
         Inew,
         Iset,
         Iret,
-        Iif,
+        Icjmp,
+        Ilabel,
         Iaddr,
         Iconstr,
         Icall,
@@ -421,9 +423,7 @@ struct Instr {
     Var* dst;
     // Argument variables.
     List(Var*) v;
-    // Is it a block statement, e.g. Iif?
-    int bstmt;
-    List(Instr*) sons; // Only if bstmt is true.
+    int label; // An optional label to jump to.
     String* s;
     int flags;
 };

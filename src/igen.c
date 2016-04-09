@@ -73,7 +73,7 @@ static void igen_index_chain(Decl* d, List(Instr*)* tgt, Var* v, Node* n) {
 static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
     Instr* ir = new(Instr);
     Var* v;
-    int i;
+    int i, label;
     switch (n->kind) {
     case Nbody:
         igen_sons(d, tgt, n);
@@ -85,10 +85,14 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         if (n->sons) list_append(ir->v, igen_node(d, tgt, n->sons[0]));
         break;
     case Nif:
-        ir->kind = Iif;
-        ir->bstmt = 1;
+        ir->kind = Icjmp;
         list_append(ir->v, igen_node(d, tgt, n->sons[0]));
-        igen_node(d, &ir->sons, n->sons[1]);
+        ir->label = label = d->labels++;
+        instr_result(d, tgt, ir); // XXX
+        for (i=1; i<list_len(n->sons); ++i) igen_node(d, tgt, n->sons[i]);
+        ir = new(Instr);
+        ir->kind = Ilabel;
+        ir->label = label;
         break;
     case Nlet:
         ir->kind = Inew;
