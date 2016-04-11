@@ -1,5 +1,7 @@
 #Blaze prototyping
 
+##Pointers
+
 `*T` - Raw, unmanaged pointer.
 `&T` - Unique pointer.
 `@T` - Smart pointer.
@@ -24,3 +26,68 @@ fun xyz():
     *x = 123
     def(x) # ERROR!
 ```
+
+##Removing new and delete
+
+Changing this:
+
+```python
+struct X:
+    new: return
+    delete: return
+```
+
+to:
+
+```python
+struct X:
+    fun __init__: return
+    fun __del__: return
+```
+
+Also, everything should be mutable in the constructor.
+
+##Moving + returning == explosion
+
+Take a look at this:
+
+```python
+struct X:
+    x: *byte
+    new:
+        @x = malloc(1)
+    delete:
+        free(@x)
+
+fun f(x: X) -> X: return x
+
+fun main -> int:
+    let x = new X
+    let y = f(x)
+```
+
+At the end of `main`, `X.x` will be deleted *twice*. Functions take arguments by
+reference, so `f` returns the original `main:x`. This itself is an issue, because
+`x` is immutable, but `f` is moving the value. When `main` ends, destructors will
+end up being called on both `main:x` and `main:y`.
+
+However, this could still cause trouble with mutable arguments. Maybe there should
+be an argument annotation that requires its input argument to be moved. But then
+I'd need control flow analysis...
+
+An option in the meantime might be to make it so that a function must "own"
+anything that is returned, maybe via `dup`. The problem would be that, when
+indexing is introduced, this could happen:
+
+```python
+struct Y:
+    values: *X
+    # Constructors, destructors, etc.
+    fun __index__[T<:Integral](i: int) -> X:
+        return @values[i]
+```
+
+`__index__` will move the item out of `@values`. Not good!
+
+An easy fix could also be to add a simple rule for moving: move constructors are
+only called if the returned value is non-addressable or is a local variable.
