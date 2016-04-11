@@ -14,6 +14,7 @@ struct A:
 fun f:
     let a = new A
     a.my()
+    a.undef[0] = 1
 
 #[
 ERROR
@@ -50,4 +51,19 @@ ERROR
 :4:8: error: struct must have a constructor
     struct A:
            ~
+:17:7: error: undefined attribute 'undef'
+    a.undef[0] = 1
+      ~~~~~
+:15:9: note: 'a' declared here
+    let a = new A
+        ~
+:17:12: error: left-hand side of assignment must be variable
+    a.undef[0] = 1
+           ~
+:15:9: note: 'a' declared here
+    let a = new A
+        ~
+:17:7: note: add 'var' to make it variable
+    a.undef[0] = 1
+      ~~~~~
 #]

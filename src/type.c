@@ -479,7 +479,8 @@ void type(Node* n) {
     case Nindex:
         type(n->sons[0]);
         type(n->sons[1]);
-        if (n->sons[0]->type->kind != Tptr) {
+        if (n->sons[0]->type->kind == Tany) n->type = anytype->override;
+        else if (n->sons[0]->type->kind != Tptr) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "only pointers can be indexed, not '%s'", ts->str);
             string_free(ts);
