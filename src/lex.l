@@ -20,6 +20,7 @@ int yylex_init(yyscan_t*);
 int yylex_init_extra(YY_EXTRA_TYPE, yyscan_t*);
 int yylex_destroy(yyscan_t);
 void yyset_extra(YY_EXTRA_TYPE, yyscan_t);
+void yyset_debug(int, yyscan_t);
 void yyset_lineno(int, yyscan_t);
 void yyset_column(int, yyscan_t);
 
@@ -51,6 +52,7 @@ LexerContext* lex_context_init(const char* file, const char* module,
     ctx->fcont = fcont;
     ctx->result = NULL;
     yylex_init(&ctx->scanner);
+    yyset_debug(1, ctx->scanner);
     yyset_extra(ctx, ctx->scanner);
     yy_scan_string(fcont, ctx->scanner);
     yyset_lineno(1, ctx->scanner);

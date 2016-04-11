@@ -23,12 +23,15 @@ def pre_options(parser):
                     action='store_false', dest='threads'),
         make_option('--use-color', help='Force the C compiler to give colored' \
                                         ' output', action='store_true'),
+        make_option('--debug-lexer', help='Tell Flex to emit debugging info',
+                    action='store_true'),
     ))
 
 class Flex(fbuild.db.PersistentObject):
-    def __init__(self, ctx, exe=None, flags=[], *, suffix='.c'):
+    def __init__(self, ctx, exe=None, debug=False, flags=[], *, suffix='.c'):
         self.ctx = ctx
         self.exe = find_program(ctx, [exe or 'flex'])
+        self.debug = debug
         self.flags = flags
         self.suffix = suffix
 
@@ -41,6 +44,7 @@ class Flex(fbuild.db.PersistentObject):
 
         cmd = [self.exe]
         cmd.extend(self.flags)
+        if self.debug: cmd.append('-d')
         cmd.extend(('-o', dst))
         cmd.append('--header='+header)
         cmd.append(src)
@@ -52,7 +56,7 @@ class Flex(fbuild.db.PersistentObject):
 
 @fbuild.db.caches
 def configure(ctx):
-    flex = Flex(ctx)
+    flex = Flex(ctx, debug=ctx.options.debug_lexer)
     bison = Bison(ctx, flags=['-Wno-other', '-v', '--report-file',
                               ctx.buildroot / 'report'])
     opts = {}
