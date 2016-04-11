@@ -142,7 +142,6 @@ LexerContext* parse_string(const char* file, const char* module,
 %token <t> TSTRUCT
 %token <t> TNEW
 %token <t> TDELETE
-%token <t> TEXPORT
 %token <t> TIF
 %token <t> TID
 %token <t> TINT
@@ -220,7 +219,6 @@ prog2 : osep tstmt {
 tstmt2 : struct | fun | global
 
 tstmt : tstmt2         { $$ = $1; }
-      | TEXPORT tstmt2 { $$ = $2; $$->export = 1; }
 
 struct : TSTRUCT id TCOLON members {
     int i;

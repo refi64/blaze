@@ -1,41 +1,41 @@
-export global true: bool = 1 :: bool
-export global false: bool = 0 :: bool
+global true: bool = 1 :: bool
+global false: bool = 0 :: bool
 
-global c_argc: int "__blaze_argc"
-global c_argv: **char "__blaze_argv"
+global _c_argc: int "__blaze_argc"
+global _c_argv: **char "__blaze_argv"
 
-fun calloc(n: size, sz: size) -> *mut byte "calloc"
-fun puts(s: *char) "puts"
-fun free(d: *byte) "free"
+fun _calloc(n: size, sz: size) -> *mut byte "calloc"
+fun _puts(s: *char) "puts"
+fun _free(d: *byte) "free"
 
-fun strlen(d: *char) -> size "strlen"
-fun memcpy(tgt: *mut char, src: *char, len: size) "memcpy"
+fun _strlen(d: *char) -> size "strlen"
+fun _memcpy(tgt: *mut char, src: *char, len: size) "memcpy"
 
-export struct str:
+struct str:
     _data: *mut char
     var len: size
 
     new(len: size):
         @len = len
-        @_data = calloc(@len+1, 1) :: *char
+        @_data = _calloc(@len+1, 1) :: *char
         @_data[@len] = 0
 
     delete:
-        free(@_data :: *byte)
+        _free(@_data :: *byte)
 
     fun __copy__ -> str:
         let s = new str(@len)
-        memcpy(s._data, @_data, @len+1)
+        _memcpy(s._data, @_data, @len+1)
         return s
 
     fun at(i: size) -> char: return @_data[i]
 
-export fun print(s: str):
-    puts(s._data)
+fun print(s: str):
+    _puts(s._data)
 
-export fun argument(i: int) -> str:
-    let arg = c_argv[i]
-    let len = strlen(arg)
+fun argument(i: int) -> str:
+    let arg = _c_argv[i]
+    let len = _strlen(arg)
     let mut s = new str(len)
-    memcpy(s._data, arg, len+1)
+    _memcpy(s._data, arg, len+1)
     return s

@@ -84,6 +84,7 @@ STEntry* symtab_find(Symtab* tab, const char* name) {
 STEntry* symtab_finds(Symtab* tab, String* name) {
     STEntry* init = NULL;
     bassert(name, "expected non-null name");
+    Symtab* otab = tab;
 
     while (tab) {
         STEntry* e = symtab_findl(tab, name);
@@ -93,6 +94,12 @@ STEntry* symtab_finds(Symtab* tab, String* name) {
         }
         tab = tab->parent;
     }
+
+    if (otab->level > 0) {
+        STEntry* e = symtab_finds(builtins_module->tab, name);
+        if (e && e->n && e->n->export) return e;
+    }
+
     return init;
 }
 

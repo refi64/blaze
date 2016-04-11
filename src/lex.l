@@ -40,7 +40,6 @@ void lex_init() {
     KW(struct, TSTRUCT)
     KW(new, TNEW)
     KW(delete, TDELETE)
-    KW(export, TEXPORT)
     KW(if, TIF)
 }
 

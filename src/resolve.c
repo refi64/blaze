@@ -23,13 +23,13 @@ static void resolve0(Node* n) {
     if (n->parent && n->parent->module) n->module = n->parent->module;
     switch (n->kind) {
     case Nmodule:
-        if (strcmp(n->s->str, BUILTINS) == 0) {
-            n->tab = symtab_new();
-            n->tab->level = 0;
-        } else n->tab = symtab_sub(builtins_module->tab);
+        n->tab = symtab_new();
+        if (strcmp(n->s->str, BUILTINS) == 0) n->tab->level = 0;
+
         for (i=0; i<list_len(n->sons); ++i) {
             n->sons[i]->parent = n->sons[i]->module = n;
             resolve0(n->sons[i]);
+            if (n->sons[i]->s->str[0] != '_') n->sons[i]->export = 1;
         }
         break;
     case Nstruct:
