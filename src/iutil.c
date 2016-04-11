@@ -1,10 +1,7 @@
 #include "blaze.h"
 
-static int var_counter = 0;
-
 Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
     Var* res = new(Var);
-    res->id = var_counter++;
     res->uses = 0;
     res->owner = owner;
     res->ir = ir;
@@ -20,8 +17,7 @@ Var* var_new(Decl* owner, Instr* ir, Type* type, String* name) {
 
 void var_dump(Var* v) {
     bassert(v, "expected non-null var");
-    printf("Var ");
-    printf("%d", v->id);
+    printf("Var %" PRIdPTR, (uintptr_t)v);
     if (v->deref) {
         printf(" *(");
         var_dump(v->base);
