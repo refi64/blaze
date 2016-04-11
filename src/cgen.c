@@ -138,6 +138,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     // The IR was optimized out by either iopt or cgen_decl1.
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0)) return;
 
+    fputs("    ", output);
     if (ir->dst && ir->dst->type && ir->kind != Iconstr)
         fprintf(output, "%s = ", CNAME(ir->dst));
 
