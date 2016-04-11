@@ -1,8 +1,17 @@
-fun f(a: *int):
+# beginning
+
+fun f:
+    return
+    # This is OK.
+    # Lalallaaaa!
+
+# LOL
+
+fun g(a: *int):
 
 #[
 ERROR
-:9:0: error: syntax error, unexpected TNEWL, expecting TINDENT
+:18:0: error: syntax error, unexpected TNEWL, expecting TINDENT
 
 
 ]#

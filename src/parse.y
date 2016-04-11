@@ -148,6 +148,9 @@ LexerContext* parse_string(const char* file, const char* module,
 %token <t> TINT
 %token <t> TSTRING
 
+%precedence TNEWL TSEMIC TSEP
+%precedence PPROG
+
 %left TDCOLON
 %nonassoc TDEQ TNE TLT TGT
 %left TPLUS TMINUS
@@ -208,11 +211,11 @@ LexerContext* parse_string(const char* file, const char* module,
 prog : prog2
      | ws { N(ctx->result, Nmodule, yylloc) }
 
-prog2 : tstmt {
+prog2 : osep tstmt {
     N(ctx->result, Nmodule, yylloc)
-    list_append(ctx->result->sons, $1);
-}   | prog2 sep tstmt { list_append(ctx->result->sons, $3); }
-    | prog2 sep {}
+    list_append(ctx->result->sons, $2);
+}   | prog2 sep tstmt %prec PPROG { list_append(ctx->result->sons, $3); }
+    | prog2 sep %prec PPROG {}
 
 tstmt2 : struct | fun | global
 
@@ -308,7 +311,9 @@ body : indent body2 unindent { $$ = $2; }
 body2 : stmt { N($$, Nbody, $1->loc); list_append($$->sons, $1); }
       | body2 sep stmt { $$ = $1; list_append($$->sons, $3); }
 
-sep : TSEMIC | TNEWL | TSEP
+osep : | sep
+sep : sepone | sep sepone
+sepone : TSEMIC | TNEWL | TSEP
 
 stmt : let    { $$ = $1; }
      | assign { $$ = $1; }
@@ -462,4 +467,4 @@ op : expr TPLUS expr { B($$, Oadd, $1, $2, $3) }
 ws : | ws TNEWL
 /* eof : TEOF */
 indent : TNEWL TINDENT
-unindent : TNEWL TUNINDENT
+unindent : sep TUNINDENT

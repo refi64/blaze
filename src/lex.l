@@ -135,7 +135,7 @@ void lex_free() { ds_hfree(kw); }
 <mcomment>"\n"+ { yycolumn = 1; }
 <mcomment>. {}
 
-<indent>[ \t]+# { unput('#'); BEGIN(INITIAL); }
+<indent>[ \t]*# { unput('#'); BEGIN(INITIAL); }
 <indent>" " { ++cur; }
 <indent>"\t" { ERROR; }
 <indent>.  {
