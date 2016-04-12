@@ -20,7 +20,11 @@ static void generate_basename(char p, GData* d, String* name, int id) {
 
 static void generate_typename(Type* t) {
     if (t->kind == Tbuiltin) t->d.cname = string_new(typenames[t->bkind]);
-    else generate_basename('t', &t->d, t->name, type_id++);
+    else if (t->kind == Tptr) {
+        generate_typename(t->sons[0]);
+        t->d.cname = string_clone(t->sons[0]->d.cname);
+        string_mergec(t->d.cname, '*');
+    } else generate_basename('t', &t->d, t->name, type_id++);
 }
 
 static void generate_argname(Var* v) {
@@ -85,10 +89,7 @@ static void cgen_typedef(Type* t, FILE* output) {
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
     switch (t->kind) {
     case Tany: fatal("unexpected type kind Tany");
-    case Tbuiltin: break;
-    case Tptr:
-        fprintf(output, "typedef %s* %s;\n", CNAME(t->sons[0]), CNAME(t));
-        break;
+    case Tbuiltin: case Tptr: break;
     case Tfun:
         fprintf(output, "typedef %s", CNAME(t->sons[0]));
         fprintf(output, " (*%s)(", CNAME(t));
