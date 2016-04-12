@@ -212,6 +212,7 @@ static void igen_func(Module* m, Decl* d, Node* n) {
             Node* arg = n->sons[1]->sons[i];
             bassert(arg->kind == Ndecl, "unexpected node kind %d", arg->kind);
             Var* v = var_new(d, NULL, arg->type, arg->s);
+            v->flags |= Farg;
             list_append(d->args, v);
             arg->v = v;
         }
@@ -221,6 +222,8 @@ static void igen_func(Module* m, Decl* d, Node* n) {
         d->ret = n->sons[0]->type;
         d->rv = var_new(d, NULL, n->sons[0]->type, NULL);
         d->ra = !(d->ret->kind == Tbuiltin || d->ret->kind == Tptr);
+        /* XXX: Even if d->ra is true, the type if d->rv is still not a pointer,
+                which is basically lying to the code generator. */
     }
 
     if (!n->import) igen_node(d, &d->sons, n->sons[2]);

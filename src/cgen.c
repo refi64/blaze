@@ -148,9 +148,22 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     case Inull: fatal("unexpected ir kind Inull");
     case Iret:
         if (ir->v) {
-            fprintf(output, "%s%s = %s; goto R", d->ra ? "*" : "", CNAME(d->rv),
-                    CNAME(ir->v[0]));
-            ir->v[0]->no_destr = 1;
+            /* Only move local variables and rvalues (which should now be locals
+               anyway). */
+            int do_move = ir->v[0]->owner == d && !(ir->v[0]->flags & Farg);
+            // XXX: This is to work around breakage from RADDR support.
+            if (do_move)
+                fprintf(output, "%s%s = %s", d->ra ? "*" : "", CNAME(d->rv),
+                        CNAME(ir->v[0]));
+            else if (HAS_COPY(ir->v[0]) && ir->v[0]->type->n->magic[Mcopy]->d->ra)
+                fprintf(output, "%s(%s%s, %s%s)", copy(ir->v[0]),
+                        d->ra ? "" : "&", CNAME(d->rv), copy_addr(ir->v[0]),
+                        CNAME(ir->v[0]));
+            else
+                fprintf(output, "%s%s = %s(%s%s)", d->ra ? "*" : "", CNAME(d->rv),
+                        copy(ir->v[0]), copy_addr(ir->v[0]), CNAME(ir->v[0]));
+            fputs("; goto R", output);
+            ir->v[0]->no_destr = do_move;
         }
         else fputs("goto R", output);
         break;

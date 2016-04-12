@@ -47,7 +47,7 @@ struct X:
 
 Also, everything should be mutable in the constructor.
 
-##Moving + returning == explosion
+##Moving + returning == explosion (fixed)
 
 Take a look at this:
 

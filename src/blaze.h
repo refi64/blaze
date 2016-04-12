@@ -165,18 +165,19 @@ struct Type {
 };
 
 enum Flags {
-    Ftype=1<<0, // Type?
-    Faddr=1<<1, // Addressable?
-    Fmut =1<<2, // Mutable? (Can be set on ptr type nodes to refer to memory.)
-    Fvar =1<<3, // Variable?
+    Ftype=1<<0 , // Type?
+    Faddr=1<<1 , // Addressable?
+    Fmut =1<<2 , // Mutable? (Can be set on ptr type nodes to refer to memory.)
+    Fvar =1<<3 , // Variable?
     Fmv  =Fmut
-         |Fvar, // Mutable or variable?
-    Fcst= 1<<4, // Constant?
-    Fused=1<<5, // Has the given value been used?
-    Fvoid=1<<6, // Is the node void (has no type)?
-    Fpure=1<<7, // Is the node/IR pure?
-    Fmemb=1<<8, // Is the node/decl a member value?
-    Fstc =1<<9, // Is the var a constant method/constructor of a parent struct?
+         |Fvar , // Mutable or variable?
+    Fcst= 1<<4 , // Constant?
+    Fused=1<<5 , // Has the given value been used?
+    Fvoid=1<<6 , // Is the node void (has no type)?
+    Fpure=1<<7 , // Is the node/IR pure?
+    Fmemb=1<<8 , // Is the node/decl a member value?
+    Fstc =1<<9 , // Is the var a constant method/constructor of a parent struct?
+    Farg =1<<10, // Is the var an argument?
 };
 
 typedef enum Op {
