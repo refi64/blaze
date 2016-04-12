@@ -91,3 +91,14 @@ struct Y:
 
 An easy fix could also be to add a simple rule for moving: move constructors are
 only called if the returned value is non-addressable or is a local variable.
+
+Note that this could cause issues with indexing a local:
+
+```python
+fun f:
+    let mem = malloc(sizeof(X)) :: *X # Yeah, this doesn't actually work ATM...
+    return mem[0]
+```
+
+Should `mem[0] :: X` be moved or not? It depends. To be safe, it would be best to
+just say it should be copied, since it won't really hurt anything.
