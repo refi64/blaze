@@ -102,3 +102,19 @@ fun f:
 
 Should `mem[0] :: X` be moved or not? It depends. To be safe, it would be best to
 just say it should be copied, since it won't really hurt anything.
+
+##Variable ids
+
+This is an ugly hack. Take this code:
+
+```python
+struct Y:
+    new: return
+    fun f -> int: return 0
+
+fun main -> int:
+    return new Y.f()
+```
+
+If I add a `struct X:\n new: return` to the beginning, the whole thing will be
+recompiled, since it'll throw the type id system off. Grrr...
