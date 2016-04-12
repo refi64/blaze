@@ -123,6 +123,7 @@ static void cgen_typeimpl(Type* t, FILE* output) {
 
 #define HAS_COPY(v) ((v)->type && (v)->type->kind == Tstruct && \
                      (v)->type->n->magic[Mcopy])
+#define RADDR(vr) ((vr)->owner->v == (vr) && (vr)->owner->ra)
 
 static const char* copy(Var* v) {
     return HAS_COPY(v) ? CNAME(v->type->n->magic[Mcopy]->v) : "";
@@ -139,14 +140,16 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0)) return;
 
     fputs("    ", output);
-    if (ir->dst && ir->dst->type && ir->kind != Iconstr)
+    if (ir->dst && ir->dst->type && ir->kind != Iconstr &&
+        !(ir->kind == Icall && RADDR(ir->v[0])))
         fprintf(output, "%s = ", CNAME(ir->dst));
 
     switch (ir->kind) {
     case Inull: fatal("unexpected ir kind Inull");
     case Iret:
         if (ir->v) {
-            fprintf(output, "%s = %s; goto R", CNAME(d->rv), CNAME(ir->v[0]));
+            fprintf(output, "%s%s = %s; goto R", d->ra ? "*" : "", CNAME(d->rv),
+                    CNAME(ir->v[0]));
             ir->v[0]->no_destr = 1;
         }
         else fputs("goto R", output);
@@ -182,6 +185,12 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
             fputc(')', output);
             if (list_len(ir->v) > 1) fputs(", ", output);
         }
+
+        if (RADDR(ir->v[0])) {
+            fprintf(output, "&(%s)", CNAME(ir->dst));
+            if (list_len(ir->v) > 1) fputs(", ", output);
+        }
+
         for (i=1; i<list_len(ir->v); ++i) {
             if (i > 1) fputs(", ", output);
             fputs(CNAME(ir->v[i]), output);
@@ -212,11 +221,16 @@ static void cgen_proto(Decl* d, FILE* output) {
 
     bassert(d->kind == Dfun, "unexpected decl kind %d", d->kind);
     if (!d->exportc && !d->import && !d->export) fputs("static ", output);
-    fprintf(output, "%s %s(", d->v->type ? CNAME(d->v->type->sons[0]) : "void",
+    fprintf(output, "%s %s(", d->v->type && !d->ra ? CNAME(d->v->type->sons[0])
+                                                   : "void",
             CNAME(d->v));
+    if (d->ra) {
+        generate_varname(d->rv);
+        fprintf(output, "%s* %s", CNAME(d->rv->type), CNAME(d->rv));
+    }
     for (i=0; i<list_len(d->args); ++i) {
         generate_argname(d->args[i]);
-        if (i) fputs(", ", output);
+        if (i || d->ra) fputs(", ", output);
         fprintf(output, "%s %s", CNAME(d->args[i]->type), CNAME(d->args[i]));
     }
     fputc(')', output);
@@ -251,7 +265,8 @@ static void cgen_decl1(Decl* d, FILE* output) {
     }
     if (d->rv) {
         generate_varname(d->rv);
-        fprintf(output, "    %s %s;\n", CNAME(d->ret), CNAME(d->rv));
+        if (!d->ra)
+            fprintf(output, "    %s %s;\n", CNAME(d->ret), CNAME(d->rv));
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, d->sons[i], output);
     fputs("R:\n", output);
@@ -262,7 +277,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
             fprintf(output, "    %s(&(%s));\n", CNAME(destr->v),
                     CNAME(d->vars[i]));
     }
-    if (d->rv) fprintf(output, "    return %s;\n", CNAME(d->rv));
+    if (d->rv && !d->ra) fprintf(output, "    return %s;\n", CNAME(d->rv));
     else fputs("    return;\n", output);
     fputs("}\n\n", output);
 }

@@ -370,6 +370,7 @@ struct Decl {
             Type* ret;
             // Return variable.
             Var* rv;
+            int ra; // Does returning work by passing an extra address argument?
         }; // Dfun
     };
     String* name, *import, *exportc;

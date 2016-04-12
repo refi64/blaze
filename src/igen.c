@@ -220,7 +220,9 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (n->sons[0]) {
         d->ret = n->sons[0]->type;
         d->rv = var_new(d, NULL, n->sons[0]->type, NULL);
+        d->ra = !(d->ret->kind == Tbuiltin || d->ret->kind == Tptr);
     }
+
     if (!n->import) igen_node(d, &d->sons, n->sons[2]);
     else d->import = n->import;
 
