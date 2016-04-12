@@ -385,6 +385,7 @@ struct Decl {
 };
 
 struct Var {
+    int id; // A unique id given to each variable.
     String* name; // NULL if temporary.
     int uses; // Number of uses.
     Decl* owner;

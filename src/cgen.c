@@ -2,14 +2,15 @@
 
 const char* typenames[] = {"int", "unsigned char", "char", "unsigned long",
                            "int"};
+int type_id=0;
 
 #define CNAME(x) ((x)?(x)->d.cname->str:"void")
 
-static void generate_basename(char p, GData* d, String* name, void* addr) {
+static void generate_basename(char p, GData* d, String* name, int id) {
     char buf[1024];
     if (d->cname) return;
     d->cname = string_newz(&p, 1);
-    snprintf(buf, sizeof(buf), "%" PRIdPTR, (uintptr_t)addr);
+    snprintf(buf, sizeof(buf), "%d", id);
     string_merges(d->cname, buf);
     if (name) {
         string_mergec(d->cname, '_');
@@ -19,11 +20,11 @@ static void generate_basename(char p, GData* d, String* name, void* addr) {
 
 static void generate_typename(Type* t) {
     if (t->kind == Tbuiltin) t->d.cname = string_new(typenames[t->bkind]);
-    else generate_basename('t', &t->d, t->name, t);
+    else generate_basename('t', &t->d, t->name, type_id++);
 }
 
 static void generate_argname(Var* v) {
-    generate_basename('a', &v->d, v->name, v);
+    generate_basename('a', &v->d, v->name, v->id);
 }
 
 static void generate_varname(Var* v) {
@@ -40,7 +41,7 @@ static void generate_varname(Var* v) {
         if (v->base) {
             generate_varname(v->base);
             v->d.cname = string_clone(v->base->d.cname);
-        } else generate_basename('v', &v->d, v->name, v);
+        } else generate_basename('v', &v->d, v->name, v->id);
         if (v->av) {
             Var* last = *v->av[list_len(v->av)-1];
             bassert(!v->iv, "attribute var also has indexes");
@@ -72,7 +73,7 @@ static void generate_declname(Decl* d) {
 
     if (d->import) d->v->d.cname = string_clone(d->import);
     else if (d->exportc) d->v->d.cname = string_clone(d->exportc);
-    else generate_basename(prefixes[d->kind], &d->v->d, d->v->name, d->v);
+    else generate_basename(prefixes[d->kind], &d->v->d, d->v->name, d->v->id);
 }
 
 static void cgen_typedef(Type* t, FILE* output) {
