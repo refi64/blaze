@@ -412,6 +412,7 @@ struct Instr {
         Iset,
         Iret,
         Icjmp,
+        Ijmp,
         Ilabel,
         Iaddr,
         Iconstr,

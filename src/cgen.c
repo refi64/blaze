@@ -172,6 +172,9 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     case Icjmp:
         fprintf(output, "if (!(%s)) goto L%d", CNAME(ir->v[0]), ir->label);
         break;
+    case Ijmp:
+        fprintf(output, "goto L%d", ir->label);
+        break;
     case Ilabel:
         fprintf(output, "L%d:", ir->label);
         break;

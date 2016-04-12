@@ -62,6 +62,7 @@ void instr_dump(Instr* ir) {
     case Inull: fatal("unexpected ir kind Inull");
     case Iret: printf("Iret"); break;
     case Icjmp: printf("Icjmp (label:%d)", ir->label); break;
+    case Ijmp: printf("Ijmp (label:%d)", ir->label); break;
     case Ilabel: printf("Ilabel (label:%d)", ir->label); break;
     case Inew: printf("Inew"); break;
     case Iset: printf("Iset"); break;
