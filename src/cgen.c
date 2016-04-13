@@ -135,6 +135,15 @@ static const char* copy_addr(Var* v) {
     return HAS_COPY(v) ? "&" : "";
 }
 
+static void cgen_set(Var* dst, int dstaddr, Var* src, FILE* output) {
+    if (HAS_COPY(src) && src->type->n->magic[Mcopy]->d->ra)
+        fprintf(output, "%s(%s%s, %s%s)", copy(src), dstaddr ? "" : "&",
+                        CNAME(dst), copy_addr(src), CNAME(src));
+    else
+        fprintf(output, "%s%s = %s(%s%s)", dstaddr ? "*" : "", CNAME(dst),
+                        copy(src), copy_addr(src), CNAME(src));
+}
+
 static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     int i;
     for (i=0; i<list_len(ir->v); ++i) generate_varname(ir->v[i]);
@@ -142,7 +151,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0)) return;
 
     fputs("    ", output);
-    if (ir->dst && ir->dst->type && ir->kind != Iconstr &&
+    if (ir->dst && ir->dst->type && ir->kind != Iconstr && ir->kind != Inew &&
         !(ir->kind == Icall && RADDR(ir->v[0])))
         fprintf(output, "%s = ", CNAME(ir->dst));
 
@@ -153,17 +162,10 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
             /* Only move local variables and rvalues (which should now be locals
                anyway). */
             int do_move = ir->v[0]->owner == d && !(ir->v[0]->flags & Farg);
-            // XXX: This is to work around breakage from RADDR support.
             if (do_move)
                 fprintf(output, "%s%s = %s", d->ra ? "*" : "", CNAME(d->rv),
                         CNAME(ir->v[0]));
-            else if (HAS_COPY(ir->v[0]) && ir->v[0]->type->n->magic[Mcopy]->d->ra)
-                fprintf(output, "%s(%s%s, %s%s)", copy(ir->v[0]),
-                        d->ra ? "" : "&", CNAME(d->rv), copy_addr(ir->v[0]),
-                        CNAME(ir->v[0]));
-            else
-                fprintf(output, "%s%s = %s(%s%s)", d->ra ? "*" : "", CNAME(d->rv),
-                        copy(ir->v[0]), copy_addr(ir->v[0]), CNAME(ir->v[0]));
+            else cgen_set(d->rv, d->ra, ir->v[0], output);
             fputs("; goto R", output);
             ir->v[0]->no_destr = do_move;
         }
@@ -179,14 +181,12 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         fprintf(output, "L%d:", ir->label);
         break;
     case Iset:
-        if (ir->v[0]->ir->kind == Iaddr) fputs(CNAME(ir->v[0]->ir->v[0]), output);
-        else fprintf(output, "*%s", CNAME(ir->v[0]));
-        fprintf(output, " = %s(%s%s)", copy(ir->v[0]), copy_addr(ir->v[0]),
-                CNAME(ir->v[1]));
+        if (ir->v[0]->ir->kind == Iaddr)
+            cgen_set(ir->v[0]->ir->v[0], 0, ir->v[1], output);
+        else cgen_set(ir->v[0], 1, ir->v[1], output);
         break;
     case Inew:
-        fprintf(output, "%s(%s%s)", copy(ir->v[0]), copy_addr(ir->v[0]),
-                CNAME(ir->v[0]));
+        cgen_set(ir->dst, 0, ir->v[0], output);
         break;
     case Iconstr:
         fprintf(output, "%s(&(%s)", CNAME(ir->v[0]), CNAME(ir->dst));
