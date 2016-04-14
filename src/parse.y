@@ -143,6 +143,7 @@ LexerContext* parse_string(const char* file, const char* module,
 %token <t> TNEW
 %token <t> TDELETE
 %token <t> TIF
+%token <t> TDUP
 %token <t> TID
 %token <t> TINT
 %token <t> TSTRING

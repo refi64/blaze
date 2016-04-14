@@ -41,6 +41,7 @@ void lex_init() {
     KW(new, TNEW)
     KW(delete, TDELETE)
     KW(if, TIF)
+    KW(dup, TDUP)
 }
 
 LexerContext* lex_context_init(const char* file, const char* module,
