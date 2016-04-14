@@ -23,7 +23,7 @@ struct str:
     delete:
         _free(@_data :: *byte)
 
-    fun __copy__ -> str:
+    fun dup -> str:
         let s = new str(@len)
         _memcpy(s._data, @_data, @len+1)
         return s

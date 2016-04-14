@@ -190,7 +190,7 @@ static const char* op_strings[] = {"+", "-", "*", "/",
                                    "==", "!=", "<", ">"};
 
 typedef enum Magic { Mcopy, Mend } Magic;
-static const char* magic_strings[] = {"__copy__", NULL};
+static const char* magic_strings[] = {"dup", 0};
 
 struct Node {
     enum {

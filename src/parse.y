@@ -87,6 +87,10 @@ LexerContext* parse_string(const char* file, const char* module,
         String* rs;
         int import, exportc;
     } funbody;
+    struct {
+        String* s;
+        Location loc;
+    } funid;
     int i;
 }
 
@@ -168,6 +172,7 @@ LexerContext* parse_string(const char* file, const char* module,
 %type <n> constr
 %type <n> destr
 %type <n> fun
+%type <funid> funid
 %type <n> funret
 %type <funbody> funbody
 %type <n> globalsuf
@@ -252,10 +257,9 @@ destr : TDELETE TCOLON body {
     list_append($$->sons, $3);
 }
 
-fun : TFUN id arglist funret funbody {
-    N($$, Nfun, $2->loc)
-    $$->s = string_clone($2->s);
-    node_free($2);
+fun : TFUN funid arglist funret funbody {
+    N($$, Nfun, $2.loc)
+    $$->s = $2.s;
     list_append($$->sons, $4);
     list_append($$->sons, $3);
     if ($5.import) $$->import = $5.rs;
@@ -263,6 +267,12 @@ fun : TFUN id arglist funret funbody {
     if ($5.exportc) $$->exportc = $5.rs;
     $$->flags |= Fcst | Faddr;
 }
+
+funid : id {
+    $$.loc = $1->loc;
+    $$.s = string_clone($1->s);
+    node_free($1);
+}     | TDUP { $$.loc = $1.loc; $$.s = string_new("dup"); }
 
 funbody : TCOLON body { $$.exportc = 0; $$.import = 0; $$.rn = $2; }
         | TEXPORTC TSTRING TCOLON body {
