@@ -199,7 +199,7 @@ static void resolve_overload(Node* n) {
         List(STEntry*) choices = possibilities ? possibilities : overloads;
         List(STEntry*) result = NULL;
         for (j=0; j<list_len(choices); ++j)
-            if (funmatch(Mnothing, choices[j]->n, n, &expected, !i))
+            if (funmatch(Mnothing, choices[j]->n, n, &expected, i))
                 list_append(result, choices[j]);
         list_free(possibilities);
         possibilities = result;
@@ -216,9 +216,9 @@ static void resolve_overload(Node* n) {
         id->type = anytype->override;
         type_incref(id->type);
     } else {
-        n->sons[0]->e = possibilities[0];
-        n->sons[0]->type = possibilities[0]->n->type;
-        type_incref(n->sons[0]->type);
+        id->e = possibilities[0];
+        id->type = possibilities[0]->n->type;
+        type_incref(id->type);
     }
 
     list_free(possibilities);
@@ -529,7 +529,7 @@ void type(Node* n) {
                 else if (n->kind == Nnew) {
                     bassert(n->sons[0]->flags & Ftype,
                             "expected type as first son");
-                    n->type = n->sons[0]->type;
+                    n->type = n->sons[0]->e->n->parent->type; // XXX
                 } else {
                     n->type = anytype->override;
                     n->flags |= Fvoid;
