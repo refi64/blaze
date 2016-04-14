@@ -290,11 +290,11 @@ static void cgen_decl1(Decl* d, FILE* output) {
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, d->sons[i], output);
     fputs("R:\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
-        Node* destr;
+        STEntry* destr;
         if (d->vars[i]->type && d->vars[i]->type->kind == Tstruct &&
             !d->vars[i]->no_destr &&
-            (destr = d->vars[i]->type->n->magic[Mdelete]->overloads[0]->n))
-            fprintf(output, "    %s(&(%s));\n", CNAME(destr->v),
+            (destr = d->vars[i]->type->n->magic[Mdelete]))
+            fprintf(output, "    %s(&(%s));\n", CNAME(destr->overloads[0]->n->v),
                     CNAME(d->vars[i]));
     }
     if (d->rv && !d->ra) fprintf(output, "    return %s;\n", CNAME(d->rv));
