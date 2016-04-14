@@ -94,7 +94,7 @@ static int is_callable(Node* n) {
 
 static List(Type*) arguments_of(Type* t) {
     switch (t->kind) {
-    case Tstruct: return (*t->constr)->sons;
+    case Tstruct: return t->n->magic[Mnew]->type->sons;
     case Tfun: return t->sons;
     default: fatal("unexpected type kind %d", t->kind);
     }
@@ -126,11 +126,10 @@ typedef enum Match {
 
 static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
                     int strict) {
-    const char* msgs[] = {"function", "constructor"};
     Type* ft = func->type;
     *expected = NULL;
     int ngiven = list_len(n->sons)-1, nexpect, i, res = 1;
-    if (ft->kind == Tstruct && !ft->constr) {
+    if (ft->kind == Tstruct && !ft->n->magic[Mnew]) {
         *expected = NULL;
         nexpect = 0;
     } else {
@@ -140,13 +139,13 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
     if (ngiven != nexpect) {
         switch (kind) {
         case Merror:
-            error(n->loc, "%s expected %d argument(s), not %d",
-                  msgs[n->kind == Nconstr], nexpect, ngiven);
+            error(n->loc, "function expected %d argument(s), not %d",nexpect,
+                  ngiven);
             declared_here(n->sons[0]);
             break;
         case Mnote:
-            note(func->loc, "%s expected %d argument(s), not %d",
-                 msgs[n->kind == Nconstr], nexpect, ngiven);
+            note(func->loc, "function expected %d argument(s), not %d", nexpect,
+                 ngiven);
             break;
         case Mnothing: break;
         }
@@ -162,14 +161,12 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
             switch (kind) {
             case Mnothing: break;
             case Mnote:
-                note(func->loc, "%s expected argument of type '%s', "
-                                "not '%s'", msgs[n->kind == Nconstr],
-                     expects->str, givens->str);
+                note(func->loc, "function expected argument of type '%s', "
+                                "not '%s'", expects->str, givens->str);
                 break;
             case Merror:
-                error(n->sons[i]->loc, "%s expected argument of type '%s', "
-                                       "not '%s'", msgs[n->kind == Nconstr],
-                      expects->str, givens->str);
+                error(n->sons[i]->loc, "function expected argument of type '%s', "
+                                       "not '%s'", expects->str, givens->str);
                 declared_here(func);
                 break;
             }
@@ -250,22 +247,6 @@ void type(Node* n) {
         n->flags |= Ftype;
         n->typing = 0;
         for (i=0; i<list_len(n->sons); ++i) {
-            if (n->sons[i]->kind == Nconstr) {
-                if (!n->constr) {
-                    n->constr = n->sons[i];
-                    n->type->constr = &n->constr->type;
-                } else {
-                    error(n->sons[i]->loc, "duplicate constructor");
-                    note(n->constr->loc, "previous constructor here");
-                }
-            } else if (n->sons[i]->kind == Ndestr) {
-                if (!n->destr) n->destr = n->sons[i];
-                else {
-                    error(n->sons[i]->loc, "duplicate destructor");
-                    note(n->destr->loc, "previous destructor here");
-                }
-            }
-
             if (n->sons[i]->this) {
                 n->sons[i]->this->type = n->type;
                 type_incref(n->type);
@@ -274,10 +255,10 @@ void type(Node* n) {
             type(n->sons[i]);
         }
 
-        if (!n->constr)
+        if (!n->magic[Mnew])
             error(n->loc, "struct must have a constructor");
         break;
-    case Nconstr: case Ndestr: case Nfun:
+    case Nfun:
         if (n->sons[0]) {
             type(n->sons[0]);
             force_type_context(n->sons[0]);
@@ -308,12 +289,24 @@ void type(Node* n) {
             for (i=0; i<Mend; ++i)
                 if (strcmp(n->s->str, magic_strings[i]) == 0) {
                     switch (i) {
+                    case Mnew:
+                        if (n->type->sons[0])
+                            error(n->sons[0]->loc,
+                                  "constructor cannot return a value");
+                        break;
+                    case Mdelete:
+                        if (n->type->sons[0])
+                            error(n->sons[0]->loc,
+                                  "destructor cannot return a value");
+                        break;
                     case Mcopy:
                         if (list_len(n->type->sons) != 1)
-                            error(n->loc, "__copy__ must take no arguments");
+                            error(n->loc,
+                                  "copy constructor must take no arguments");
                         if (n->type->sons[0] != n->parent->type)
                             error(n->sons[0] ? n->sons[0]->loc : n->loc,
-                                  "__copy__ must return the parent's type");
+                                  "copy constructor must return the parent's "
+                                  "type");
                         break;
                     default: fatal("invalid magic kind %d", i);
                     }
@@ -388,9 +381,8 @@ void type(Node* n) {
                 string_free(givens);
             }
         } else if (n->sons) {
-            const char* k = f->kind == Nconstr ? "constructor" : "function";
-            error(n->sons[0]->loc, "%s should not return a value", k);
-            note(f->loc, "%s declared here", k);
+            error(n->sons[0]->loc, "function should not return a value");
+            note(f->loc, "function declared here");
         }
         break;
     case Nif:

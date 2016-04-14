@@ -17,8 +17,7 @@ static void igen_struct(Module* m, Node* n) {
         Decl* d = igen_decl(m, n->sons[i]);
         if (d) {
             d->flags |= Fmemb;
-            if (n->sons[i]->kind == Nconstr || n->sons[i]->kind == Nfun)
-                d->v->flags |= Fstc;
+            if (n->sons[i]->kind == Nfun) d->v->flags |= Fstc;
             list_append(n->type->d.sons, d);
             if (d->kind == Dfun) list_append(m->decls, d);
             if (n->export) d->export = 1;
@@ -158,8 +157,8 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         ir->s = string_clone(n->s);
         ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
         break;
-    case Nmodule: case Ntypeof: case Nstruct: case Nconstr: case Ndestr:
-    case Nfun: case Narglist: case Ndecl: case Nsons: case Nptr:
+    case Nmodule: case Ntypeof: case Nstruct: case Nfun: case Narglist:
+    case Ndecl: case Nsons: case Nptr:
         fatal("unexpected node kind %d", n->kind);
     }
 
@@ -177,11 +176,11 @@ static void igen_sons(Decl* d, List(Instr*)* tgt, Node* n) {
 static void igen_func(Module* m, Decl* d, Node* n) {
     int i;
 
-    bassert(n->kind == Nconstr || n->kind == Ndestr || n->kind == Nfun,
-            "unexpected node kind %d", n->kind);
+    bassert(n->kind == Nfun, "unexpected node kind %d", n->kind);
     d->kind = Dfun;
     d->v = n->v = var_new(d, NULL, n->type, n->s);
-    if (n->kind == Nconstr) n->parent->v = n->v;
+    if (n->parent->kind == Nstruct && n == n->parent->magic[Mnew])
+        n->parent->v = n->v;
 
     if (n->flags & Fmemb) {
         Var* v;
@@ -263,7 +262,7 @@ static Decl* igen_decl(Module* m, Node* n) {
     d->m = m;
 
     switch (n->kind) {
-    case Nconstr: case Ndestr: case Nfun:
+    case Nfun:
         igen_func(m, d, n);
         break;
     case Ndecl:

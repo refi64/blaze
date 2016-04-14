@@ -50,14 +50,11 @@ static void resolve0(Node* n) {
     case Nfun:
         e = stentry_new_overload(n, n->s);
         symtab_add(n->parent->tab, n->s, e);
-
-    // Fall though.
-    case Nconstr: case Ndestr:
         n->tab = symtab_sub(n->parent->tab);
 
         if (n->parent->kind == Nstruct) {
             make_magic_this(n); // Overrides the parent struct's this.
-            if (n->kind == Nconstr)
+            if (strcmp(n->s->str, "new") == 0)
                 // Constructors can always mutate the struct.
                 n->this->flags |= Fmv;
         }
@@ -146,8 +143,8 @@ static void resolve1(Node* n) {
     int i;
     bassert(n, "expected non-null node");
     switch (n->kind) {
-    case Nmodule: case Nstruct: case Nconstr: case Ndestr: case Nfun:
-    case Narglist: case Ndecl: case Ncast: case Nif:
+    case Nmodule: case Nstruct: case Nfun: case Narglist: case Ndecl: case Ncast:
+    case Nif:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;

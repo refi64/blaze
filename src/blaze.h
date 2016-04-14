@@ -189,8 +189,8 @@ static const char* op_strings[] = {"+", "-", "*", "/",
                                    NULL,
                                    "==", "!=", "<", ">"};
 
-typedef enum Magic { Mcopy, Mend } Magic;
-static const char* magic_strings[] = {"dup", 0};
+typedef enum Magic { Mnew, Mdelete, Mcopy, Mend } Magic;
+static const char* magic_strings[] = {"new", "delete", "dup", 0};
 
 struct Node {
     enum {
@@ -214,8 +214,6 @@ struct Node {
         Ntypeof,
         Nptr,
         Nstruct,
-        Nconstr,
-        Ndestr,
         Nfun,
         Narglist,
         Ndecl,
@@ -224,10 +222,7 @@ struct Node {
     } kind;
     union {
         String *exportc; // Nfun
-        struct {
-            Node* constr, *destr;
-            Node* magic[Mend];
-        }; // Nstruct
+        Node* magic[Mend]; // Nstruct
         Node* attr; // Nattr
         Op op; // Nop
         Module* m; // Nmodule
@@ -248,7 +243,7 @@ struct Node {
     // Ntypeof: expr
     // Nptr: expr
     // Nstruct: members...
-    // Nconstr, Ndestr, Nfun: ret | NULL (always NULL for Nconstr, Ndestr), args, body
+    // Nfun: ret | NULL, args, body
     // Narglist: Narg...
     // Ndecl: type
     // Nbody: stmts...

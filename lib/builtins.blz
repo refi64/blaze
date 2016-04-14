@@ -15,12 +15,12 @@ struct str:
     _data: *mut char
     var len: size
 
-    new(len: size):
+    fun new(len: size):
         @len = len
         @_data = _calloc(@len+1, 1) :: *char
         @_data[@len] = 0
 
-    delete:
+    fun delete:
         _free(@_data :: *byte)
 
     fun dup -> str:

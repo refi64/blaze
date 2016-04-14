@@ -240,22 +240,8 @@ members : indent members2 unindent { $$ = $2; }
 members2 : member { $$ = NULL; list_append($$, $1); }
          | members2 sep member { $$ = $1; list_append($$, $3); }
 
-member : constr | destr | fun
+member : fun
        | modspec decl { $$ = $2; $$->flags |= $1; }
-
-constr : TNEW arglist TCOLON body {
-    N($$, Nconstr, $1.loc)
-    list_append($$->sons, NULL);
-    list_append($$->sons, $2);
-    list_append($$->sons, $4);
-}
-
-destr : TDELETE TCOLON body {
-    N($$, Ndestr, $1.loc)
-    list_append($$->sons, NULL);
-    list_append($$->sons, NULL);
-    list_append($$->sons, $3);
-}
 
 fun : TFUN funid arglist funret funbody {
     N($$, Nfun, $2.loc)
@@ -272,7 +258,10 @@ funid : id {
     $$.loc = $1->loc;
     $$.s = string_clone($1->s);
     node_free($1);
-}     | TDUP { $$.loc = $1.loc; $$.s = string_new("dup"); }
+}
+      | TNEW { $$.loc = $1.loc; $$.s = string_new("new"); }
+      | TDELETE { $$.loc = $1.loc; $$.s = string_new("delete"); }
+      | TDUP { $$.loc = $1.loc; $$.s = string_new("dup"); }
 
 funbody : TCOLON body { $$.exportc = 0; $$.import = 0; $$.rn = $2; }
         | TEXPORTC TSTRING TCOLON body {
