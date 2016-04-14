@@ -219,7 +219,7 @@ static void resolve_overload(Node* n) {
 }
 
 void type(Node* n) {
-    Node* f;
+    Node* nn;
     int i;
 
     bassert(n, "expected non-null node");
@@ -244,6 +244,25 @@ void type(Node* n) {
         n->this->type = n->type;
         type_incref(n->type);
 
+        for (i=0; i<Mend; ++i) {
+            STEntry* e;
+            Node* nn;
+            String* s = string_new(magic_strings[i]);
+            e = symtab_findl(n->tab, s);
+            string_free(s);
+            if (!e) continue;
+
+            if (!e->overload) {
+                error(e->n->loc, "magic item names must be functions");
+                continue;
+            }
+
+            bassert(list_len(e->overloads) == 1, "TODO");
+            bassert(nn = e->overloads[0]->n, "builtin node in overload list");
+
+            n->magic[i] = nn;
+        }
+
         n->flags |= Ftype;
         n->typing = 0;
         for (i=0; i<list_len(n->sons); ++i) {
@@ -255,8 +274,22 @@ void type(Node* n) {
             type(n->sons[i]);
         }
 
-        if (!n->magic[Mnew])
-            error(n->loc, "struct must have a constructor");
+        if ((nn = n->magic[Mnew])) {
+            if (nn->type->sons[0])
+                error(nn->sons[0]->loc, "constructor cannot return a value");
+        } else error(n->loc, "struct must have a constructor");
+
+        if ((nn = n->magic[Mdelete]) && nn->type->sons[0])
+            error(nn->sons[0]->loc, "destructor cannot return a value");
+
+        if ((nn = n->magic[Mcopy])) {
+            if (list_len(nn->type->sons) != 1)
+                error(nn->loc, "copy constructor cannot take any arguments");
+
+            if (nn->type->sons[0] != n->type)
+                    error(nn->sons[0] ? nn->sons[0]->loc : nn->loc,
+                          "copy constructor must return the parent's type");
+        }
         break;
     case Nfun:
         if (n->sons[0]) {
@@ -284,35 +317,6 @@ void type(Node* n) {
             && typematch(n->type->sons[0],
                          builtin_types[Tint]->override, NULL)))
             error(n->loc, "invalid main signature");
-
-        if (n->kind == Nfun && n->parent->kind == Nstruct)
-            for (i=0; i<Mend; ++i)
-                if (strcmp(n->s->str, magic_strings[i]) == 0) {
-                    switch (i) {
-                    case Mnew:
-                        if (n->type->sons[0])
-                            error(n->sons[0]->loc,
-                                  "constructor cannot return a value");
-                        break;
-                    case Mdelete:
-                        if (n->type->sons[0])
-                            error(n->sons[0]->loc,
-                                  "destructor cannot return a value");
-                        break;
-                    case Mcopy:
-                        if (list_len(n->type->sons) != 1)
-                            error(n->loc,
-                                  "copy constructor must take no arguments");
-                        if (n->type->sons[0] != n->parent->type)
-                            error(n->sons[0] ? n->sons[0]->loc : n->loc,
-                                  "copy constructor must return the parent's "
-                                  "type");
-                        break;
-                    default: fatal("invalid magic kind %d", i);
-                    }
-                    if (!n->parent->magic[i]) n->parent->magic[i] = n;
-                    break;
-                }
         break;
     case Nlet:
         type(n->sons[0]);
@@ -355,17 +359,17 @@ void type(Node* n) {
         type_incref(n->type);
         break;
     case Nreturn:
-        f = n->func;
-        bassert(f, "return without function");
+        nn = n->func;
+        bassert(nn, "return without function");
         if (n->sons) {
             type(n->sons[0]);
             force_typed_expr_context(n->sons[0]);
         }
-        if (f->sons[0]) {
-            Type* ret = f->type->sons[0], *given;
+        if (nn->sons[0]) {
+            Type* ret = nn->type->sons[0], *given;
             if (!n->sons) {
                 error(n->loc, "function is supposed to return a value");
-                note(f->sons[0]->loc, "function return type declared here");
+                note(nn->sons[0]->loc, "function return type declared here");
                 break;
             }
             given = n->sons[0]->type;
@@ -375,14 +379,14 @@ void type(Node* n) {
                 givens = typestring(given);
                 error(n->sons[0]->loc, "function was declared to return type '%s'"
                                        ", not '%s'", rets->str, givens->str);
-                note(f->sons[0]->loc, "function return type declared here");
+                note(nn->sons[0]->loc, "function return type declared here");
                 declared_here(n->sons[0]);
                 string_free(rets);
                 string_free(givens);
             }
         } else if (n->sons) {
             error(n->sons[0]->loc, "function should not return a value");
-            note(f->loc, "function declared here");
+            note(nn->loc, "function declared here");
         }
         break;
     case Nif:
