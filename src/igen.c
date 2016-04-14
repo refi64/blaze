@@ -179,8 +179,9 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     bassert(n->kind == Nfun, "unexpected node kind %d", n->kind);
     d->kind = Dfun;
     d->v = n->v = var_new(d, NULL, n->type, n->s);
-    if (n->parent->kind == Nstruct && n == n->parent->magic[Mnew])
-        n->parent->v = n->v;
+    // TODO
+    /* if (n->parent->kind == Nstruct && n == n->parent->magic[Mnew]) */
+        /* n->parent->v = n->v; */
 
     if (n->flags & Fmemb) {
         Var* v;

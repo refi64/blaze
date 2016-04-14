@@ -94,7 +94,7 @@ static int is_callable(Node* n) {
 
 static List(Type*) arguments_of(Type* t) {
     switch (t->kind) {
-    case Tstruct: return t->n->magic[Mnew]->type->sons;
+    case Tstruct: return t->n->magic[Mnew]->overloads[0]->n->type->sons;
     case Tfun: return t->sons;
     default: fatal("unexpected type kind %d", t->kind);
     }
@@ -182,15 +182,21 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
 static void resolve_overload(Node* n) {
     int i, j;
     List(STEntry*) possibilities = NULL;
+    List(STEntry*) overloads = NULL;
     List(Type*) expected;
     Node* id = n->sons[0];
 
     bassert(id->kind == Nid || id->kind == Nattr, "unexpected node kind %d",
             id->kind);
-    bassert(id->e->overload, "attempt to resolve non-overloaded node");
+
+    if (id->flags & Ftype) overloads = id->e->n->magic[Mnew]->overloads;
+    else {
+        bassert(id->e->overload, "attempt to resolve non-overloaded node");
+        overloads = id->e->overloads;
+    }
+
     for (i=0; i<2; ++i) {
-        List(STEntry*) choices = possibilities ? possibilities :
-                                 id->e->overloads;
+        List(STEntry*) choices = possibilities ? possibilities : overloads;
         List(STEntry*) result = NULL;
         for (j=0; j<list_len(choices); ++j)
             if (funmatch(Mnothing, choices[j]->n, n, &expected, !i))
@@ -205,8 +211,8 @@ static void resolve_overload(Node* n) {
             error(id->loc, "no overload of '%s' with given arguments available",
                   id->s->str);
         else error(id->loc, "ambiguous occurence of '%s'", id->s->str);
-        for (i=0; i<list_len(id->e->overloads); ++i)
-            funmatch(Mnote, id->e->overloads[i]->n, n, &expected, 0);
+        for (i=0; i<list_len(overloads); ++i)
+            funmatch(Mnote, overloads[i]->n, n, &expected, 0);
         id->type = anytype->override;
         type_incref(id->type);
     } else {
@@ -246,21 +252,13 @@ void type(Node* n) {
 
         for (i=0; i<Mend; ++i) {
             STEntry* e;
-            Node* nn;
             String* s = string_new(magic_strings[i]);
             e = symtab_findl(n->tab, s);
             string_free(s);
+
             if (!e) continue;
-
-            if (!e->overload) {
-                error(e->n->loc, "magic item names must be functions");
-                continue;
-            }
-
-            bassert(list_len(e->overloads) == 1, "TODO");
-            bassert(nn = e->overloads[0]->n, "builtin node in overload list");
-
-            n->magic[i] = nn;
+            else if (e->overload) n->magic[i] = e;
+            else error(e->n->loc, "magic item names must be functions");
         }
 
         n->flags |= Ftype;
@@ -274,15 +272,22 @@ void type(Node* n) {
             type(n->sons[i]);
         }
 
-        if ((nn = n->magic[Mnew])) {
+        for (i=0; i<list_len(n->magic[Mnew]->overloads); ++i) {
+            nn = n->magic[Mnew]->overloads[i]->n;
+            bassert(nn, "builtin entry inside overloaded constructor");
+
             if (nn->type->sons[0])
                 error(nn->sons[0]->loc, "constructor cannot return a value");
-        } else error(n->loc, "struct must have a constructor");
+        }
 
-        if ((nn = n->magic[Mdelete]) && nn->type->sons[0])
+        if (i == 0) error(n->loc, "struct must have a constructor");
+
+        // XXX: These all assume one overload. Nfun needs to check for this!
+        if (n->magic[Mdelete] && (nn = n->magic[Mdelete]->overloads[0]->n)
+            && nn->type->sons[0])
             error(nn->sons[0]->loc, "destructor cannot return a value");
 
-        if ((nn = n->magic[Mcopy])) {
+        if (n->magic[Mcopy] && (nn = n->magic[Mcopy]->overloads[0]->n)) {
             if (list_len(nn->type->sons) != 1)
                 error(nn->loc, "copy constructor cannot take any arguments");
 
@@ -499,8 +504,11 @@ void type(Node* n) {
             if (n->kind == Nnew && i == 0) force_type_context(n->sons[i]);
             else force_typed_expr_context(n->sons[i]);
         }
+
         if ((n->sons[0]->kind == Nid || n->sons[0]->kind == Nattr) &&
-            !n->sons[0]->type && n->sons[0]->e && n->sons[0]->e->overload) {
+            (n->kind == Nnew ||
+                (!n->sons[0]->type && n->sons[0]->e &&
+                 n->sons[0]->e->overload))) {
             resolve_overload(n);
 
             if (n->sons[0]->kind == Nattr) n->sons[0]->attr = n->sons[0]->e->n;

@@ -222,7 +222,7 @@ struct Node {
     } kind;
     union {
         String *exportc; // Nfun
-        Node* magic[Mend]; // Nstruct
+        STEntry* magic[Mend]; // Nstruct
         Node* attr; // Nattr
         Op op; // Nop
         Module* m; // Nmodule

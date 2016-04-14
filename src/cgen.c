@@ -128,7 +128,7 @@ static void cgen_typeimpl(Type* t, FILE* output) {
 #define RADDR(vr) ((vr)->owner->v == (vr) && (vr)->owner->ra)
 
 static const char* copy(Var* v) {
-    return HAS_COPY(v) ? CNAME(v->type->n->magic[Mcopy]->v) : "";
+    return HAS_COPY(v) ? CNAME(v->type->n->magic[Mcopy]->overloads[0]->n->v) : "";
 }
 
 static const char* copy_addr(Var* v) {
@@ -136,7 +136,7 @@ static const char* copy_addr(Var* v) {
 }
 
 static void cgen_set(Var* dst, int dstaddr, Var* src, FILE* output) {
-    if (HAS_COPY(src) && src->type->n->magic[Mcopy]->d->ra)
+    if (HAS_COPY(src) && src->type->n->magic[Mcopy]->overloads[0]->n->d->ra)
         fprintf(output, "%s(%s%s, %s%s)", copy(src), dstaddr ? "" : "&",
                         CNAME(dst), copy_addr(src), CNAME(src));
     else
@@ -293,7 +293,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
         Node* destr;
         if (d->vars[i]->type && d->vars[i]->type->kind == Tstruct &&
             !d->vars[i]->no_destr &&
-            (destr = d->vars[i]->type->n->magic[Mdelete]))
+            (destr = d->vars[i]->type->n->magic[Mdelete]->overloads[0]->n))
             fprintf(output, "    %s(&(%s));\n", CNAME(destr->v),
                     CNAME(d->vars[i]));
     }
