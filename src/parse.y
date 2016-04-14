@@ -210,6 +210,7 @@ LexerContext* parse_string(const char* file, const char* module,
 
 %destructor { if ($$.s) string_free($$.s); } <t>
 %destructor { node_free($$); } <n>
+%destructor { string_free($$.s); } <funid>
 
 %%
 
