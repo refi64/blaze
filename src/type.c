@@ -94,7 +94,6 @@ static int is_callable(Node* n) {
 
 static List(Type*) arguments_of(Type* t) {
     switch (t->kind) {
-    case Tstruct: return t->n->magic[Mnew]->overloads[0]->n->type->sons;
     case Tfun: return t->sons;
     default: fatal("unexpected type kind %d", t->kind);
     }
@@ -189,8 +188,14 @@ static void resolve_overload(Node* n) {
     bassert(id->kind == Nid || id->kind == Nattr, "unexpected node kind %d",
             id->kind);
 
-    if (id->flags & Ftype) overloads = id->e->n->magic[Mnew]->overloads;
-    else {
+    if (id->flags & Ftype) {
+        if (id->e->n->magic[Mnew]) overloads = id->e->n->magic[Mnew]->overloads;
+        else {
+            id->type = anytype->override;
+            type_incref(id->type);
+            return;
+        }
+    } else {
         bassert(id->e->overload, "attempt to resolve non-overloaded node");
         overloads = id->e->overloads;
     }
@@ -272,15 +277,15 @@ void type(Node* n) {
             type(n->sons[i]);
         }
 
-        for (i=0; i<list_len(n->magic[Mnew]->overloads); ++i) {
-            nn = n->magic[Mnew]->overloads[i]->n;
-            bassert(nn, "builtin entry inside overloaded constructor");
+        if (n->magic[Mnew])
+            for (i=0; i<list_len(n->magic[Mnew]->overloads); ++i) {
+                nn = n->magic[Mnew]->overloads[i]->n;
+                bassert(nn, "builtin entry inside overloaded constructor");
 
-            if (nn->type->sons[0])
-                error(nn->sons[0]->loc, "constructor cannot return a value");
-        }
-
-        if (i == 0) error(n->loc, "struct must have a constructor");
+                if (nn->type->sons[0])
+                    error(nn->sons[0]->loc, "constructor cannot return a value");
+            }
+        else error(n->loc, "struct must have a constructor");
 
         // XXX: These all assume one overload. Nfun needs to check for this!
         if (n->magic[Mdelete] && (nn = n->magic[Mdelete]->overloads[0]->n)
@@ -515,7 +520,8 @@ void type(Node* n) {
         }
 
         if (n->sons[0]->type == anytype->override)
-            n->type = anytype->override;
+            n->type = n->kind == Nnew ? n->sons[0]->e->n->type
+                                      : anytype->override;
         else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "cannot call non-callable type '%s'", ts->str);
