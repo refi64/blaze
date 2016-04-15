@@ -158,7 +158,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
 
     switch (ir->kind) {
     case Inull: fatal("unexpected ir kind Inull");
-    case Iret:
+    case Isr:
         if (ir->v) {
             /* Only move local variables and rvalues (which should now be locals
                anyway). */
@@ -167,10 +167,8 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
                 fprintf(output, "%s%s = %s", d->ra ? "*" : "", CNAME(d->rv),
                         CNAME(ir->v[0]));
             else cgen_set(d->rv, d->ra, ir->v[0], output);
-            fprintf(output, "; goto L%d", d->rl);
             ir->v[0]->no_destr = do_move;
         }
-        else fprintf(output, "goto L%d", d->rl);
         break;
     case Icjmp:
         fprintf(output, "if (!(%s)) goto L%d", CNAME(ir->v[0]), ir->label);

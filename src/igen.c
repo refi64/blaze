@@ -94,8 +94,14 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         ir = NULL;
         break;
     case Nreturn:
-        ir->kind = Iret;
-        if (n->sons) list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+        if (n->sons) {
+            ir->kind = Isr;
+            list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+            instr_result(d, tgt, ir); // XXX
+            ir = new(Instr);
+        }
+        ir->kind = Ijmp;
+        ir->label = d->rl;
         break;
     case Nif:
         ir->kind = Icjmp;
@@ -250,8 +256,8 @@ static void igen_func(Module* m, Decl* d, Node* n) {
 
     if (!n->import) {
         Instr* ir = new(Instr);
-        igen_node(d, &d->sons, n->sons[2]);
         d->rl = d->labels++;
+        igen_node(d, &d->sons, n->sons[2]);
         ir->kind = Ilabel;
         ir->label = d->rl;
         instr_result(d, &d->sons, ir);

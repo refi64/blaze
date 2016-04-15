@@ -60,7 +60,7 @@ void instr_dump(Instr* ir) {
     bassert(ir, "expected non-null ir");
     switch (ir->kind) {
     case Inull: fatal("unexpected ir kind Inull");
-    case Iret: printf("Iret"); break;
+    case Isr: printf("Isr"); break;
     case Icjmp: printf("Icjmp (label:%d)", ir->label); break;
     case Ijmp: printf("Ijmp (label:%d)", ir->label); break;
     case Ilabel: printf("Ilabel (label:%d)", ir->label); break;

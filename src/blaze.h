@@ -413,7 +413,7 @@ struct Instr {
         Inew,
         Idel,
         Iset,
-        Iret,
+        Isr,
         Icjmp,
         Ijmp,
         Ilabel,
