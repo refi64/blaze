@@ -1,3 +1,6 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
 fun f() -> int: return f
 fun g(a: f) -> int:
     let x = f

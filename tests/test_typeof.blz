@@ -1,3 +1,6 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
 fun f(a: int) -> int: return a
 fun g(a: int, b: char) -> typeof(f):
     let d = a
