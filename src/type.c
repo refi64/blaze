@@ -135,12 +135,31 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
         *expected = arguments_of(ft);
         nexpect = list_len(*expected)-1;
     }
+    if (n->sons[0]->kind == Nattr && func->flags & Fmvm &&
+        !(n->sons[0]->sons[0]->flags & Fmut)) {
+        switch (kind) {
+        case Merror:
+            error(n->loc, "function requires a mutable this");
+            declared_here(func);
+            make_mutvar(declared_here(n->sons[0]->sons[0]), Fmut,
+                        n->sons[0]->sons[0]->flags);
+            break;
+        case Mnote:
+            note(func->loc, "function requires a mutable this");
+            make_mutvar(declared_here(n->sons[0]->sons[0]), Fmut,
+                        n->sons[0]->sons[0]->flags);
+            break;
+        case Mnothing: break;
+        }
+        return 0;
+    }
+
     if (ngiven != nexpect) {
         switch (kind) {
         case Merror:
-            error(n->loc, "function expected %d argument(s), not %d",nexpect,
+            error(n->loc, "function expected %d argument(s), not %d", nexpect,
                   ngiven);
-            declared_here(n->sons[0]);
+            declared_here(func);
             break;
         case Mnote:
             note(func->loc, "function expected %d argument(s), not %d", nexpect,
