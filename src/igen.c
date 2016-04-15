@@ -72,14 +72,14 @@ static void igen_index_chain(Decl* d, List(Instr*)* tgt, Var* v, Node* n) {
 static void igen_destr(Decl* d, List(Instr*)* tgt, Var* v) {
     Instr* ir;
     STEntry* destr;
-    if (v->dgen || !v->type || v->type->kind != Tstruct) return;
+    if (v->destr || !v->type || v->type->kind != Tstruct) return;
     destr = v->type->n->magic[Mdelete];
     if (!destr) return;
     ir = new(Instr);
     ir->kind = Idel;
     list_append(ir->v, destr->overloads[0]->n->v);
     list_append(ir->v, v);
-    v->dgen = 1;
+    v->destr = ir;
     instr_result(d, tgt, ir);
 }
 
