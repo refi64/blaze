@@ -170,7 +170,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
             fprintf(output, "; goto L%d", d->rl);
             ir->v[0]->no_destr = do_move;
         }
-        else fputs("goto R", output);
+        else fprintf(output, "goto L%d", d->rl);
         break;
     case Icjmp:
         fprintf(output, "if (!(%s)) goto L%d", CNAME(ir->v[0]), ir->label);
