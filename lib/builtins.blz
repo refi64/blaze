@@ -1,7 +1,7 @@
 global true: bool = 1 :: bool
 global false: bool = 0 :: bool
 
-global _c_argc: int "__blaze_argc"
+global argc: int "__blaze_argc"
 global _c_argv: **char "__blaze_argv"
 
 fun _calloc(n: size, sz: size) -> *mut byte "calloc"
