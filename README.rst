@@ -31,10 +31,18 @@ Current status
 in at a whopping >3k LOC. However, you can write really basic programs, and some
 more complex control flow structures (like if statements) work.
 
-Structs are present, as is overloading, but you can't overload constructors, nor
-can you overload magic methods (such as ``__copy__``). The eventual goal is to
-phase out the magic methods in favor of something more elegant (such as ``dup``),
-but they're kind of stuck here ATM.
+Structs are present, as is overloading. But a lot of other stuff doesn't work:
+
+- Properly calling destructors (see "Destructors" section in proto.md).
+- Modules.
+- Classes.
+- Unions.
+- Generics.
+- Consistency. (I have no clue why I'm writing this in reStructuredText but wrote
+  proto.md in Markdown...)
+- Sanity.
+
+Use it at your own risk!
 
 .. _Smarter error handling:
     http://kirbyfan64.github.io/posts/an-idea-for-concise-checked-error-handling-in-imperative-languages.html
