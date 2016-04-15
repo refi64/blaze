@@ -144,11 +144,3 @@ fun f:
     let z = "abc"
     return # Here, z is destroyed.
 ```
-
-In addition, currently, assignments don't call destructors:
-
-```python
-fun f:
-    let var a = "abc"
-    a = "def" # a's destructor should be called.
-```
