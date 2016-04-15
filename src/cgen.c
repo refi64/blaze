@@ -147,7 +147,7 @@ static void cgen_set(Var* dst, int dstaddr, Var* src, FILE* output) {
 static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     int i;
     for (i=0; i<list_len(ir->v); ++i) generate_varname(ir->v[i]);
-    // The IR was optimized out by either iopt or cgen_decl1.
+    // The IR was optimized out by iopt.
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0) ||
         (ir->kind == Inew && !ir->dst->type)) return;
 
@@ -180,9 +180,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         fprintf(output, "L%d:", ir->label);
         break;
     case Iset:
-        if (ir->v[0]->ir->kind == Iaddr)
-            cgen_set(ir->v[0]->ir->v[0], 0, ir->v[1], output);
-        else cgen_set(ir->v[0], 1, ir->v[1], output);
+        cgen_set(ir->v[0], 0, ir->v[1], output);
         break;
     case Inew:
         cgen_set(ir->dst, 0, ir->v[0], output);
@@ -288,8 +286,7 @@ static void cgen_decl1(Decl* d, FILE* output) {
         Var* v = d->vars[i];
         if (!v->type) continue;
         generate_varname(v);
-        if (v->assign && v->uses == 1) --v->uses;
-        else fprintf(output, "    %s %s;\n", CNAME(v->type), CNAME(v));
+        fprintf(output, "    %s %s;\n", CNAME(v->type), CNAME(v));
     }
     if (d->rv) {
         generate_varname(d->rv);

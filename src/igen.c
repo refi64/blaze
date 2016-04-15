@@ -37,16 +37,6 @@ static Var* instr_result(Decl* d, List(Instr*)* tgt, Instr* ir) {
     } else return NULL;
 }
 
-static Var* igen_address(Decl* d, List(Instr*)* tgt, Node* n) {
-    Instr* ir = new(Instr);
-    bassert(n->sons[0]->flags & Faddr, "expected addressable node");
-    ir->kind = Iaddr;
-    list_append(ir->v, igen_node(d, tgt, n->sons[0]));
-    ir->flags |= PUREFLAGS(ir->v[0]);
-    ir->dst = var_new(d, ir, n->type, NULL);
-    return instr_result(d, tgt, ir);
-}
-
 static void igen_attr_chain(Decl* d, List(Instr*)* tgt, Var* v, Node* n) {
     // Make sure the original attributes come FIRST.
     if (n->kind != Nattr) {
@@ -124,8 +114,7 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         break;
     case Nassign:
         ir->kind = Iset;
-        list_append(ir->v, igen_address(d, tgt, n));
-        ir->v[0]->assign = 1;
+        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
         list_append(ir->v, igen_node(d, tgt, n->sons[1]));
         ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
         break;
@@ -137,8 +126,12 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         ++v->base->uses;
         return v;
     case Naddr:
-        free(ir);
-        return igen_address(d, tgt, n);
+        bassert(n->sons[0]->flags & Faddr, "expected addressable node");
+        ir->kind = Iaddr;
+        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+        ir->flags |= PUREFLAGS(ir->v[0]);
+        ir->dst = var_new(d, ir, n->type, NULL);
+        break;
     case Nindex:
         free(ir);
         v = var_new(d, &magic, n->type, NULL);
@@ -274,19 +267,12 @@ static void igen_global(Module* m, Decl* d, Node* n) {
     ++d->v->uses;
 
     if (n->sons[1]) {
-        Instr* set = new(Instr), *addr = new(Instr);
-
-        addr->kind = Iaddr;
-        list_append(addr->v, d->v);
-        // XXX: cgen optimizations must remove this variable to avoid void errors!
-        addr->dst = var_new(m->init, addr, NULL, NULL);
-        list_append(m->init->sons, addr);
+        Instr* set = new(Instr);
 
         set->kind = Iset;
-        list_append(set->v, addr->dst);
+        list_append(set->v, d->v);
         list_append(set->v, igen_node(m->init, &m->init->sons, n->sons[1]));
         ++set->v[1]->uses;
-
         list_append(m->init->sons, set);
     } else if (n->import) d->import = n->import;
 }
