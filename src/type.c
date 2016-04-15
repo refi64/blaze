@@ -181,27 +181,15 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
 static void resolve_overload(Node* n) {
     int i, j;
     List(STEntry*) possibilities = NULL;
-    List(STEntry*) overloads = NULL;
     List(Type*) expected;
     Node* id = n->sons[0];
 
     bassert(id->kind == Nid || id->kind == Nattr, "unexpected node kind %d",
             id->kind);
-
-    if (id->flags & Ftype) {
-        if (id->e->n->magic[Mnew]) overloads = id->e->n->magic[Mnew]->overloads;
-        else {
-            id->type = anytype->override;
-            type_incref(id->type);
-            return;
-        }
-    } else {
-        bassert(id->e->overload, "attempt to resolve non-overloaded node");
-        overloads = id->e->overloads;
-    }
+    bassert(id->e->overload, "attempt to resolve non-overloaded node");
 
     for (i=0; i<2; ++i) {
-        List(STEntry*) choices = possibilities ? possibilities : overloads;
+        List(STEntry*) choices = possibilities ? possibilities : id->e->overloads;
         List(STEntry*) result = NULL;
         for (j=0; j<list_len(choices); ++j)
             if (funmatch(Mnothing, choices[j]->n, n, &expected, i))
@@ -216,8 +204,8 @@ static void resolve_overload(Node* n) {
             error(id->loc, "no overload of '%s' with given arguments available",
                   id->s->str);
         else error(id->loc, "ambiguous occurence of '%s'", id->s->str);
-        for (i=0; i<list_len(overloads); ++i)
-            funmatch(Mnote, overloads[i]->n, n, &expected, 0);
+        for (i=0; i<list_len(id->e->overloads); ++i)
+            funmatch(Mnote, id->e->overloads[i]->n, n, &expected, 0);
         id->type = anytype->override;
         type_incref(id->type);
     } else {
@@ -510,18 +498,26 @@ void type(Node* n) {
             else force_typed_expr_context(n->sons[i]);
         }
 
+        if (n->kind == Nnew) {
+            bassert(n->sons[0]->flags & Ftype, "new of non-type");
+            nn = n->sons[0]->type->n;
+            if (!(n->sons[0]->e = nn->magic[Mnew])) {
+                type_decref(n->sons[0]->type);
+                n->sons[0]->type = anytype->override;
+                type_incref(n->sons[0]->type);
+            }
+        }
+
         if ((n->sons[0]->kind == Nid || n->sons[0]->kind == Nattr) &&
-            (n->kind == Nnew ||
-                (!n->sons[0]->type && n->sons[0]->e &&
-                 n->sons[0]->e->overload))) {
+            n->sons[0]->e && (n->kind == Nnew ||
+                              (!n->sons[0]->type && n->sons[0]->e->overload))) {
             resolve_overload(n);
 
             if (n->sons[0]->kind == Nattr) n->sons[0]->attr = n->sons[0]->e->n;
         }
 
         if (n->sons[0]->type == anytype->override)
-            n->type = n->kind == Nnew ? n->sons[0]->e->n->type
-                                      : anytype->override;
+            n->type = n->kind == Nnew ? nn->type : anytype->override;
         else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "cannot call non-callable type '%s'", ts->str);
