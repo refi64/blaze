@@ -71,7 +71,8 @@ void instr_dump(Instr* ir) {
     case Icall: printf("Icall"); break;
     case Icast: printf("Icast"); break;
     case Iop: printf("Iop (op:%s)", op_strings[ir->op]); break;
-    case Iint: printf("Iint (i:%s)", ir->s->str); break;
+    case Iint: printf("Iint (s:%s)", ir->s->str); break;
+    case Istr: printf("Istr (s:%s)", ir->s->str); break;
     }
 
     if (ir->flags & Fpure)

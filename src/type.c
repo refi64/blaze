@@ -670,6 +670,10 @@ void type(Node* n) {
         n->type = builtin_types[Tint]->override;
         type_incref(n->type);
         break;
+    case Nstr:
+        n->type = builtins[Bstr]->type;
+        type_incref(n->type);
+        break;
     case Nsons: fatal("unexpected node kind Nsons");
     }
 

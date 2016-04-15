@@ -1,5 +1,9 @@
 fun f() -> char:
     return 0 :: int
+
+fun s() -> str:
+    return "abc123"
+
 #[
 ERROR
 :2:14: error: function was declared to return type 'char', not 'int'

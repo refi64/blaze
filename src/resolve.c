@@ -31,6 +31,12 @@ static void resolve0(Node* n) {
             resolve0(n->sons[i]);
             if (n->sons[i]->s->str[0] != '_') n->sons[i]->export = 1;
         }
+
+        if (strcmp(n->s->str, BUILTINS) == 0) {
+            String* s = string_new("str");
+            builtins[Bstr] = symtab_findl(n->tab, s)->n;
+            string_free(s);
+        }
         break;
     case Nstruct:
         e = stentry_new(n, n->s, NULL);
@@ -129,8 +135,7 @@ static void resolve0(Node* n) {
         n->sons[0]->parent = n;
         resolve0(n->sons[0]);
         break;
-    case Nid: break;
-    case Nint: break;
+    case Nid: case Nint: case Nstr: break;
     case Nsons: fatal("unexpected node kind Nsons");
     }
 }
@@ -217,7 +222,7 @@ static void resolve1(Node* n) {
             n->flags |= Fused;
         }
         break;
-    case Nint: break;
+    case Nint: case Nstr: break;
     case Nsons: fatal("unexpected node kind Nsons");
     }
 }

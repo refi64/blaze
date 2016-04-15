@@ -20,11 +20,12 @@ struct str:
         @_data = _calloc(@len+1, 1) :: *char
         @_data[@len] = 0
 
-    fun new(len: size): @_setup(len)
-
+    # THIS CONSTRUCTOR MUST BE FIRST!! The compiler internals depend on it!
     fun new(s: *char, len: size):
         @_setup(len)
         _memcpy(@_data, s, len)
+
+    fun new(len: size): @_setup(len)
 
     fun delete:
         _free(@_data :: *byte)

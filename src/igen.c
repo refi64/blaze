@@ -151,11 +151,11 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         free(ir);
         ++n->e->n->v->uses;
         return n->e->n->v;
-    case Nint:
-        ir->kind = Iint;
+    case Nint: case Nstr:
+        ir->kind = n->kind == Nint ? Iint : Istr;
         ir->flags |= Fpure;
         ir->s = string_clone(n->s);
-        ir->dst = var_new(d, ir, builtin_types[Tint]->override, NULL);
+        ir->dst = var_new(d, ir, n->type, NULL);
         break;
     case Nmodule: case Ntypeof: case Nstruct: case Nfun: case Narglist:
     case Ndecl: case Nsons: case Nptr:

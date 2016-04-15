@@ -197,6 +197,7 @@ struct Node {
     enum {
         Nid,
         Nint,
+        Nstr,
 
         Nsons,
 
@@ -322,8 +323,11 @@ struct LexerContext {
     const char* file, *module, *fcont;
 };
 
+enum Builtin { Bstr, Bend };
 extern DSHtab* modules;
-Node* builtins_module;
+extern Node* builtins_module;
+extern Node* builtins[Bend];
+
 int yyparse(LexerContext* ctx);
 
 void lex_init();
@@ -415,7 +419,8 @@ struct Instr {
         Icall,
         Icast,
         Iop,
-        Iint
+        Iint,
+        Istr,
     } kind;
     Op op; // Iop
     // Destination variable.

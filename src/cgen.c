@@ -153,7 +153,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
 
     fputs("    ", output);
     if (ir->dst && ir->dst->type && ir->kind != Iconstr && ir->kind != Inew &&
-        !(ir->kind == Icall && RADDR(ir->v[0])))
+        ir->kind != Istr && !(ir->kind == Icall && RADDR(ir->v[0])))
         fprintf(output, "%s = ", CNAME(ir->dst));
 
     switch (ir->kind) {
@@ -230,6 +230,13 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         break;
     case Iint:
         fputs(ir->s->str, output);
+        break;
+    case Istr:
+        bassert(ir->dst->type == builtins[Bstr]->type,
+                "string literal with non-string type");
+        fprintf(output, "%s(&(%s), \"%s\", %zu)",
+                CNAME(ir->dst->type->n->magic[Mnew]->overloads[0]->n->v),
+                CNAME(ir->dst), ir->s->str, ir->s->len);
         break;
     }
     fputs(";\n", output);

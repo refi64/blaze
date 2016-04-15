@@ -5,6 +5,7 @@
 
 DSHtab* modules;
 Node* builtins_module;
+Node* builtins[Bend];
 
 void yyerror(YYLTYPE* yylloc, LexerContext* ctx, const char* msg) {
     error(*yylloc, "%s", msg);
@@ -194,6 +195,7 @@ LexerContext* parse_string(const char* file, const char* module,
 %type <n> this
 %type <n> id
 %type <n> dec
+%type <n> str
 %type <n> ptr
 %type <n> call
 %type <l> callargs
@@ -370,6 +372,7 @@ typeof : TTYPEOF TLP expr TRP {
 
 expr : name { $$ = $1; }
      | dec  { $$ = $1; }
+     | str  { $$ = $1; }
      | ptr  { $$ = $1; }
      | call { $$ = $1; }
      | index { $$ = $1; }
@@ -395,6 +398,12 @@ this : TAT {
 
 dec : TINT {
     N($$, Nint, $1.loc)
+    $$->s = $1.s;
+    $$->flags |= Fcst;
+}
+
+str : TSTRING {
+    N($$, Nstr, $1.loc)
     $$->s = $1.s;
     $$->flags |= Fcst;
 }
