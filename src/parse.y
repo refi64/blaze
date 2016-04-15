@@ -169,8 +169,7 @@ LexerContext* parse_string(const char* file, const char* module,
 %type <l> members
 %type <l> members2
 %type <n> member
-%type <n> constr
-%type <n> destr
+%type <i> funspec
 %type <n> fun
 %type <funid> funid
 %type <n> funret
@@ -241,8 +240,11 @@ members : indent members2 unindent { $$ = $2; }
 members2 : member { $$ = NULL; list_append($$, $1); }
          | members2 sep member { $$ = $1; list_append($$, $3); }
 
-member : fun
+member : funspec fun  { $$ = $2; $$->flags |= $1; }
        | modspec decl { $$ = $2; $$->flags |= $1; }
+
+funspec :      { $$ = 0; }
+        | TMUT { $$ = Fmvm; }
 
 fun : TFUN funid arglist funret funbody {
     N($$, Nfun, $2.loc)
@@ -253,6 +255,7 @@ fun : TFUN funid arglist funret funbody {
     else list_append($$->sons, $5.rn);
     if ($5.exportc) $$->exportc = $5.rs;
     $$->flags |= Fcst | Faddr;
+    if (strcmp($$->s->str, "new") == 0) $$->flags |= Fmvm;
 }
 
 funid : id {

@@ -15,18 +15,16 @@ struct str:
     _data: *mut char
     len: size
 
-    fun _alloc -> *char: return _calloc(@len+1, 1) :: *char
-
-    fun new(len: size):
+    mut fun _setup(len: size) -> *char:
         @len = len
-        @_data = @_alloc()
+        @_data = _calloc(@len+1, 1) :: *char
         @_data[@len] = 0
+
+    fun new(len: size): @_setup(len)
 
     fun new(s: *char, len: size):
-        @len = len
-        @_data = @_alloc()
+        @_setup(len)
         _memcpy(@_data, s, len)
-        @_data[@len] = 0
 
     fun delete:
         _free(@_data :: *byte)

@@ -178,6 +178,7 @@ enum Flags {
     Fmemb=1<<8 , // Is the node/decl a member value?
     Fstc =1<<9 , // Is the var a constant method/constructor of a parent struct?
     Farg =1<<10, // Is the var an argument?
+    Fmvm =1<<11, // Does this method require a mutable this?
 };
 
 typedef enum Op {

@@ -54,9 +54,7 @@ static void resolve0(Node* n) {
 
         if (n->parent->kind == Nstruct) {
             make_magic_this(n); // Overrides the parent struct's this.
-            if (strcmp(n->s->str, "new") == 0)
-                // Constructors can always mutate the struct.
-                n->this->flags |= Fmv;
+            if (n->flags & Fmvm) n->this->flags |= Fmv;
         }
 
         for (i=0; i<list_len(n->sons); ++i) {
