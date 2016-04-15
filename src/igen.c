@@ -117,6 +117,8 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         list_append(ir->v, igen_node(d, tgt, n->sons[0]));
         list_append(ir->v, igen_node(d, tgt, n->sons[1]));
         ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
+        igen_destr(d, tgt, ir->v[0]);
+        ir->v[0]->destr = NULL;
         break;
     case Nderef:
         free(ir);
