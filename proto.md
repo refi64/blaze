@@ -118,3 +118,17 @@ fun main -> int:
 
 If I add a `struct X:\n new: return` to the beginning, the whole thing will be
 recompiled, since it'll throw the type id system off. Grrr...
+
+##Destructors
+
+This doesn't work:
+
+```python
+fun f:
+    if myval:
+        return
+    let z = "abc"
+    return
+```
+
+The first `return` will end up destroying `z`...which hasn't been created yet!
