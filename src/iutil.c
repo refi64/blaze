@@ -65,6 +65,7 @@ void instr_dump(Instr* ir) {
     case Ijmp: printf("Ijmp (label:%d)", ir->label); break;
     case Ilabel: printf("Ilabel (label:%d)", ir->label); break;
     case Inew: printf("Inew"); break;
+    case Idel: printf("Idel"); break;
     case Iset: printf("Iset"); break;
     case Iaddr: printf("Iaddr"); break;
     case Iconstr: printf("Iconstr"); break;

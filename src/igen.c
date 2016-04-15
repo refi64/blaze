@@ -69,10 +69,24 @@ static void igen_index_chain(Decl* d, List(Instr*)* tgt, Var* v, Node* n) {
     }
 }
 
+static void igen_destr(Decl* d, List(Instr*)* tgt, Var* v) {
+    Instr* ir;
+    STEntry* destr;
+    if (v->dgen || !v->type || v->type->kind != Tstruct) return;
+    destr = v->type->n->magic[Mdelete];
+    if (!destr) return;
+    ir = new(Instr);
+    ir->kind = Idel;
+    list_append(ir->v, destr->overloads[0]->n->v);
+    list_append(ir->v, v);
+    v->dgen = 1;
+    instr_result(d, tgt, ir);
+}
+
 static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
     Instr* ir = new(Instr);
     Var* v;
-    int i, label;
+    int i, j, label;
     switch (n->kind) {
     case Nbody:
         igen_sons(d, tgt, n);
@@ -88,7 +102,10 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         list_append(ir->v, igen_node(d, tgt, n->sons[0]));
         ir->label = label = d->labels++;
         instr_result(d, tgt, ir); // XXX
+        j = list_len(d->vars);
         for (i=1; i<list_len(n->sons); ++i) igen_node(d, tgt, n->sons[i]);
+        for (; j<list_len(d->vars); ++j) igen_destr(d, tgt, d->vars[j]);
+
         ir = new(Instr);
         ir->kind = Ilabel;
         ir->label = label;
@@ -179,9 +196,6 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     bassert(n->kind == Nfun, "unexpected node kind %d", n->kind);
     d->kind = Dfun;
     d->v = n->v = var_new(d, NULL, n->type, n->s);
-    // TODO
-    /* if (n->parent->kind == Nstruct && n == n->parent->magic[Mnew]) */
-        /* n->parent->v = n->v; */
 
     if (n->flags & Fmemb) {
         Var* v;
@@ -226,8 +240,15 @@ static void igen_func(Module* m, Decl* d, Node* n) {
                 which is basically lying to the code generator. */
     }
 
-    if (!n->import) igen_node(d, &d->sons, n->sons[2]);
-    else d->import = n->import;
+    if (!n->import) {
+        Instr* ir = new(Instr);
+        igen_node(d, &d->sons, n->sons[2]);
+        d->rl = d->labels++;
+        ir->kind = Ilabel;
+        ir->label = d->rl;
+        instr_result(d, &d->sons, ir);
+        for (i=0; i<list_len(d->vars); ++i) igen_destr(d, &d->sons, d->vars[i]);
+    } else d->import = n->import;
 
     d->exportc = n->exportc;
 }

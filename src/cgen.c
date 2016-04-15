@@ -167,7 +167,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
                 fprintf(output, "%s%s = %s", d->ra ? "*" : "", CNAME(d->rv),
                         CNAME(ir->v[0]));
             else cgen_set(d->rv, d->ra, ir->v[0], output);
-            fputs("; goto R", output);
+            fprintf(output, "; goto L%d", d->rl);
             ir->v[0]->no_destr = do_move;
         }
         else fputs("goto R", output);
@@ -188,6 +188,10 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         break;
     case Inew:
         cgen_set(ir->dst, 0, ir->v[0], output);
+        break;
+    case Idel:
+        if (ir->v[1]->type && !ir->v[1]->no_destr)
+            fprintf(output, "%s(&(%s));\n", CNAME(ir->v[0]), CNAME(ir->v[1]));
         break;
     case Iconstr:
         fprintf(output, "%s(&(%s)", CNAME(ir->v[0]), CNAME(ir->dst));
@@ -295,15 +299,6 @@ static void cgen_decl1(Decl* d, FILE* output) {
             fprintf(output, "    %s %s;\n", CNAME(d->ret), CNAME(d->rv));
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, d->sons[i], output);
-    fputs("R:\n", output);
-    for (i=0; i<list_len(d->vars); ++i) {
-        STEntry* destr;
-        if (d->vars[i]->type && d->vars[i]->type->kind == Tstruct &&
-            !d->vars[i]->no_destr &&
-            (destr = d->vars[i]->type->n->magic[Mdelete]))
-            fprintf(output, "    %s(&(%s));\n", CNAME(destr->overloads[0]->n->v),
-                    CNAME(d->vars[i]));
-    }
     if (d->rv && !d->ra) fprintf(output, "    return %s;\n", CNAME(d->rv));
     else fputs("    return;\n", output);
     fputs("}\n\n", output);
