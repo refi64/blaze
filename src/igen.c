@@ -233,11 +233,19 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     }
 
     if (n->sons[0]) {
-        d->ret = n->sons[0]->type;
-        d->rv = var_new(d, NULL, n->sons[0]->type, NULL);
-        d->ra = !(d->ret->kind == Tbuiltin || d->ret->kind == Tptr);
-        /* XXX: Even if d->ra is true, the type if d->rv is still not a pointer,
-                which is basically lying to the code generator. */
+        if (n->sons[0]->type->kind == Tbuiltin ||
+            n->sons[0]->type->kind == Tptr) {
+            d->ret = n->sons[0]->type;
+            d->ra = 0;
+        } else {
+            Type* t = new(Type);
+            t->kind = Tptr;
+            list_append(t->sons, n->sons[0]->type);
+            list_append(d->m->types, t);
+            d->ret = t;
+            d->ra = 1;
+        }
+        d->rv = var_new(d, NULL, d->ret, NULL);
     }
 
     if (!n->import) {

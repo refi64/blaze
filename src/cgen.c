@@ -256,7 +256,7 @@ static void cgen_proto(Decl* d, FILE* output) {
             CNAME(d->v));
     if (d->ra) {
         generate_varname(d->rv);
-        fprintf(output, "%s* %s", CNAME(d->rv->type), CNAME(d->rv));
+        fprintf(output, "%s %s", CNAME(d->rv->type), CNAME(d->rv));
     }
     for (i=0; i<list_len(d->args); ++i) {
         generate_argname(d->args[i]);
