@@ -135,24 +135,6 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
         *expected = arguments_of(ft);
         nexpect = list_len(*expected)-1;
     }
-    if (n->sons[0]->kind == Nattr && func->flags & Fmvm &&
-        !(n->sons[0]->sons[0]->flags & Fmut)) {
-        switch (kind) {
-        case Merror:
-            error(n->loc, "function requires a mutable this");
-            declared_here(func);
-            make_mutvar(declared_here(n->sons[0]->sons[0]), Fmut,
-                        n->sons[0]->sons[0]->flags);
-            break;
-        case Mnote:
-            note(func->loc, "function requires a mutable this");
-            make_mutvar(declared_here(n->sons[0]->sons[0]), Fmut,
-                        n->sons[0]->sons[0]->flags);
-            break;
-        case Mnothing: break;
-        }
-        return 0;
-    }
 
     if (ngiven != nexpect) {
         switch (kind) {
@@ -193,6 +175,26 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
             string_free(expects);
             string_free(givens);
         }
+
+
+    if (n->sons[0]->kind == Nattr && func->flags & Fmvm &&
+        !(n->sons[0]->sons[0]->flags & Fmut) && res) {
+        switch (kind) {
+        case Merror:
+            error(n->loc, "function requires a mutable this");
+            declared_here(func);
+            make_mutvar(declared_here(n->sons[0]->sons[0]), Fmut,
+                        n->sons[0]->sons[0]->flags);
+            break;
+        case Mnote:
+            note(func->loc, "function requires a mutable this");
+            make_mutvar(declared_here(n->sons[0]->sons[0]), Fmut,
+                        n->sons[0]->sons[0]->flags);
+            break;
+        case Mnothing: break;
+        }
+        res = 0;
+    }
 
     return res;
 }

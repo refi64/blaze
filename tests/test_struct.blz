@@ -16,6 +16,18 @@ fun f:
     a.my()
     a.undef[0] = 1
 
+struct B:
+    v: int
+    fun new: @v = 0
+    fun new(v: int): @setv(v)
+    mut fun setv(v: int): @v = v
+
+fun g:
+    let b1 = new B
+    let b2 = new B(1)
+    b1.setv(1)
+    b2.setv()
+
 #[
 ERROR
 :6:5: error: duplicate definition of mx
@@ -66,4 +78,22 @@ ERROR
 :17:7: note: add 'var' to make it variable
     a.undef[0] = 1
       ~~~~~
+:28:8: error: no overload of 'setv' with given arguments available
+    b1.setv(1)
+       ~~~~
+:23:13: note: function requires a mutable this
+    mut fun setv(v: int): @v = v
+            ~~~~
+:26:9: note: 'b1' declared here
+    let b1 = new B
+        ~~
+:26:9: note: add 'mut' to make it mutable
+    let b1 = new B
+        ~~
+:29:8: error: no overload of 'setv' with given arguments available
+    b2.setv()
+       ~~~~
+:23:13: note: function expected 1 argument(s), not 0
+    mut fun setv(v: int): @v = v
+            ~~~~
 #]
