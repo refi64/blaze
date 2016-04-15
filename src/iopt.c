@@ -12,7 +12,9 @@ static int remove_unused_vars(Decl* d) {
     int i, removed=0;
     for (i=0; i<list_len(d->vars); ++i)
         if (d->vars[i]->uses == 0 && d->vars[i]->type &&
-            !(d->vars[i]->ir && d->vars[i]->ir->kind == Iconstr)) {
+            !(d->vars[i]->ir && d->vars[i]->ir->kind == Iconstr) &&
+            !(d->vars[i]->ir && d->vars[i]->ir->kind == Icall &&
+              d->vars[i]->ir->v[0]->owner->ra)) {
             // This will cause code generators to not emit space for the variable.
             d->vars[i]->type = NULL;
             ++removed;
