@@ -7,16 +7,16 @@ fun g(a: int, b: char) -> typeof(f):
     return d
 #[
 ERROR
-:4:12: error: function was declared to return type '(int) -> int', not 'int'
+:7:12: error: function was declared to return type '(int) -> int', not 'int'
     return d
            ~
-:2:27: note: function return type declared here
+:5:27: note: function return type declared here
     fun g(a: int, b: char) -> typeof(f):
                               ~~~~~~
-:3:9: note: 'd' declared here
+:6:9: note: 'd' declared here
     let d = a
         ~
-:2:7: note: 'a' declared here
+:5:7: note: 'a' declared here
     fun g(a: int, b: char) -> typeof(f):
           ~
 ]#

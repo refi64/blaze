@@ -14,7 +14,7 @@ fun g(a: *int):
 
 #[
 ERROR
-:18:0: error: syntax error, unexpected TNEWL, expecting TINDENT
+:21:0: error: syntax error, unexpected TNEWL, expecting TINDENT
 
 
 ]#

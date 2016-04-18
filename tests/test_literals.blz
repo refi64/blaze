@@ -9,10 +9,10 @@ fun s() -> str:
 
 #[
 ERROR
-:2:14: error: function was declared to return type 'char', not 'int'
+:5:14: error: function was declared to return type 'char', not 'int'
     return 0 :: int
              ~~
-:1:12: note: function return type declared here
+:4:12: note: function return type declared here
     fun f() -> char:
                ~~~~
 ]#

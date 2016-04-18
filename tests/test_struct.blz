@@ -33,70 +33,70 @@ fun g:
 
 #[
 ERROR
-:6:5: error: duplicate definition of mx
+:9:5: error: duplicate definition of mx
     mx: int
     ~~
-:5:5: note: previous definition is here
+:8:5: note: previous definition is here
     mx: int
     ~~
-:9:13: warning: redefinition of x shadows outer definition
+:12:13: warning: redefinition of x shadows outer definition
     let x = 1
         ~
-:1:12: note: previous definition is here
+:4:12: note: previous definition is here
     global var x: int
                ~
-:10:9: error: identifier 'my' cannot be accessed without @
+:13:9: error: identifier 'my' cannot be accessed without @
     my(x)
     ~~
-:8:9: note: 'my' declared here
+:11:9: note: 'my' declared here
     fun my -> int:
         ~~
-:11:16: error: identifier 'mx' cannot be accessed without @
+:14:16: error: identifier 'mx' cannot be accessed without @
     return mx
            ~~
-:5:5: note: 'mx' declared here
+:8:5: note: 'mx' declared here
     mx: int
     ~~
-:10:9: error: function expected 0 argument(s), not 1
+:13:9: error: function expected 0 argument(s), not 1
     my(x)
     ~~
-:8:9: note: 'my' declared here
+:11:9: note: 'my' declared here
     fun my -> int:
         ~~
-:4:8: error: struct must have a constructor
+:7:8: error: struct must have a constructor
     struct A:
            ~
-:17:7: error: undefined attribute 'undef'
+:20:7: error: undefined attribute 'undef'
     a.undef[0] = 1
       ~~~~~
-:15:9: note: 'a' declared here
+:18:9: note: 'a' declared here
     let a = new A
         ~
-:17:12: error: left-hand side of assignment must be variable
+:20:12: error: left-hand side of assignment must be variable
     a.undef[0] = 1
            ~
-:15:9: note: 'a' declared here
+:18:9: note: 'a' declared here
     let a = new A
         ~
-:17:7: note: add 'var' to make it variable
+:20:7: note: add 'var' to make it variable
     a.undef[0] = 1
       ~~~~~
-:28:8: error: no overload of 'setv' with given arguments available
+:31:8: error: no overload of 'setv' with given arguments available
     b1.setv(1)
        ~~~~
-:23:13: note: function requires a mutable this
+:26:13: note: function requires a mutable this
     mut fun setv(v: int): @v = v
             ~~~~
-:26:9: note: 'b1' declared here
+:29:9: note: 'b1' declared here
     let b1 = new B
         ~~
-:26:9: note: add 'mut' to make it mutable
+:29:9: note: add 'mut' to make it mutable
     let b1 = new B
         ~~
-:29:8: error: no overload of 'setv' with given arguments available
+:32:8: error: no overload of 'setv' with given arguments available
     b2.setv()
        ~~~~
-:23:13: note: function expected 1 argument(s), not 0
+:26:13: note: function expected 1 argument(s), not 0
     mut fun setv(v: int): @v = v
             ~~~~
 #]

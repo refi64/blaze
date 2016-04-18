@@ -19,76 +19,76 @@ fun m -> n:
     return
 #[
 ERROR
-:15:10: error: undeclared identifier 'n'
+:18:10: error: undeclared identifier 'n'
     fun m -> n:
              ~
-:1:24: error: function was declared to return type 'int', not '() -> int'
+:4:24: error: function was declared to return type 'int', not '() -> int'
     fun f() -> int: return f
                            ~
-:1:12: note: function return type declared here
+:4:12: note: function return type declared here
     fun f() -> int: return f
                ~~~
-:1:5: note: 'f' declared here
+:4:5: note: 'f' declared here
     fun f() -> int: return f
                            ~
-:2:10: error: expression is not a type
+:5:10: error: expression is not a type
     fun g(a: f) -> int:
              ~
-:1:5: note: 'f' declared here
+:4:5: note: 'f' declared here
     fun f() -> int: return f
         ~
-:4:12: error: function was declared to return type 'int', not '() -> int'
+:7:12: error: function was declared to return type 'int', not '() -> int'
      return x
             ~
-:2:16: note: function return type declared here
+:5:16: note: function return type declared here
     fun g(a: f) -> int:
                    ~~~
-:3:9: note: 'x' declared here
+:6:9: note: 'x' declared here
     let x = f
         ~
-:1:5: note: 'f' declared here
+:4:5: note: 'f' declared here
     fun f() -> int: return f
         ~
-:5:12: error: function was declared to return type 'int', not '() -> int'
+:8:12: error: function was declared to return type 'int', not '() -> int'
     return f
            ~
-:2:16: note: function return type declared here
+:5:16: note: function return type declared here
     fun g(a: f) -> int:
                    ~~~
-:1:5: note: 'f' declared here
+:4:5: note: 'f' declared here
     fun f() -> int: return f
         ~
-:6:10: error: expression is not a type
+:9:10: error: expression is not a type
     fun h -> g: return f
                ~
-:2:5: note: 'g' declared here
+:5:5: note: 'g' declared here
     fun g(a: f) -> int:
         ~
-:8:12: error: function should not return a value
+:11:12: error: function should not return a value
     return f
            ~
-:7:5: note: function declared here
+:10:5: note: function declared here
     fun i:
         ~
-:9:5: error: type is recursive
+:12:5: error: type is recursive
     fun j() -> typeof(j):
         ~
-:12:5: error: function is supposed to return a value
+:15:5: error: function is supposed to return a value
     return
     ~~~~~~
-:11:12: note: function return type declared here
+:14:12: note: function return type declared here
     fun k() -> int:
                ~~~
-:14:12: error: function should not return a value
+:17:12: error: function should not return a value
     return 1
            ~
-:13:5: note: function declared here
+:16:5: note: function declared here
     fun l():
         ~
-:16:5: error: function is supposed to return a value
+:19:5: error: function is supposed to return a value
     return
     ~~~~~~
-:15:10: note: function return type declared here
+:18:10: note: function return type declared here
     fun m -> n:
              ~
 ]#
