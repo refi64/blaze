@@ -6,8 +6,8 @@
 
 Instr magic;
 
-static void igen_sons(Decl* d, List(Instr*)* tgt, Node* n);
-static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n);
+static void igen_sons(Decl* d, Node* n);
+static Var* igen_node(Decl* d, Node* n);
 
 #define PUREFLAGS(v) ((v)->ir ? (v)->ir->flags & Fpure : Fpure)
 
@@ -29,10 +29,10 @@ static void igen_struct(Module* m, Node* n) {
     }
 }
 
-static Var* instr_result(Decl* d, List(Instr*)* tgt, Instr* ir) {
+static Var* instr_result(Decl* d, Instr* ir) {
     if (ir) {
         int i;
-        list_append(*tgt, ir);
+        list_append(d->sons, ir);
         for (i=0; i<list_len(ir->v); ++i) {
             bassert(ir->v[i], "null variable at index %d", i);
             ++ir->v[i]->uses;
@@ -41,29 +41,29 @@ static Var* instr_result(Decl* d, List(Instr*)* tgt, Instr* ir) {
     } else return NULL;
 }
 
-static void igen_attr_chain(Decl* d, List(Instr*)* tgt, Var* v, Node* n) {
+static void igen_attr_chain(Decl* d, Var* v, Node* n) {
     // Make sure the original attributes come FIRST.
     if (n->kind != Nattr) {
-        v->base = igen_node(d, tgt, n);
+        v->base = igen_node(d, n);
         ++v->base->uses;
     } else {
-        igen_attr_chain(d, tgt, v, n->sons[0]);
+        igen_attr_chain(d, v, n->sons[0]);
         list_append(v->av, &n->attr->d->v);
     }
 }
 
-static void igen_index_chain(Decl* d, List(Instr*)* tgt, Var* v, Node* n) {
+static void igen_index_chain(Decl* d, Var* v, Node* n) {
     if (n->kind != Nindex) {
-        v->base = igen_node(d, tgt, n);
+        v->base = igen_node(d, n);
         ++v->base->uses;
     } else {
-        igen_index_chain(d, tgt, v, n->sons[0]);
-        list_append(v->iv, igen_node(d, tgt, n->sons[1]));
+        igen_index_chain(d, v, n->sons[0]);
+        list_append(v->iv, igen_node(d, n->sons[1]));
         ++v->iv[list_len(v->iv)-1]->uses;
     }
 }
 
-static void igen_destr(Decl* d, List(Instr*)* tgt, Var* v) {
+static void igen_destr(Decl* d, Var* v) {
     Instr* ir;
     STEntry* destr;
     if (v->destr || !v->type || v->type->kind != Tstruct) return;
@@ -74,24 +74,24 @@ static void igen_destr(Decl* d, List(Instr*)* tgt, Var* v) {
     list_append(ir->v, destr->overloads[0]->n->v);
     list_append(ir->v, v);
     v->destr = ir;
-    instr_result(d, tgt, ir);
+    instr_result(d, ir);
 }
 
-static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
+static Var* igen_node(Decl* d, Node* n) {
     Instr* ir = new(Instr);
     Var* v;
     int i, j, label;
     switch (n->kind) {
     case Nbody:
-        igen_sons(d, tgt, n);
+        igen_sons(d, n);
         instr_free(ir);
         ir = NULL;
         break;
     case Nreturn:
         if (n->sons) {
             ir->kind = Isr;
-            list_append(ir->v, igen_node(d, tgt, n->sons[0]));
-            instr_result(d, tgt, ir); // XXX
+            list_append(ir->v, igen_node(d, n->sons[0]));
+            instr_result(d, ir); // XXX
             ir = new(Instr);
         }
         ir->kind = Ijmp;
@@ -99,12 +99,12 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         break;
     case Nif:
         ir->kind = Icjmp;
-        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[0]));
         ir->label = label = d->labels++;
-        instr_result(d, tgt, ir); // XXX
+        instr_result(d, ir); // XXX
         j = list_len(d->vars);
-        for (i=1; i<list_len(n->sons); ++i) igen_node(d, tgt, n->sons[i]);
-        for (; j<list_len(d->vars); ++j) igen_destr(d, tgt, d->vars[j]);
+        for (i=1; i<list_len(n->sons); ++i) igen_node(d, n->sons[i]);
+        for (; j<list_len(d->vars); ++j) igen_destr(d, d->vars[j]);
 
         ir = new(Instr);
         ir->kind = Ilabel;
@@ -113,59 +113,59 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
     case Nlet:
         ir->kind = Inew;
         n->v = ir->dst = var_new(d, ir, n->type, n->s);
-        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[0]));
         ir->flags |= PUREFLAGS(ir->v[0]);
         break;
     case Nassign:
         ir->kind = Iset;
-        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
-        list_append(ir->v, igen_node(d, tgt, n->sons[1]));
+        list_append(ir->v, igen_node(d, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[1]));
         ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
-        igen_destr(d, tgt, ir->v[0]);
+        igen_destr(d, ir->v[0]);
         ir->v[0]->destr = NULL;
         break;
     case Nderef:
         free(ir);
         v = var_new(d, &magic, n->type, NULL);
         v->deref = 1;
-        v->base = igen_node(d, tgt, n->sons[0]);
+        v->base = igen_node(d, n->sons[0]);
         ++v->base->uses;
         return v;
     case Naddr:
         bassert(n->sons[0]->flags & Faddr, "expected addressable node");
         ir->kind = Iaddr;
-        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[0]));
         ir->flags |= PUREFLAGS(ir->v[0]);
         ir->dst = var_new(d, ir, n->type, NULL);
         break;
     case Nindex:
         free(ir);
         v = var_new(d, &magic, n->type, NULL);
-        igen_index_chain(d, tgt, v, n);
+        igen_index_chain(d, v, n);
         return v;
     case Nnew: case Ncall:
         ir->kind = n->kind == Nnew ? Iconstr : Icall;
         ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
         for (i=0; i<list_len(n->sons); ++i)
-            list_append(ir->v, igen_node(d, tgt, n->sons[i]));
+            list_append(ir->v, igen_node(d, n->sons[i]));
         break;
     case Ncast:
         ir->kind = Icast;
         ir->dst = var_new(d, ir, n->type, NULL);
-        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[0]));
         ir->flags |= PUREFLAGS(ir->v[0]);
         break;
     case Nattr:
         free(ir);
         v = var_new(d, &magic, n->type, NULL);
-        igen_attr_chain(d, tgt, v, n);
+        igen_attr_chain(d, v, n);
         return v;
     case Nop:
         ir->kind = Iop;
         ir->dst = var_new(d, ir, n->type, NULL);
         ir->op = n->op;
-        list_append(ir->v, igen_node(d, tgt, n->sons[0]));
-        list_append(ir->v, igen_node(d, tgt, n->sons[1]));
+        list_append(ir->v, igen_node(d, n->sons[0]));
+        list_append(ir->v, igen_node(d, n->sons[1]));
         break;
     case Nid:
         bassert(n->e && n->e->n && n->e->n->v,
@@ -184,15 +184,14 @@ static Var* igen_node(Decl* d, List(Instr*)* tgt, Node* n) {
         fatal("unexpected node kind %d", n->kind);
     }
 
-    return instr_result(d, tgt, ir);
+    return instr_result(d, ir);
 }
 
-static void igen_sons(Decl* d, List(Instr*)* tgt, Node* n) {
+static void igen_sons(Decl* d, Node* n) {
     int i;
     bassert(n && n->kind > Nsons, "unexpected son-less node kind %d",
             n?n->kind:-1);
-    for (i=0; i<list_len(n->sons); ++i)
-        igen_node(d, tgt, n->sons[i]);
+    for (i=0; i<list_len(n->sons); ++i) igen_node(d, n->sons[i]);
 }
 
 static void igen_func(Module* m, Decl* d, Node* n) {
@@ -256,11 +255,11 @@ static void igen_func(Module* m, Decl* d, Node* n) {
     if (!n->import) {
         Instr* ir = new(Instr);
         d->rl = d->labels++;
-        igen_node(d, &d->sons, n->sons[2]);
+        igen_node(d, n->sons[2]);
         ir->kind = Ilabel;
         ir->label = d->rl;
-        instr_result(d, &d->sons, ir);
-        for (i=0; i<list_len(d->vars); ++i) igen_destr(d, &d->sons, d->vars[i]);
+        instr_result(d, ir);
+        for (i=0; i<list_len(d->vars); ++i) igen_destr(d, d->vars[i]);
     } else d->import = n->import;
 
     d->exportc = n->exportc;
@@ -277,7 +276,7 @@ static void igen_global(Module* m, Decl* d, Node* n) {
 
         set->kind = Iset;
         list_append(set->v, d->v);
-        list_append(set->v, igen_node(m->init, &m->init->sons, n->sons[1]));
+        list_append(set->v, igen_node(m->init, n->sons[1]));
         ++set->v[1]->uses;
         list_append(m->init->sons, set);
     } else if (n->import) d->import = n->import;
