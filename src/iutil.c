@@ -56,6 +56,7 @@ void var_free(Var* v) {
     if (v->name) string_free(v->name);
     list_free(v->av);
     list_free(v->iv);
+    list_free(v->destr);
     free(v);
 }
 

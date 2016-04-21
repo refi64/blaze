@@ -13,7 +13,7 @@ static void nir(Instr* ir) {
 }
 
 static int remove_unused_vars(Decl* d) {
-    int i, removed=0;
+    int i, j, removed=0;
     for (i=0; i<list_len(d->vars); ++i)
         if (d->vars[i]->uses == 0 && d->vars[i]->type &&
             !(d->vars[i]->ir && d->vars[i]->ir->kind == Iconstr) &&
@@ -21,7 +21,8 @@ static int remove_unused_vars(Decl* d) {
               d->vars[i]->ir->v[0]->owner->ra)) {
             // This will cause code generators to not emit space for the variable.
             d->vars[i]->type = NULL;
-            if (d->vars[i]->destr) nir(d->vars[i]->destr);
+            for (j=0; j<list_len(d->vars[i]->destr); ++j)
+                nir(d->vars[i]->destr[j]);
             ++removed;
 
             if (d->vars[i]->ir && d->vars[i]->ir->flags & Fpure)
@@ -32,15 +33,15 @@ static int remove_unused_vars(Decl* d) {
 }
 
 static void remove_useless_news(Decl* d) {
-    int i;
+    int i, j;
     for (i=0; i<list_len(d->sons); ++i) {
         Instr* ir = d->sons[i];
-        if (ir->kind == Inew && ir->v[0]->uses == (ir->v[0]->destr ? 2 : 1) &&
+        if (ir->kind == Inew && ir->v[0]->uses == (list_len(ir->v[0]->destr)+1) &&
             !ir->v[0]->name && ir->v[0]->ir && ir->v[0]->ir != &magic) {
             ir->v[0]->ir->dst = ir->dst;
             ir->dst->ir = ir->v[0]->ir;
             ir->v[0]->type = NULL;
-            if (d->vars[i]->destr) nir(ir->v[0]->destr);
+            for (j=0; j<list_len(ir->v[0]->destr); ++j) nir(ir->v[0]->destr[j]);
             nir(ir);
         }
     }

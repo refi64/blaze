@@ -35,6 +35,7 @@ typedef struct LexerContext LexerContext;
 typedef struct Module Module;
 typedef struct Decl Decl;
 typedef struct Var Var;
+typedef struct VarStack VarStack;
 typedef struct Instr Instr;
 typedef struct GData GData;
 
@@ -406,8 +407,13 @@ struct Var {
     List(Var*) iv; // Index variables.
     Var* base; // If either of the above are truthy, this is the base var.
     int no_destr; // Avoid calling the destructor?
-    Instr* destr; // The Idel instruction.
+    List(Instr*) destr; // The Idel instructions.
     GData d;
+};
+
+struct VarStack {
+    List(Var*) v;
+    VarStack* prev;
 };
 
 struct Instr {
