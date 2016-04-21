@@ -119,7 +119,7 @@ fun main -> int:
 If I add a `struct X:\n new: return` to the beginning, the whole thing will be
 recompiled, since it'll throw the type id system off. Grrr...
 
-##Destructors
+##Destructors (fixed!)
 
 This doesn't work:
 
