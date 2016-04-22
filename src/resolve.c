@@ -37,9 +37,15 @@ static void resolve0(Node* n) {
         }
 
         if (strcmp(n->s->str, BUILTINS) == 0) {
-            String* s = string_new("str");
-            builtins[Bstr] = symtab_findl(n->tab, s)->n;
-            string_free(s);
+            String* s;
+            #define B(x) \
+                s = string_new(#x);\
+                builtins[B##x] = symtab_findl(n->tab, s)->n;\
+                string_free(s);
+            B(str)
+            B(true)
+            B(false)
+            #undef B
         }
         break;
     case Nstruct:

@@ -328,7 +328,7 @@ struct LexerContext {
     const char* file, *module, *fcont;
 };
 
-enum Builtin { Bstr, Bend };
+enum Builtin { Bstr, Btrue, Bfalse, Bend };
 extern DSHtab* modules;
 extern Node* builtins_module;
 extern Node* builtins[Bend];

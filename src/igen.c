@@ -180,13 +180,19 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
     case Nid:
         bassert(n->e && n->e->n && n->e->n->v,
                 "node of kind Nid has no corresponding entry");
-        free(ir);
-        ++n->e->n->v->uses;
-        return n->e->n->v;
+        if (n->e->n != builtins[Btrue] && n->e->n != builtins[Bfalse]) {
+            free(ir);
+            ++n->e->n->v->uses;
+            return n->e->n->v;
+        }
+        // Fallthough.
     case Nint: case Nstr:
-        ir->kind = n->kind == Nint ? Iint : Istr;
+        ir->kind = n->kind == Nstr ? Istr : Iint;
         ir->flags |= Fpure;
-        ir->s = string_clone(n->s);
+        ir->s = n->kind == Nid
+                ? string_new(n->e->n == builtins[Btrue] ? "1/*true*/"
+                                                        : "0/*false*/")
+                : string_clone(n->s);
         ir->dst = var_new(d, ir, n->type, NULL);
         break;
     case Nmodule: case Ntypeof: case Nstruct: case Nfun: case Narglist:
