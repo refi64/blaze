@@ -19,8 +19,26 @@ fun h:
 
 fun i(a: *int): return *a
 
+global a: int
+fun a: return
+
+global b: int
+fun b: return
+
 #[
 ERROR
+:23:5: error: duplicate definition of a
+    fun a: return
+        ~
+:22:8: note: previous definition is here
+    global a: int
+           ~
+:26:5: error: duplicate definition of b
+    fun b: return
+        ~
+:25:8: note: previous definition is here
+    global b: int
+           ~
 :8:13: error: function expected 1 argument(s), not 0
     let x = f()
             ~

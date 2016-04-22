@@ -113,6 +113,8 @@ STEntry* symtab_findl(Symtab* tab, String* name) {
 }
 
 #define USABLE_FROM(p,e) ((p)->n->module == (e)->n->module || (p)->n->export)
+#define ENTRY_LOC(e) (((e)->overload ? (e)->overloads[list_len((e)->overloads)-1]\
+                                     : (e))->n->loc)
 
 void symtab_add(Symtab* tab, String* name, STEntry* e) {
     STEntry* p;
@@ -124,7 +126,7 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
     }
     p = symtab_finds(tab, name);
     if (p) {
-        Location el = e->n->loc;
+        Location el = ENTRY_LOC(e);
         if (p->overload && e->overload && USABLE_FROM(p->overloads[0],
                                                       e->overloads[0])) {
             bassert(p->overloads, "overloaded entry '%s' has no overloads",
@@ -133,7 +135,7 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
             return;
         } else if (ABS(p->level) == ABS(e->level)) {
             error(el, "duplicate definition of %s", name->str);
-            note(p->n->loc, "previous definition is here");
+            note(ENTRY_LOC(p), "previous definition is here");
             stentry_free(e);
             return;
         } else if (!p->overload && !e->overload && p->n && USABLE_FROM(p, e)) {
@@ -142,7 +144,7 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
             else if (p->level > 0 && e->level > 0) {
                 warning(el, "redefinition of %s shadows outer definition",
                     name->str);
-                note(p->n->loc, "previous definition is here");
+                note(ENTRY_LOC(p), "previous definition is here");
             }
         }
     }
