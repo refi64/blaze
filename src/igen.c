@@ -178,8 +178,13 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
         list_append(ir->v, igen_node(d, vs, n->sons[1]));
         break;
     case Nid:
-        bassert(n->e && n->e->n && n->e->n->v,
-                "node of kind Nid has no corresponding entry");
+        bassert(n->e && n->e->n, "node of kind Nid has no corresponding entry");
+        if (!n->e->n->v) {
+            // Hope it's a decl...
+            igen_decl(d->m, n->e->n);
+            bassert(n->e->n->v,
+                    "igen of previously unbound Nid still has no associated var");
+        }
         if (n->e->n != builtins[Btrue] && n->e->n != builtins[Bfalse]) {
             free(ir);
             ++n->e->n->v->uses;
@@ -303,26 +308,27 @@ static void igen_global(Module* m, Decl* d, Node* n) {
 }
 
 static Decl* igen_decl(Module* m, Node* n) {
-    Decl* d = new(Decl);
-    if (n->s) d->name = string_clone(n->s);
-    if (n->export) d->export = 1;
-    d->m = m;
+    if (n->d) return n->d;
+    n->d = new(Decl);
+    if (n->s) n->d->name = string_clone(n->s);
+    if (n->export) n->d->export = 1;
+    n->d->m = m;
 
     switch (n->kind) {
     case Nfun:
-        igen_func(m, d, n);
+        igen_func(m, n->d, n);
         break;
     case Ndecl:
-        igen_global(m, d, n);
+        igen_global(m, n->d, n);
         break;
     case Nstruct: default:
-        if (d->name) string_free(d->name);
-        free(d);
+        if (n->d->name) string_free(n->d->name);
+        free(n->d);
+        n->d = NULL;
         return NULL;
     }
 
-    n->d = d;
-    return d;
+    return n->d;
 }
 
 Module* igen(Node* n) {
