@@ -33,7 +33,6 @@ more complex control flow structures (like if statements) work.
 
 Structs are present, as is overloading. But a lot of other stuff doesn't work:
 
-- Properly calling destructors (see "Destructors" section in proto.md).
 - Modules.
 - Classes.
 - Unions.
