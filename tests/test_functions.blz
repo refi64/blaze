@@ -60,7 +60,7 @@ ERROR
 :12:9: warning: unused variable 'b'
     let b = f(n)
         ~
-:17:7: error: types 'int' and '*int' in assignment are not compatible
+:17:7: error: types 'int' and '*mut int' in assignment are not compatible
     x = &x
       ~
 :16:13: note: 'x' declared here

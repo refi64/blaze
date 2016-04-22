@@ -45,6 +45,7 @@ static String* typestring(Type* t) {
         }
     case Tptr:
         res = string_newz("*", 1);
+        if (t->mut) string_merges(res, "mut ");
         s = typestring(t->sons[0]);
         if ((p = strchr(s->str, ' '))) string_mergec(res, '(');
         string_merge(res, s);
