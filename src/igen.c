@@ -49,6 +49,11 @@ static void igen_attr_chain(Decl* d, VarStack* vs, Var* v, Node* n) {
         ++v->base->uses;
     } else {
         igen_attr_chain(d, vs, v, n->sons[0]);
+        if (!n->attr->d) {
+            // Hope it's a decl...
+            igen_decl(d->m, n->attr);
+            bassert(n->attr->d, "igen of unbound attribute still has no decl");
+        }
         list_append(v->av, &n->attr->d->v);
     }
 }
