@@ -272,6 +272,12 @@ funid : id {
       | TNEW { $$.loc = $1.loc; $$.s = string_new("new"); }
       | TDELETE { $$.loc = $1.loc; $$.s = string_new("delete"); }
       | TDUP { $$.loc = $1.loc; $$.s = string_new("dup"); }
+      | TID TDOT TID {
+          $$.loc = $1.loc;
+          $$.s = $1.s;
+          string_mergec($$.s, '.');
+          string_merge($$.s, $3.s);
+      }
 
 funbody : TCOLON body { $$.exportc = 0; $$.import = 0; $$.rn = $2; }
         | TEXPORTC TSTRING TCOLON body {
