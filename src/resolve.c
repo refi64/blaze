@@ -65,7 +65,6 @@ static void resolve0(Node* n) {
         }
         break;
     case Nfun:
-        e = stentry_new_overload(n, n->s);
         n->tab = symtab_sub(n->parent->tab);
         cs = strchr(n->s->str, '.');
         if (cs) {
@@ -84,7 +83,10 @@ static void resolve0(Node* n) {
             fs = string_new(cs+1);
             string_free(n->s);
             n->s = fs;
-        } else symtab_add(n->parent->tab, n->s, e);
+        } else {
+            e = stentry_new_overload(n, n->s);
+            symtab_add(n->parent->tab, n->s, e);
+        }
 
         if (n->parent->kind == Nstruct || cs) {
             make_magic_this(n); // Overrides the parent struct's this.
@@ -174,7 +176,14 @@ static void resolve1(Node* n) {
     int i;
     bassert(n, "expected non-null node");
     switch (n->kind) {
-    case Nfun: if (n->bind) resolve1(n->bind);
+    case Nfun:
+        if (n->bind) {
+            resolve1(n->bind);
+            if (n->bind->e && n->bind->e->n && n->bind->e->n->kind == Nstruct) {
+                STEntry* e = stentry_new_overload(n, n->s);
+                symtab_add(n->bind->e->n->tab, n->s, e);
+            }
+        }
     // Fallthrough.
     case Nmodule: case Nstruct: case Narglist: case Ndecl: case Ncast: case Nif:
         for (i=0; i<list_len(n->sons); ++i)
