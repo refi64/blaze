@@ -228,7 +228,10 @@ struct Node {
         Nmodule
     } kind;
     union {
-        String *exportc; // Nfun
+        struct {
+            String *exportc;
+            Node* bind; // For bound methods; like `fun X.f: return`.
+        }; // Nfun
         STEntry* magic[Mend]; // Nstruct
         Node* attr; // Nattr
         Op op; // Nop

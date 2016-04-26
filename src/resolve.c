@@ -22,6 +22,7 @@ static void make_magic_this(Node* n) {
 static void resolve0(Node* n) {
     STEntry* e;
     int i;
+    const char* cs;
     bassert(n && (n->kind == Nmodule || n->parent), "node has no parent");
     if (n->kind != Nmodule && n->kind != Nfun && !n->tab) n->tab = n->parent->tab;
     if (n->parent && n->parent->module) n->module = n->parent->module;
@@ -64,11 +65,30 @@ static void resolve0(Node* n) {
         }
         break;
     case Nfun:
-        e = stentry_new_overload(n, n->s);
-        symtab_add(n->parent->tab, n->s, e);
         n->tab = symtab_sub(n->parent->tab);
+        cs = strchr(n->s->str, '.');
+        if (cs) {
+            String* fs;
 
-        if (n->parent->kind == Nstruct) {
+            n->bind = new(Node);
+            n->bind->kind = Nid;
+            n->bind->parent = n;
+            n->bind->module = n->module;
+            n->bind->tab = n->tab;
+            n->bind->s = string_newz(n->s->str, cs-n->s->str);
+            n->bind->loc = n->loc;
+
+            n->flags |= Fmemb;
+
+            fs = string_new(cs+1);
+            string_free(n->s);
+            n->s = fs;
+        } else {
+            e = stentry_new_overload(n, n->s);
+            symtab_add(n->parent->tab, n->s, e);
+        }
+
+        if (n->parent->kind == Nstruct || cs) {
             make_magic_this(n); // Overrides the parent struct's this.
             if (n->flags & Fmvm) n->this->flags |= Fmv;
         }
@@ -156,8 +176,16 @@ static void resolve1(Node* n) {
     int i;
     bassert(n, "expected non-null node");
     switch (n->kind) {
-    case Nmodule: case Nstruct: case Nfun: case Narglist: case Ndecl: case Ncast:
-    case Nif:
+    case Nfun:
+        if (n->bind) {
+            resolve1(n->bind);
+            if (n->bind->e && n->bind->e->n && n->bind->e->n->kind == Nstruct) {
+                STEntry* e = stentry_new_overload(n, n->s);
+                symtab_add(n->bind->e->n->tab, n->s, e);
+            }
+        }
+    // Fallthrough.
+    case Nmodule: case Nstruct: case Narglist: case Ndecl: case Ncast: case Nif:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;

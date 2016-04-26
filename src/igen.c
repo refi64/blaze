@@ -249,6 +249,8 @@ static void igen_func(Module* m, Decl* d, Node* n) {
         n->this->v = v;
     }
 
+    if (n->bind) d->v->flags |= Fstc;
+
     if (n->sons[1]) {
         bassert(n->sons[1]->kind == Narglist, "unexpected node kind %d",
                 n->sons[1]->kind);

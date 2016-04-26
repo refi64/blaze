@@ -23,6 +23,7 @@ struct B:
     v: int
     fun new: @v = 0
     fun new(v: int): @setv(v)
+    fun getv() -> int: return @v
     mut fun setv(v: int): @v = v
 
 fun g:
@@ -30,6 +31,12 @@ fun g:
     let b2 = new B(1)
     b1.setv(1)
     b2.setv()
+
+fun B.bound -> int: return @getv()
+
+fun h -> int:
+    let b1 = new B
+    return b1.bound()
 
 #[
 ERROR
@@ -81,22 +88,22 @@ ERROR
 :20:7: note: add 'var' to make it variable
     a.undef[0] = 1
       ~~~~~
-:31:8: error: no overload of 'setv' with given arguments available
+:32:8: error: no overload of 'setv' with given arguments available
     b1.setv(1)
        ~~~~
-:26:13: note: function requires a mutable this
+:27:13: note: function requires a mutable this
     mut fun setv(v: int): @v = v
             ~~~~
-:29:9: note: 'b1' declared here
+:30:9: note: 'b1' declared here
     let b1 = new B
         ~~
-:29:9: note: add 'mut' to make it mutable
+:30:9: note: add 'mut' to make it mutable
     let b1 = new B
         ~~
-:32:8: error: no overload of 'setv' with given arguments available
+:33:8: error: no overload of 'setv' with given arguments available
     b2.setv()
        ~~~~
-:26:13: note: function expected 1 argument(s), not 0
+:27:13: note: function expected 1 argument(s), not 0
     mut fun setv(v: int): @v = v
             ~~~~
 #]
