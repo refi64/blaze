@@ -181,6 +181,7 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
         ir->op = n->op;
         list_append(ir->v, igen_node(d, vs, n->sons[0]));
         list_append(ir->v, igen_node(d, vs, n->sons[1]));
+        ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
         break;
     case Nid:
         bassert(n->e && n->e->n, "node of kind Nid has no corresponding entry");

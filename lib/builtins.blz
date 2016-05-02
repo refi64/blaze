@@ -13,7 +13,7 @@ fun _puts(s: *char) "puts"
 fun _free(d: *byte) "free"
 
 fun _strlen(d: *char) -> size "strlen"
-fun _memcpy(tgt: *mut char, src: *char, len: size) "memcpy"
+fun _memcpy(tgt: *mut byte, src: *byte, len: size) "memcpy"
 
 struct str:
     _data: *mut char
@@ -27,7 +27,7 @@ struct str:
     # THIS CONSTRUCTOR MUST BE FIRST!! The compiler internals depend on it!
     fun new(s: *char, len: size):
         @_setup(len)
-        _memcpy(@_data, s, len)
+        _memcpy(@_data :: *mut byte, s :: *byte, len)
 
     fun new(len: size): @_setup(len)
 
@@ -36,7 +36,7 @@ struct str:
 
     fun dup -> str:
         let s = new str(@len)
-        _memcpy(s._data, @_data, @len+1)
+        _memcpy(s._data :: *mut byte, @_data :: *byte, @len+1)
         return s
 
     fun at(i: size) -> char: return @_data[i]
@@ -48,5 +48,5 @@ fun argument(i: int) -> str:
     let arg = _c_argv[i]
     let len = _strlen(arg)
     let mut s = new str(len)
-    _memcpy(s._data, arg, len+1)
+    _memcpy(s._data :: *byte, arg :: *byte, len+1)
     return s
