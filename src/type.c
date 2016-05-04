@@ -204,9 +204,7 @@ static void resolve_overload(Node* n) {
     List(Type*) expected;
     Node* id = n->sons[0];
 
-    bassert(id->kind == Nid || id->kind == Nattr, "unexpected node kind %d",
-            id->kind);
-    bassert(id->e->overload, "attempt to resolve non-overloaded node");
+    bassert(id->e && id->e->overload, "attempt to resolve non-overloaded node");
 
     for (i=0; i<2; ++i) {
         List(STEntry*) choices = possibilities ? possibilities : id->e->overloads;
@@ -220,10 +218,14 @@ static void resolve_overload(Node* n) {
     }
 
     if (list_len(possibilities) != 1) {
+        String* s = id->s;
+        if (!s) s = id->e->overloads[0]->n->parent->kind == Nstruct ?
+                    id->e->overloads[0]->n->parent->s :
+                    id->e->overloads[0]->n->s;
         if (!possibilities)
             error(id->loc, "no overload of '%s' with given arguments available",
-                  id->s->str);
-        else error(id->loc, "ambiguous occurence of '%s'", id->s->str);
+                  s->str);
+        else error(id->loc, "ambiguous occurence of '%s'", s->str);
         for (i=0; i<list_len(id->e->overloads); ++i)
             funmatch(Mnote, id->e->overloads[i]->n, n, &expected, 0);
         id->type = anytype->override;
@@ -542,8 +544,7 @@ void type(Node* n) {
             }
         }
 
-        if ((n->sons[0]->kind == Nid || n->sons[0]->kind == Nattr) &&
-            n->sons[0]->e && n->sons[0]->type != anytype->override &&
+        if (n->sons[0]->e && n->sons[0]->type != anytype->override &&
             (n->kind == Nnew || (!n->sons[0]->type && n->sons[0]->e->overload))) {
             resolve_overload(n);
 

@@ -183,8 +183,11 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
         list_append(ir->v, igen_node(d, vs, n->sons[1]));
         ir->flags |= PUREFLAGS(ir->v[0]) & PUREFLAGS(ir->v[1]);
         break;
+    case Ntypeof:
+        bassert(n->parent->kind == Nnew, "Ntypeof outside of Nnew");
+        // Fallthough.
     case Nid:
-        bassert(n->e && n->e->n, "node of kind Nid has no corresponding entry");
+        bassert(n->e && n->e->n, "Nid has no corresponding entry");
         if (!n->e->n->v) {
             // Hope it's a decl...
             igen_decl(d->m, n->e->n);
@@ -206,8 +209,8 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
                 : string_clone(n->s);
         ir->dst = var_new(d, ir, n->type, NULL);
         break;
-    case Nmodule: case Ntypeof: case Nstruct: case Nfun: case Narglist:
-    case Ndecl: case Nsons: case Nptr:
+    case Nmodule: case Nstruct: case Nfun: case Narglist: case Ndecl: case Nsons:
+    case Nptr:
         fatal("unexpected node kind %d", n->kind);
     }
 

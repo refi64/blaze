@@ -38,9 +38,10 @@ fun h -> int:
     let b1 = new B
     return b1.bound()
 
-fun i -> int:
+fun i -> str:
     let v = new int
-    return v
+    let y = new typeof("")(v)
+    return y
 
 #[
 ERROR
