@@ -221,7 +221,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         fputc(')', output);
         break;
     case Iaddr:
-        if (ir->v[0]->deref) fprintf(output, "%s%s", CNAME(ir->v[0]->base));
+        if (ir->v[0]->deref) fprintf(output, "%s", CNAME(ir->v[0]->base));
         else fprintf(output, "&%s", CNAME(ir->v[0]));
         break;
     case Icast:
