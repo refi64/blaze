@@ -97,13 +97,6 @@ static int is_callable(Node* n) {
     return n->type && n->type->kind == Tfun;
 }
 
-static List(Type*) arguments_of(Type* t) {
-    switch (t->kind) {
-    case Tfun: return t->sons;
-    default: fatal("unexpected type kind %d", t->kind);
-    }
-}
-
 void type_incref(Type* t) {
     bassert(t, "expected non-null type");
     ++t->rc;
@@ -137,7 +130,8 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
         *expected = NULL;
         nexpect = 0;
     } else {
-        *expected = arguments_of(ft);
+        bassert(ft->kind == Tfun, "unexpected type kind %d", ft->kind);
+        *expected = ft->sons;
         nexpect = list_len(*expected)-1;
     }
 
