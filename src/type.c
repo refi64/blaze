@@ -532,24 +532,32 @@ void type(Node* n) {
 
         if (n->kind == Nnew) {
             bassert(n->sons[0]->flags & Ftype, "new of non-type");
-            nn = n->sons[0]->type->n;
-            if (!(n->sons[0]->e = nn->magic[Mnew])) {
+
+            if (n->sons[0]->type->kind != Tstruct) {
+                error(n->sons[0]->loc, "new requires a user-defined type");
                 type_decref(n->sons[0]->type);
                 n->sons[0]->type = anytype->override;
                 type_incref(n->sons[0]->type);
+            } else {
+                nn = n->sons[0]->type->n;
+                if (!(n->sons[0]->e = nn->magic[Mnew])) {
+                    type_decref(n->sons[0]->type);
+                    n->sons[0]->type = anytype->override;
+                    type_incref(n->sons[0]->type);
+                }
             }
         }
 
         if ((n->sons[0]->kind == Nid || n->sons[0]->kind == Nattr) &&
-            n->sons[0]->e && (n->kind == Nnew ||
-                              (!n->sons[0]->type && n->sons[0]->e->overload))) {
+            n->sons[0]->e && n->sons[0]->type != anytype->override &&
+            (n->kind == Nnew || (!n->sons[0]->type && n->sons[0]->e->overload))) {
             resolve_overload(n);
 
             if (n->sons[0]->kind == Nattr) n->sons[0]->attr = n->sons[0]->e->n;
         }
 
         if (n->sons[0]->type == anytype->override)
-            n->type = n->kind == Nnew ? nn->type : anytype->override;
+            n->type = n->kind == Nnew && nn->type ? nn->type : anytype->override;
         else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "cannot call non-callable type '%s'", ts->str);

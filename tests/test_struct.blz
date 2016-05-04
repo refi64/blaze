@@ -38,6 +38,10 @@ fun h -> int:
     let b1 = new B
     return b1.bound()
 
+fun i -> int:
+    let v = new int
+    return v
+
 #[
 ERROR
 :9:5: error: duplicate definition of mx
@@ -106,4 +110,7 @@ ERROR
 :27:13: note: function expected 1 argument(s), not 0
     mut fun setv(v: int): @v = v
             ~~~~
+:42:17: error: new requires a user-defined type
+    let v = new int
+                ~~~
 #]
