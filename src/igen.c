@@ -161,8 +161,18 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
     case Nnew: case Ncall:
         ir->kind = n->kind == Nnew ? Iconstr : Icall;
         ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
-        for (i=0; i<list_len(n->sons); ++i)
+        list_append(ir->v, igen_node(d, vs, n->sons[0]));
+        v = ir->v[0]->name && !strcmp(ir->v[0]->name->str, "[]") ?
+            igen_node(d, vs, list_pop(n->sons)) : NULL;
+        for (i=1; i<list_len(n->sons); ++i)
             list_append(ir->v, igen_node(d, vs, n->sons[i]));
+        if (v) {
+            ir->v[0] = var_new(d, &magic, n->sons[0]->type, NULL);
+            ir->v[0]->base = v;
+            igen_decl(d->m, n->sons[0]->e->n);
+            bassert(n->sons[0]->e->n->d, "igen of [] has no decl");
+            list_append(ir->v[0]->av, &n->sons[0]->e->n->d->v);
+        }
         break;
     case Ncast:
         ir->kind = Icast;

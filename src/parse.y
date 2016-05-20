@@ -272,6 +272,8 @@ funid : id {
       | TNEW { $$.loc = $1.loc; $$.s = string_new("new"); }
       | TDELETE { $$.loc = $1.loc; $$.s = string_new("delete"); }
       | TDUP { $$.loc = $1.loc; $$.s = string_new("dup"); }
+      | TLBK TRBK { $$.loc = $1.loc; $$.s = string_new("[]"); }
+      | TAND TLBK TRBK { $$.loc = $1.loc; $$.s = string_new("&[]"); }
       | TID TDOT TID {
           $$.loc = $1.loc;
           $$.s = $1.s;
