@@ -556,7 +556,8 @@ void type(Node* n) {
                 n->sons[0] = new(Node);
                 n->sons[0]->kind = Nid;
                 n->sons[0]->loc = nn->loc;
-                if ((n->parent->kind == Naddr || n->parent->kind == Nassign) &&
+                if ((n->parent->kind == Naddr || n->parent->kind == Nassign ||
+                     !nn->type->n->magic[Mindex]) &&
                     nn->type->n->magic[Maindex]) {
                     n->sons[0]->e = nn->type->n->magic[Maindex];
                     i = 1;
