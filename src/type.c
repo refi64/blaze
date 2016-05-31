@@ -239,6 +239,32 @@ static void resolve_overload(Node* n) {
     list_free(possibilities);
 }
 
+static void check_index_magic(Node* n, Magic m) {
+    int i;
+    if (n->magic[m])
+        for (i=0; i<list_len(n->magic[m]->overloads); ++i) {
+            Node* nn;
+            const char* strings[] = {[Mindex] = "[]", [Maindex] = "&[]"};
+            nn = n->magic[m]->overloads[i]->n;
+            bassert(nn, "builtin entry inside overloaded index");
+
+            if (!nn->sons[0]) {
+                error(nn->loc, "%s must return a value", strings[m]);
+                nn->type->sons[0] = anytype->override;
+                type_incref(nn->type->sons[0]);
+            }
+
+            if (m == Maindex && nn->type->sons[0]->kind != Tptr) {
+                error(nn->sons[0]->loc, "&[] must return a pointer type");
+                nn->type->sons[0] = anytype->override;
+                type_incref(nn->type->sons[0]);
+            }
+
+            if (list_len(nn->type->sons) != 2)
+                error(nn->loc, "%s function must take one argument", strings[m]);
+            }
+}
+
 void type(Node* n) {
     Node* nn;
     int i;
@@ -297,20 +323,7 @@ void type(Node* n) {
             }
         else error(n->loc, "struct must have a constructor");
 
-        if (n->magic[Mindex])
-            for (i=0; i<list_len(n->magic[Mindex]->overloads); ++i) {
-                nn = n->magic[Mindex]->overloads[i]->n;
-                bassert(nn, "builtin entry inside overloaded index");
-
-                if (!nn->type->sons[0]) {
-                    error(nn->loc, "indexing function must return a value");
-                    nn->type->sons[0] = anytype->override;
-                    type_incref(nn->type->sons[0]);
-                }
-
-                if (list_len(nn->type->sons) != 2)
-                    error(nn->loc, "indexing function must take one argument");
-            }
+        for (i=Mindex; i<=Maindex; i++) check_index_magic(n, i);
 
         // XXX: These all assume one overload. Nfun needs to check for this!
         if (n->magic[Mdelete] && (nn = n->magic[Mdelete]->overloads[0]->n)
@@ -531,7 +544,7 @@ void type(Node* n) {
             }
         } else if (n->sons[0]->type->kind == Tstruct) {
             nn = n->sons[0];
-            if (!nn->type->n->magic[Mindex] /*&& !nn->type->n->magic[Maindex]*/) {
+            if (!nn->type->n->magic[Mindex] && !nn->type->n->magic[Maindex]) {
                 String* ts = typestring(nn->type);
                 error(n->loc, "structural type '%s' doesn't overload any index "
                               "operators", ts->str);
