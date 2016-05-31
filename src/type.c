@@ -254,7 +254,8 @@ static void check_index_magic(Node* n, Magic m) {
                 type_incref(nn->type->sons[0]);
             }
 
-            if (m == Maindex && nn->type->sons[0]->kind != Tptr) {
+            if (m == Maindex && nn->type->sons[0] != anytype->override &&
+                nn->type->sons[0]->kind != Tptr) {
                 error(nn->sons[0]->loc, "&[] must return a pointer type");
                 nn->type->sons[0] = anytype->override;
                 type_incref(nn->type->sons[0]);
