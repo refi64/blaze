@@ -555,13 +555,18 @@ void type(Node* n) {
                 n->sons[0] = new(Node);
                 n->sons[0]->kind = Nid;
                 n->sons[0]->loc = nn->loc;
-                n->sons[0]->e = nn->type->n->magic[Mindex];
+                if ((n->parent->kind == Naddr || n->parent->kind == Nassign) &&
+                    nn->type->n->magic[Maindex])
+                    n->sons[0]->e = nn->type->n->magic[Maindex];
+                else {
+                    n->flags &= ~Faddr; // Remove Faddr.
+                    n->sons[0]->e = nn->type->n->magic[Mindex];
+                }
                 type(n->sons[0]);
                 resolve_overload(n);
                 n->type = n->sons[0]->type == anytype->override ?
                           anytype->override : n->sons[0]->type->sons[0];
                 type_incref(n->type);
-                n->flags &= ~Faddr; // Remove Faddr.
                 // igen will later need the node that was indexed.
                 list_append(n->sons, nn);
             }

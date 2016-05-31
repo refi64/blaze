@@ -19,6 +19,7 @@ static void generate_basename(char p, GData* d, String* name, int id) {
     if (name) {
         string_mergec(d->cname, '_');
         if (!strcmp(name->str, "[]")) string_merges(d->cname, "$index");
+        else if (!strcmp(name->str, "&[]")) string_merges(d->cname, "$aindex");
         else string_merge(d->cname, name);
     }
 }
