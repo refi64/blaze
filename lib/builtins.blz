@@ -39,7 +39,7 @@ struct str:
         _memcpy(s._data :: *mut byte, @_data :: *byte, @len+1)
         return s
 
-    fun at(i: size) -> char: return @_data[i]
+    fun [](i: size) -> char: return @_data[i]
 
 fun print(s: str):
     _puts(s._data)

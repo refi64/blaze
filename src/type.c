@@ -239,6 +239,33 @@ static void resolve_overload(Node* n) {
     list_free(possibilities);
 }
 
+static void check_index_magic(Node* n, Magic m) {
+    int i;
+    if (n->magic[m])
+        for (i=0; i<list_len(n->magic[m]->overloads); ++i) {
+            Node* nn;
+            const char* strings[] = {[Mindex] = "[]", [Maindex] = "&[]"};
+            nn = n->magic[m]->overloads[i]->n;
+            bassert(nn, "builtin entry inside overloaded index");
+
+            if (!nn->sons[0]) {
+                error(nn->loc, "%s must return a value", strings[m]);
+                nn->type->sons[0] = anytype->override;
+                type_incref(nn->type->sons[0]);
+            }
+
+            if (m == Maindex && nn->type->sons[0] != anytype->override &&
+                nn->type->sons[0]->kind != Tptr) {
+                error(nn->sons[0]->loc, "&[] must return a pointer type");
+                nn->type->sons[0] = anytype->override;
+                type_incref(nn->type->sons[0]);
+            }
+
+            if (list_len(nn->type->sons) != 2)
+                error(nn->loc, "%s function must take one argument", strings[m]);
+            }
+}
+
 void type(Node* n) {
     Node* nn;
     int i;
@@ -296,6 +323,8 @@ void type(Node* n) {
                     error(nn->sons[0]->loc, "constructor cannot return a value");
             }
         else error(n->loc, "struct must have a constructor");
+
+        for (i=Mindex; i<=Maindex; i++) check_index_magic(n, i);
 
         // XXX: These all assume one overload. Nfun needs to check for this!
         if (n->magic[Mdelete] && (nn = n->magic[Mdelete]->overloads[0]->n)
@@ -502,22 +531,64 @@ void type(Node* n) {
         type(n->sons[0]);
         type(n->sons[1]);
         if (n->sons[0]->type->kind == Tany) n->type = anytype->override;
-        else if (n->sons[0]->type->kind != Tptr) {
+        else if (n->sons[0]->type->kind == Tptr) {
+            if (n->sons[1]->type->kind != Tbuiltin ||
+                n->sons[1]->type->bkind == Tbool) {
+                String* ts = typestring(n->sons[1]->type);
+                error(n->loc, "only integral types can be indices of pointers, "
+                              " not '%s'", ts->str);
+                string_free(ts);
+                n->type = anytype->override;
+            } else {
+                n->type = n->sons[0]->type->sons[0];
+                if (n->sons[0]->type->mut) n->flags |= Fmv;
+            }
+        } else if (n->sons[0]->type->kind == Tstruct) {
+            nn = n->sons[0];
+            if (!nn->type->n->magic[Mindex] && !nn->type->n->magic[Maindex]) {
+                String* ts = typestring(nn->type);
+                error(n->loc, "structural type '%s' doesn't overload any index "
+                              "operators", ts->str);
+                string_free(ts);
+                n->type = anytype->override;
+            } else {
+                n->kind = Ncall;
+                n->sons[0] = new(Node);
+                n->sons[0]->kind = Nid;
+                n->sons[0]->loc = nn->loc;
+                if ((n->parent->kind == Naddr || n->parent->kind == Nassign ||
+                     !nn->type->n->magic[Mindex]) &&
+                    nn->type->n->magic[Maindex]) {
+                    n->sons[0]->e = nn->type->n->magic[Maindex];
+                    i = 1;
+                } else {
+                    n->flags &= ~Faddr; // Remove Faddr.
+                    n->sons[0]->e = nn->type->n->magic[Mindex];
+                    i = 0;
+                }
+                type(n->sons[0]);
+                resolve_overload(n);
+                n->type = n->sons[0]->type == anytype->override ?
+                          anytype->override : n->sons[0]->type->sons[0];
+                if (i && n->type != anytype->override) {
+                    bassert(n->type->kind == Tptr, "&[] return type is %d",
+                            n->type->kind);
+                    if (n->type->mut) n->flags |= Fmv;
+                    // XXX: This lies about the type to the code generator.
+                    n->type = n->type->sons[0];
+                }
+                type_incref(n->type);
+                // igen will later need the node that was indexed.
+                list_append(n->sons, nn);
+            }
+        } else {
             String* ts = typestring(n->sons[0]->type);
-            error(n->loc, "only pointers can be indexed, not '%s'", ts->str);
+            error(n->loc, "type '%s' cannot be indexed", ts->str);
             string_free(ts);
             n->type = anytype->override;
-        } else if (n->sons[1]->type->kind != Tbuiltin ||
-                   n->sons[1]->type->bkind == Tbool) {
-            String* ts = typestring(n->sons[1]->type);
-            error(n->loc, "only integral types can be indices, not '%s'",
-                  ts->str);
-            string_free(ts);
-            n->type = anytype->override;
-        } else n->type = n->sons[0]->type->sons[0];
-        type_incref(n->type);
-        if (n->sons[0]->type->mut)
             n->flags |= Fmv;
+        }
+        type_incref(n->type);
         break;
     case Nnew: case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {

@@ -43,6 +43,35 @@ fun i -> str:
     let y = new typeof("")(v)
     return y
 
+struct C:
+    var x: int
+    fun new: @x = 0
+    fun [](i: int) -> int: return @x
+    fun &[](i: int) -> *mut int: return &@x
+
+struct D:
+    var x: int
+    fun new: @x = 0
+    fun &[](i: int) -> *mut int: return &@x
+
+struct E:
+    var x: int
+    fun new: @x = 0
+    fun [](i: int) -> int: return @x
+
+fun j -> int:
+    let c = new C
+    c[0] = 1
+    return c[0]
+
+    let d = new D
+    d[0] = 1
+    return d[0]
+
+    let e = new E
+    e[0] = 1
+    return e[0]
+
 #[
 ERROR
 :9:5: error: duplicate definition of mx
@@ -114,4 +143,7 @@ ERROR
 :42:17: error: new requires a user-defined type
     let v = new int
                 ~~~
+:72:6: error: left-hand side of assignment must be addressable
+    e[0] = 1
+     ~
 #]

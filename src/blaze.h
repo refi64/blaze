@@ -106,6 +106,7 @@ void string_merges(String* base, const char* rhs);
     list_lenref(l) = list_var(len)+1;\
     (l)[list_lenref(l)-1] = (x);\
 } while (0)
+#define list_pop(l) ((l) ? (l)[--list_lenref(l)] : NULL)
 #define list_free(l) free((l)?(void*)(l)-sizeof(size_t):NULL)
 
 
@@ -195,8 +196,8 @@ static const char* op_strings[] = {"+", "-", "*", "/",
                                    NULL,
                                    "==", "!=", "<", ">"};
 
-typedef enum Magic { Mnew, Mdelete, Mcopy, Mend } Magic;
-static const char* magic_strings[] = {"new", "delete", "dup", 0};
+typedef enum Magic { Mnew, Mdelete, Mcopy, Mindex, Maindex, Mend } Magic;
+static const char* magic_strings[] = {"new", "delete", "dup", "[]", "&[]", 0};
 
 struct Node {
     enum {

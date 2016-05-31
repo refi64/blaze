@@ -94,6 +94,7 @@ static void igen_destr_live_vars(Decl* d, VarStack* vs) {
 static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
     Instr* ir = new(Instr);
     Var* v;
+    Type* t;
     int i, label;
     VarStack vvs;
     switch (n->kind) {
@@ -160,9 +161,35 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
         return v;
     case Nnew: case Ncall:
         ir->kind = n->kind == Nnew ? Iconstr : Icall;
-        ir->dst = var_new(d, ir, n->flags & Fvoid ? NULL : n->type, NULL);
+        v = n->sons[0]->kind == Nid && n->sons[0]->e->n->kind == Nfun &&
+            (!strcmp(n->sons[0]->e->n->s->str, "[]") ||
+             !strcmp(n->sons[0]->e->n->s->str, "&[]")) ?
+            igen_node(d, vs, list_pop(n->sons)) : NULL;
+        if (v && *n->sons[0]->e->n->s->str == '&') {
+            // XXX: type lies about the result type to make type-checking work.
+            t = new(Type);
+            t->kind = Tptr;
+            list_append(t->sons, n->type);
+        } else t = n->flags & Fvoid ? NULL : n->type;
+        ir->dst = var_new(d, ir, t, NULL);
         for (i=0; i<list_len(n->sons); ++i)
             list_append(ir->v, igen_node(d, vs, n->sons[i]));
+        if (v) {
+            ir->v[0] = var_new(d, &magic, n->sons[0]->type, NULL);
+            ir->v[0]->base = v;
+            igen_decl(d->m, n->sons[0]->e->n);
+            bassert(n->sons[0]->e->n->d, "igen of [] has no decl");
+            list_append(ir->v[0]->av, &n->sons[0]->e->n->d->v);
+
+            if (*(*ir->v[0]->av[0])->name->str == '&') {
+                // We need to add a wrapper over the result to deref it.
+                v = var_new(d, &magic, n->sons[0]->type, NULL);
+                v->base = instr_result(d, vs, ir);
+                ++v->base->uses;
+                v->deref = 1;
+                return v;
+            }
+        }
         break;
     case Ncast:
         ir->kind = Icast;
