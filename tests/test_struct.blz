@@ -43,6 +43,17 @@ fun i -> str:
     let y = new typeof("")(v)
     return y
 
+struct C:
+    var x: int
+    fun new: @x = 0
+    fun [](i: int) -> int: return @x
+    fun &[](i: int) -> *mut int: return &@x
+
+fun j -> int:
+    let c = new C
+    c[0] = 1
+    return c[0]
+
 #[
 ERROR
 :9:5: error: duplicate definition of mx
