@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
             for (i=0; i<kc; ++i) {
                 Node* n = ctxs[i]->result;
-                printf("##########Module %s:\n", n->s->str);
+                /* printf("##########Module %s:\n", n->s->str); */
                 /* node_dump(n); */
                 resolve(n);
                 type(n);
@@ -37,12 +37,12 @@ int main(int argc, char** argv) {
                 for (i=0; i<kc; ++i) {
                     Node* n = ctxs[i]->result;
                     Module* m = igen(n);
-                    printf("##########Module %s:\n", n->s->str);
-                    puts("*****Unoptimized*****");
-                    module_dump(m);
+                    /* printf("##########Module %s:\n", n->s->str); */
+                    /* puts("*****Unoptimized*****"); */
+                    /* module_dump(m); */
                     iopt(m);
-                    puts("*****Optimized*****");
-                    module_dump(m);
+                    /* puts("*****Optimized*****"); */
+                    /* module_dump(m); */
                     list_append(mods, m);
                 }
 

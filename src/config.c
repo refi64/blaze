@@ -62,8 +62,8 @@ Config load_config() {
     while (lua_next(config.L, -2)) {
         luaL_checktype(config.L, -2, LUA_TSTRING);
         luaL_checktype(config.L, -1, LUA_TSTRING);
-        printf("%s - %s\n", lua_tostring(config.L, -2),
-                            lua_tostring(config.L, -1));
+        /* printf("%s - %s\n", lua_tostring(config.L, -2), */
+                            /* lua_tostring(config.L, -1)); */
 
         #define F(n,x) else if (strcmp(lua_tostring(config.L, -2), #n) == 0)\
                          config.n##x = lua_tostring(config.L, -1);
