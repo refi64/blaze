@@ -30,7 +30,7 @@ fun j -> typeof(j()): return 0
 
 struct X:
     fun new: return
-    fun k -> typeof(@k()): return 0
+    fun f -> typeof(@f()): return 0
 #[
 ERROR
 :23:5: error: duplicate definition of a
@@ -109,12 +109,12 @@ ERROR
     fun j -> typeof(j()): return 0
         ~
 :33:9: error: type is recursive
-    fun k -> typeof(@k()): return 0
+    fun f -> typeof(@f()): return 0
         ~
-:33:22: error: no overload of 'k' with given arguments available
-    fun k -> typeof(@k()): return 0
+:33:22: error: no overload of 'f' with given arguments available
+    fun f -> typeof(@f()): return 0
                      ~
 :33:9: note: cannot determine if function matches because its definition is erroneous
-    fun k -> typeof(@k()): return 0
+    fun f -> typeof(@f()): return 0
         ~
 #]

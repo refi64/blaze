@@ -115,6 +115,8 @@ STEntry* symtab_findl(Symtab* tab, String* name) {
 #define USABLE_FROM(p,e) ((p)->n->module == (e)->n->module || (p)->n->export)
 #define ENTRY_LOC(e) (((e)->overload ? (e)->overloads[list_len((e)->overloads)-1]\
                                      : (e))->n->loc)
+// http://stackoverflow.com/a/67020/2097780
+#define SAME_SIGN(a, b) (((a) >= 0) ^ ((b) < 0))
 
 void symtab_add(Symtab* tab, String* name, STEntry* e) {
     STEntry* p;
@@ -128,7 +130,8 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
     if (p) {
         Location el = ENTRY_LOC(e);
         if (p->overload && e->overload && USABLE_FROM(p->overloads[0],
-                                                      e->overloads[0])) {
+                                                      e->overloads[0]) &&
+            SAME_SIGN(p->level, e->level)) {
             bassert(p->overloads, "overloaded entry '%s' has no overloads",
                     name->str);
             list_append(p->overloads, e->overloads[0]);
