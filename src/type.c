@@ -131,6 +131,16 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
     if (ft->kind == Tstruct && !ft->n->magic[Mnew]) {
         *expected = NULL;
         nexpect = 0;
+    } else if (ft->kind == Tany) {
+        switch (kind) {
+        case Mnote:
+            note(func->loc, "cannot determine if function matches because its "
+                            "definition is erroneous");
+            // Fallthrough.
+        case Mnothing:
+        case Merror:
+            return 0;
+        }
     } else {
         bassert(ft->kind == Tfun, "unexpected type kind %d", ft->kind);
         *expected = ft->sons;
