@@ -601,6 +601,7 @@ void type(Node* n) {
             bassert(n->sons[0]->flags & Ftype, "new of non-type");
 
             if (n->sons[0]->type->kind != Tstruct) {
+                nn = NULL;
                 error(n->sons[0]->loc, "new requires a user-defined type");
                 type_decref(n->sons[0]->type);
                 n->sons[0]->type = anytype->override;
@@ -623,7 +624,8 @@ void type(Node* n) {
         }
 
         if (n->sons[0]->type == anytype->override)
-            n->type = n->kind == Nnew && nn->type ? nn->type : anytype->override;
+            n->type = n->kind == Nnew && nn && nn->type ? nn->type :
+                      anytype->override;
         else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "cannot call non-callable type '%s'", ts->str);

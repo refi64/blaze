@@ -72,6 +72,13 @@ fun j -> int:
     e[0] = 1
     return e[0]
 
+struct Issue11:
+    fun new: return
+
+fun k -> int:
+    let v = new int
+    return v
+
 #[
 ERROR
 :9:5: error: duplicate definition of mx
@@ -146,4 +153,7 @@ ERROR
 :72:6: error: left-hand side of assignment must be addressable
     e[0] = 1
      ~
+:79:17: error: new requires a user-defined type
+    let v = new int
+                ~~~
 #]
