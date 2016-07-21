@@ -25,6 +25,8 @@ static void force_typed_expr_context(Node* n) {
     } else if (n->flags & Fvoid) {
         error(n->loc, "cannot use void value in expression");
         if (n->kind == Ncall) declared_here(n->sons[0]);
+        n->type = anytype->override;
+        type_incref(n->type);
     }
 }
 
@@ -461,7 +463,10 @@ void type(Node* n) {
             error(n->sons[0]->loc, "type of expression is recursive");
             declared_here(n->sons[0]);
             n->type = anytype->override;
-        } else n->type = n->sons[0]->type;
+        } else {
+            force_typed_expr_context(n->sons[0]);
+            n->type = n->sons[0]->type;
+        }
         n->flags |= Ftype;
         type_incref(n->type);
         break;

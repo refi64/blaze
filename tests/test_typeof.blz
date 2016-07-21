@@ -5,6 +5,8 @@ fun f(a: int) -> int: return a
 fun g(a: int, b: char) -> typeof(f):
     let d = a
     return d
+fun h: return
+global i: typeof(h())
 #[
 ERROR
 :7:12: error: function was declared to return type '(int) -> int', not 'int'
@@ -19,4 +21,10 @@ ERROR
 :5:7: note: 'a' declared here
     fun g(a: int, b: char) -> typeof(f):
           ~
+:9:18: error: cannot use void value in expression
+    global i: typeof(h())
+                     ~
+:8:5: note: 'h' declared here
+    fun h: return
+        ~
 ]#
