@@ -351,6 +351,17 @@ void type(Node* n) {
                     error(nn->sons[0] ? nn->sons[0]->loc : nn->loc,
                           "copy constructor must return the parent's type");
         }
+
+        if (n->magic[Mbool] && (nn = n->magic[Mbool]->overloads[0]->n)) {
+            if (list_len(nn->type->sons) != 1)
+                error(nn->loc, "bool converter cannot take any arguments");
+
+            if (!nn->type->sons[0] ||
+                !typematch(nn->type->sons[0], builtin_types[Tbool]->override,
+                           NULL))
+                error(nn->sons[0] ? nn->sons[0]->loc : nn->loc,
+                      "bool converter must return bool");
+        }
         break;
     case Nfun:
         if (n->sons[0]) {
@@ -462,12 +473,37 @@ void type(Node* n) {
         type(n->sons[1]);
         if (!typematch(builtin_types[Tbool]->override, n->sons[0]->type,
                        n->sons[0])) {
-            String* ts = typestring(n->sons[0]->type);
-            ;
-            error(n->sons[0]->loc, "%s statement condition must be of type "
-                                   "'bool', not '%s'",
-                  n->kind == Nif ? "if" : "while", ts->str);
-            string_free(ts);
+            if (n->sons[0]->type->kind == Tbuiltin) {
+                nn = new(Node);
+                nn->kind = Ncast;
+                list_append(nn->sons, n->sons[0]);
+                list_append(nn->sons, new(Node));
+                nn->sons[1]->kind = Nid;
+                nn->sons[1]->s = string_newz("bool", 4);
+                nn->sons[1]->e = builtin_types[Tbool];
+                nn->sons[1]->parent = nn;
+                nn->parent = n;
+                type(nn);
+                n->sons[0] = nn;
+            } else if (n->sons[0]->type->kind == Tstruct &&
+                       n->sons[0]->type->n->magic[Mbool]) {
+                nn = new(Node);
+                nn->kind = Ncall;
+                list_append(nn->sons, new(Node));
+                nn->sons[0]->kind = Nattr;
+                list_append(nn->sons[0]->sons, n->sons[0]);
+                nn->sons[0]->s = string_newz("bool", 4);
+                nn->sons[0]->parent = nn;
+                nn->parent = n;
+                type(nn);
+                n->sons[0] = nn;
+            } else {
+                String* ts = typestring(n->sons[0]->type);
+                error(n->sons[0]->loc, "%s statement condition must be of a "
+                                       "type convertible to 'bool'; '%s' isn't",
+                      n->kind == Nif ? "if" : "while", ts->str);
+                string_free(ts);
+            }
         }
         break;
     case Ntypeof:

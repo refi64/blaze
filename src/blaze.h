@@ -196,8 +196,10 @@ static const char* op_strings[] = {"+", "-", "*", "/",
                                    NULL,
                                    "==", "!=", "<", ">"};
 
-typedef enum Magic { Mnew, Mdelete, Mcopy, Mindex, Maindex, Mend } Magic;
-static const char* magic_strings[] = {"new", "delete", "dup", "[]", "&[]", 0};
+typedef enum Magic { Mnew, Mdelete, Mcopy, Mindex, Maindex, Mbool, Mend } Magic;
+static const char* magic_strings[] = {
+    "new", "delete", "dup", "[]", "&[]", "bool", 0
+};
 
 struct Node {
     enum {

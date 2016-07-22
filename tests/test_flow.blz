@@ -5,6 +5,11 @@ struct A:
 
 struct B:
     fun new: return
+    fun bool -> bool: return true
+
+struct C:
+    fun new: return
+    fun bool: return
 
 fun g:
     let s = 0
@@ -22,22 +27,13 @@ fun g:
 
 #[
 ERROR
-:11:8: error: if statement condition must be of type 'bool', not 'int'
-    if s: g()
-       ~
-:14:8: error: if statement condition must be of type 'bool', not 'A'
+:12:9: error: bool converter must return bool
+    fun bool: return
+        ~~~~
+:19:8: error: if statement condition must be of a type convertible to 'bool'; 'A' isn't
     if a: g()
        ~
-:17:8: error: if statement condition must be of type 'bool', not 'B'
-    if b: g()
-       ~
-:19:11: error: while statement condition must be of type 'bool', not 'A'
+:24:11: error: while statement condition must be of a type convertible to 'bool'; 'A' isn't
     while a: g()
-          ~
-:20:11: error: while statement condition must be of type 'bool', not 'B'
-    while b: g()
-          ~
-:21:11: error: while statement condition must be of type 'bool', not 'int'
-    while s: g()
-          ~
+                    ~
 ]#
