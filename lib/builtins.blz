@@ -41,6 +41,8 @@ struct str:
 
     fun [](i: size) -> char: return @_data[i]
 
+    fun bool -> bool: return @len != 0
+
 fun print(s: str):
     _puts(s._data)
 
