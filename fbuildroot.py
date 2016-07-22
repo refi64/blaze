@@ -29,6 +29,9 @@ def pre_options(parser):
                                         ' output', action='store_true'),
         make_option('--debug-lexer', help='Tell Flex to emit debugging info',
                     action='store_true'),
+        make_option('--address-sanitizer',
+                    help="Enable Clang and/or GCC's address sanitizer",
+                    action='store_true'),
     ))
 
 class Flex(fbuild.db.PersistentObject):
@@ -73,6 +76,8 @@ def configure(ctx):
         opts['macros'] = ['NO_THREADS']
     if ctx.options.use_color:
         flags.append('-fdiagnostics-color')
+    if ctx.options.address_sanitizer:
+        flags.extend(('-fsanitize=address', '-fno-omit-frame-pointer'))
 
     c = guess_static(ctx, external_libs=['ds'], exe=ctx.options.cc, flags=flags,
         platform_options=[
