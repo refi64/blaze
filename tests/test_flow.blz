@@ -1,0 +1,43 @@
+fun f: return
+
+struct A:
+    fun new: return
+
+struct B:
+    fun new: return
+
+fun g:
+    let s = 0
+    if s: g()
+
+    let a = new A
+    if a: g()
+
+    let b = new B
+    if b: g()
+
+    while a: g()
+    while b: g()
+    while s: g()
+
+#[
+ERROR
+:11:8: error: if statement condition must be of type 'bool', not 'int'
+    if s: g()
+       ~
+:14:8: error: if statement condition must be of type 'bool', not 'A'
+    if a: g()
+       ~
+:17:8: error: if statement condition must be of type 'bool', not 'B'
+    if b: g()
+       ~
+:19:11: error: while statement condition must be of type 'bool', not 'A'
+    while a: g()
+          ~
+:20:11: error: while statement condition must be of type 'bool', not 'B'
+    while b: g()
+          ~
+:21:11: error: while statement condition must be of type 'bool', not 'int'
+    while s: g()
+          ~
+]#
