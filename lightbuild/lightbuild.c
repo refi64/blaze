@@ -355,7 +355,10 @@ static void build() {
 
 static void free_all() {
     int i;
-    for (i=0; i<nfiles; ++i) free(all_files[i].path);
+    for (i=0; i<nfiles; ++i) {
+        free(all_files[i].path);
+        free(all_files[i].obj);
+    }
     free(all_files);
     free(opts.compiler);
     free(opts.cflags);
