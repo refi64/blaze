@@ -16,6 +16,7 @@ src/config.c
 src/build.c
 tst.c
 tst.blz
+x.blz
 fbuildroot.py
 !:
 --howl.config.clang_completion = true
