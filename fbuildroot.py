@@ -32,6 +32,9 @@ def pre_options(parser):
         make_option('--address-sanitizer',
                     help="Enable Clang and/or GCC's address sanitizer",
                     action='store_true'),
+        make_option('--no-builtins',
+                    help="Have the Blaze compiler not build the builtins",
+                    action='store_true'),
     ))
 
 class Flex(fbuild.db.PersistentObject):
@@ -117,10 +120,15 @@ def build(ctx):
     cflags = rec.cflags
     ldlibs = rec.ldlibs
 
+    blaze_opts = {}
+    if ctx.options.no_builtins:
+        blaze_opts['macros'] = ['NO_BUILTINS']
+
     lex, hdr = flex('src/lex.l', 'lex.h')
     yacc = bison('src/parse.y', defines=True)
     c.build_exe('tst', ['tst.c', lex, yacc]+Path.glob('src/*.c'),
-        cflags=cflags, includes=['src', hdr.parent], ldlibs=ldlibs)
+        cflags=cflags, includes=['src', hdr.parent], ldlibs=ldlibs,
+        **blaze_opts)
 
     lightbuild_opts = {}
     if pthread.header:

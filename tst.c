@@ -16,7 +16,9 @@ int main(int argc, char** argv) {
 
     config = load_config();
 
+    #ifndef NO_BUILTINS
     assert(parse_file(LIBDIR BUILTINS ".blz", BUILTINS));
+    #endif
 
     ctx = parse_file(argv[1], "__main__");
     if (ctx) {

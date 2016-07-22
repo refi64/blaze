@@ -400,7 +400,9 @@ Module* igen(Node* n) {
     memset(&magic, 0, sizeof(magic));
 
     res = n->m = new(Module);
+    #ifndef NO_BUILTINS
     if (n != builtins_module) list_append(res->imports, builtins_module->m);
+    #endif
 
     res->name = string_clone(n->s);
 
