@@ -139,6 +139,9 @@ void symtab_add(Symtab* tab, String* name, STEntry* e) {
             bassert(p->overloads, "overloaded entry '%s' has no overloads",
                     name->str);
             list_append(p->overloads, e->overloads[0]);
+            list_free(e->overloads);
+            e->overloads = NULL;
+            stentry_free(e);
             return;
         } else if (ABS(p->level) == ABS(e->level)) {
             error(el, "duplicate definition of %s", name->str);

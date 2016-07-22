@@ -25,6 +25,7 @@ static void force_typed_expr_context(Node* n) {
     } else if (n->flags & Fvoid) {
         error(n->loc, "cannot use void value in expression");
         if (n->kind == Ncall) declared_here(n->sons[0]);
+        type_decref(n->type);
         n->type = anytype->override;
         type_incref(n->type);
     }
@@ -244,6 +245,7 @@ static void resolve_overload(Node* n) {
         type_incref(id->type);
     } else {
         id->e = possibilities[0];
+        if (id->type) type_decref(id->type);
         id->type = possibilities[0]->n->type;
         type_incref(id->type);
     }
