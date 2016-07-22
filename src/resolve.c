@@ -146,6 +146,7 @@ static void resolve0(Node* n) {
         }
         break;
     case Nif:
+    case Nwhile:
         n->sons[1]->func = n->func;
         n->sons[0]->parent = n->sons[1]->parent = n;
         resolve0(n->sons[0]);
@@ -186,6 +187,7 @@ static void resolve1(Node* n) {
         }
     // Fallthrough.
     case Nmodule: case Nstruct: case Narglist: case Ndecl: case Ncast: case Nif:
+    case Nwhile:
         for (i=0; i<list_len(n->sons); ++i)
             if (n->sons[i]) resolve1(n->sons[i]);
         break;

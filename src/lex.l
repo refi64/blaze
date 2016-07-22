@@ -45,6 +45,7 @@ void lex_init() {
     KW(new, TNEW)
     KW(delete, TDELETE)
     KW(if, TIF)
+    KW(while, TWHILE)
     KW(dup, TDUP)
 }
 

@@ -152,6 +152,7 @@ LexerContext* parse_string(const char* file, const char* module,
 %token <t> TNEW
 %token <t> TDELETE
 %token <t> TIF
+%token <t> TWHILE
 %token <t> TDUP
 %token <t> TID
 %token <t> TINT
@@ -191,6 +192,7 @@ LexerContext* parse_string(const char* file, const char* module,
 %type <n> assign
 %type <n> return
 %type <n> if
+%type <n> while
 %type <n> texpr
 %type <i> mutptr
 %type <n> typeof
@@ -336,6 +338,7 @@ stmt : let    { $$ = $1; }
      | return { $$ = $1; }
      | call   { $$ = $1; }
      | if     { $$ = $1; }
+     | while  { $$ = $1; }
 
 let : TLET modspec id TEQ expr {
     N($$, Nlet, $3->loc)
@@ -362,6 +365,12 @@ return : TRETURN expr {
 
 if : TIF expr TCOLON body {
     N($$, Nif, $1.loc)
+    list_append($$->sons, $2);
+    list_append($$->sons, $4);
+}
+
+while : TWHILE expr TCOLON body {
+    N($$, Nwhile, $1.loc)
     list_append($$->sons, $2);
     list_append($$->sons, $4);
 }

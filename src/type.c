@@ -457,13 +457,16 @@ void type(Node* n) {
         }
         break;
     case Nif:
+    case Nwhile:
         type(n->sons[0]);
         type(n->sons[1]);
         if (!typematch(builtin_types[Tbool]->override, n->sons[0]->type,
                        n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
-            error(n->sons[0]->loc, "if statement condition must be of type 'bool'"
-                                   ", not '%s'", ts->str);
+            ;
+            error(n->sons[0]->loc, "%s statement condition must be of type "
+                                   "'bool', not '%s'",
+                  n->kind == Nif ? "if" : "while", ts->str);
             string_free(ts);
         }
         break;

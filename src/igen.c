@@ -127,6 +127,29 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
         ir->kind = Ilabel;
         ir->label = label;
         break;
+    case Nwhile:
+        ir->kind = Ilabel;
+        ir->label = label = d->labels;
+        d->labels += 2;
+        instr_result(d, vs, ir); // XXX
+
+        ir = new(Instr);
+        ir->kind = Icjmp;
+        list_append(ir->v, igen_node(d, vs, n->sons[0]));
+        ir->label = label+1;
+        instr_result(d, vs, ir); // XXX
+
+        igen_node(d, vs, n->sons[1]);
+
+        ir = new(Instr);
+        ir->kind = Ijmp;
+        ir->label = label;
+        instr_result(d, vs, ir); // XXX
+
+        ir = new(Instr);
+        ir->kind = Ilabel;
+        ir->label = label+1;
+        break;
     case Nlet:
         ir->kind = Inew;
         n->v = ir->dst = var_new(d, ir, n->type, n->s);

@@ -219,6 +219,7 @@ struct Node {
         Nassign,
         Nreturn,
         Nif,
+        Nwhile,
         Ntypeof,
         Nptr,
         Nstruct,
@@ -251,6 +252,7 @@ struct Node {
     // Nlet: expr
     // Nassign: target, rhs
     // Nreturn: [expr]
+    // Nif, Nwhile: expr, body
     // Ntypeof: expr
     // Nptr: expr
     // Nstruct: members...
