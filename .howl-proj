@@ -14,6 +14,7 @@ src/cgen.c
 src/iopt.c
 src/config.c
 src/build.c
+lightbuild/lightbuild.c
 tst.c
 tst.blz
 x.blz
