@@ -219,6 +219,13 @@ static void resolve_overload(Node* n) {
 
     bassert(id->e && id->e->overload, "attempt to resolve non-overloaded node");
 
+    for (i=0; i<list_len(n->sons); ++i)
+        if (n->sons[i]->type == anytype->override) {
+            id->type = anytype->override;
+            type_incref(id->type);
+            return;
+        }
+
     for (i=0; i<2; ++i) {
         List(STEntry*) choices = possibilities ? possibilities : id->e->overloads;
         List(STEntry*) result = NULL;
