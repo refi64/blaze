@@ -234,7 +234,7 @@ static void resolve1(Node* n) {
         if (n->e->overload && !OVERLOAD(n->parent)) {
             if (list_len(n->e->overloads) > 1) {
                 int i;
-                error(n->loc, "ambiguous occurence of '%s'", n->s->str);
+                error(n->loc, "ambiguous occurrence of '%s'", n->s->str);
                 for (i=0; i<list_len(n->e->overloads); ++i) {
                     bassert(n->e->overloads[i]->n,
                             "'%s' is overloaded with a compiler builtin",

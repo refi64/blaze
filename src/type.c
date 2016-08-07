@@ -238,7 +238,7 @@ static void resolve_overload(Node* n) {
         if (!possibilities)
             error(id->loc, "no overload of '%s' with given arguments available",
                   s->str);
-        else error(id->loc, "ambiguous occurence of '%s'", s->str);
+        else error(id->loc, "ambiguous occurrence of '%s'", s->str);
         for (i=0; i<list_len(id->e->overloads); ++i)
             funmatch(Mnote, id->e->overloads[i]->n, n, &expected, 0);
         id->type = anytype->override;
