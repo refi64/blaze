@@ -325,7 +325,7 @@ static void link_objects() {
                             opts.exeflag_l + 1 + opts.target_l + 1;
     char* buf;
     int i;
-    for (i=0; i<nfiles; ++i) total += strlen(all_files[i].obj);
+    for (i=0; i<nfiles; ++i) total += strlen(all_files[i].obj) + 1;
     buf = alloc(total+1);
     P(opts.compiler, opts.compiler_l, ' ');
     for (i=0; i<nfiles; ++i) P(all_files[i].obj, strlen(all_files[i].obj), ' ');
