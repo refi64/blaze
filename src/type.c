@@ -224,6 +224,7 @@ static void resolve_overload(Node* n) {
 
     for (i=0; i<list_len(n->sons); ++i)
         if (n->sons[i]->type == anytype->override) {
+            if (id->type) type_decref(id->type);
             id->type = anytype->override;
             type_incref(id->type);
             return;
