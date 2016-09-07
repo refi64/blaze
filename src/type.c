@@ -301,8 +301,15 @@ void type(Node* n) {
     } else n->typing = 1;
 
     if (n->this && n->kind != Nstruct) {
-        bassert(n->parent->kind == Nstruct, "non-Nstruct son with this");
-        n->this->type = n->parent->type;
+        if (n->bind) {
+            bassert(n->bind->kind == Nid, "node bound to %d, not Nid",
+                    n->bind->kind);
+            bassert(n->bind->e && n->bind->e->n,
+                    "node bound without bound entry");
+            nn = n->bind->e->n;
+        } else nn = n->parent;
+        bassert(nn->kind == Nstruct, "non-Nstruct son with this");
+        n->this->type = nn->type;
         type_incref(n->this->type);
     }
 
