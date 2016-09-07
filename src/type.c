@@ -300,6 +300,12 @@ void type(Node* n) {
         return;
     } else n->typing = 1;
 
+    if (n->this && n->kind != Nstruct) {
+        bassert(n->parent->kind == Nstruct, "non-Nstruct son with this");
+        n->this->type = n->parent->type;
+        type_incref(n->this->type);
+    }
+
     switch (n->kind) {
     case Nmodule: case Narglist: case Nbody:
         for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
@@ -326,14 +332,7 @@ void type(Node* n) {
 
         n->flags |= Ftype;
         n->typing = 0;
-        for (i=0; i<list_len(n->sons); ++i) {
-            if (n->sons[i]->this) {
-                n->sons[i]->this->type = n->type;
-                type_incref(n->type);
-            }
-
-            type(n->sons[i]);
-        }
+        for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
 
         if (n->magic[Mnew])
             for (i=0; i<list_len(n->magic[Mnew]->overloads); ++i) {

@@ -49,6 +49,7 @@ static void igen_attr_chain(Decl* d, VarStack* vs, Var* v, Node* n) {
         ++v->base->uses;
     } else {
         igen_attr_chain(d, vs, v, n->sons[0]);
+        bassert(n->attr, "Nattr has no attr");
         if (!n->attr->d) {
             // Hope it's a decl...
             igen_decl(d->m, n->attr);
