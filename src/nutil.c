@@ -71,13 +71,15 @@ void node_free(Node* n) {
     case Ndecl: case Nattr:
         if (n->s) string_free(n->s);
         if (n->import) string_free(n->import);
-        if (n->kind == Nfun && n->exportc) string_free(n->exportc);
+        if (n->kind == Nfun) {
+            node_free(n->bind);
+            if (n->exportc) string_free(n->exportc);
+        }
         break;
     case Nsons: fatal("unexpected node kind Nsons");
     default: break;
     }
     if (n->type) type_decref(n->type);
     node_free(n->this);
-    node_free(n->bind);
     free(n);
 }
