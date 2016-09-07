@@ -69,14 +69,16 @@ def configure(ctx):
     flex = Flex(ctx, debug=ctx.options.debug_lexer)
     bison = Bison(ctx, flags=['-Wno-other', '-v', '--report-file',
                               ctx.buildroot / 'report'])
-    opts = {}
+    opts = {'macros': []}
     flags = ctx.options.cflag
     if ctx.options.release:
         opts['optimize'] = True
     else:
         opts['debug'] = True
     if not ctx.options.threads:
-        opts['macros'] = ['NO_THREADS']
+        opts['macros'].append('NO_THREADS')
+    if ctx.options.no_builtins:
+        opts['macros'].append('NO_BUILTINS')
     if ctx.options.use_color:
         flags.append('-fdiagnostics-color')
     if ctx.options.address_sanitizer:
@@ -120,15 +122,10 @@ def build(ctx):
     cflags = rec.cflags
     ldlibs = rec.ldlibs
 
-    blaze_opts = {}
-    if ctx.options.no_builtins:
-        blaze_opts['macros'] = ['NO_BUILTINS']
-
     lex, hdr = flex('src/lex.l', 'lex.h')
     yacc = bison('src/parse.y', defines=True)
     c.build_exe('tst', ['tst.c', lex, yacc]+Path.glob('src/*.c'),
-        cflags=cflags, includes=['src', hdr.parent], ldlibs=ldlibs,
-        **blaze_opts)
+        cflags=cflags, includes=['src', hdr.parent], ldlibs=ldlibs)
 
     lightbuild_opts = {}
     if pthread.header:
