@@ -305,6 +305,8 @@ void type(Node* n) {
 
     if (n->this && n->kind != Nstruct) {
         if (n->bind) {
+            type(n->bind);
+            force_type_context(n->bind);
             bassert(n->bind->kind == Nid, "node bound to %d, not Nid",
                     n->bind->kind);
             bassert(n->bind->e && n->bind->e->n,
@@ -387,12 +389,6 @@ void type(Node* n) {
             force_type_context(n->sons[0]);
         }
         if (n->sons[1]) type(n->sons[1]);
-        if (n->bind) {
-            type(n->bind);
-            force_type_context(n->bind);
-            n->this->type = n->bind->type;
-            type_incref(n->this->type);
-        }
         n->type = new(Type);
         n->type->kind = Tfun;
         type_incref(n->type);

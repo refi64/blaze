@@ -78,5 +78,6 @@ void node_free(Node* n) {
     }
     if (n->type) type_decref(n->type);
     node_free(n->this);
+    node_free(n->bind);
     free(n);
 }

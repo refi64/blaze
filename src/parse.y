@@ -281,6 +281,7 @@ funid : id {
           $$.s = $1.s;
           string_mergec($$.s, '.');
           string_merge($$.s, $3.s);
+          string_free($3.s);
       }
 
 funbody : TCOLON body { $$.exportc = 0; $$.import = 0; $$.rn = $2; }
