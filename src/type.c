@@ -649,7 +649,6 @@ void type(Node* n) {
                     // XXX: This lies about the type to the code generator.
                     n->type = n->type->sons[0];
                 }
-                type_incref(n->type);
                 // igen will later need the node that was indexed.
                 list_append(n->sons, nn);
             }
