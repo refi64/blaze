@@ -79,6 +79,10 @@ fun k -> int:
     let v = new int
     return v
 
+fun l -> int:
+    let v = new Undefined
+    return v
+
 #[
 ERROR
 :9:5: error: duplicate definition of mx
@@ -105,6 +109,9 @@ ERROR
 :8:5: note: 'mx' declared here
     mx: int
     ~~
+:83:17: error: undeclared identifier 'Undefined'
+    let v = new Undefined
+                ~~~~~~~~~
 :13:9: error: function expected 0 argument(s), not 1
     my(x)
     ~~

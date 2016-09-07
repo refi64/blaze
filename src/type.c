@@ -5,13 +5,16 @@
 #include "blaze.h"
 
 static void force_type_context(Node* n) {
-    if (!(n->flags & Ftype) && n->type != anytype->override) {
-        error(n->loc, "expression is not a type");
-        if (n->e && n->e->n) declared_here(n->e->n);
+    if (!(n->flags & Ftype)) {
+        if (n->type != anytype->override) {
+            error(n->loc, "expression is not a type");
+            if (n->e && n->e->n) declared_here(n->e->n);
+        }
         n->e = anytype;
         type_decref(n->type);
         n->type = anytype->override;
         type_incref(n->type);
+        n->flags |= Ftype;
     }
 }
 
@@ -671,7 +674,8 @@ void type(Node* n) {
 
             if (n->sons[0]->type->kind != Tstruct) {
                 nn = NULL;
-                error(n->sons[0]->loc, "new requires a user-defined type");
+                if (n->sons[0]->type != anytype->override)
+                    error(n->sons[0]->loc, "new requires a user-defined type");
                 type_decref(n->sons[0]->type);
                 n->sons[0]->type = anytype->override;
                 type_incref(n->sons[0]->type);
