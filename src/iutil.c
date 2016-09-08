@@ -105,7 +105,7 @@ void instr_dump(Instr* ir) {
 
 void instr_free(Instr* ir) {
     switch (ir->kind) {
-    case Iint: string_free(ir->s); break;
+    case Iint: case Istr: string_free(ir->s); break;
     default: break;
     }
     list_free(ir->v);
