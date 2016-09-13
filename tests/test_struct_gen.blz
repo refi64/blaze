@@ -1,0 +1,15 @@
+struct X:
+    v: int
+    fun new: @f()
+    mut fun f: @v = 2
+
+fun main -> int:
+    let mut x = new X
+    let s = "abc"[x.v :: size]
+    print(new str(&s, 1))
+    return 0
+
+#[
+RUN
+c
+]#
