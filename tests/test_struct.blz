@@ -83,6 +83,15 @@ fun l -> int:
     let v = new Undefined
     return v
 
+struct F:
+    fun new: return
+    fun [](n: int) -> int: return n
+    fun f: return
+
+fun m -> int:
+    let f = new F
+    return f[f.f()]
+
 #[
 ERROR
 :9:5: error: duplicate definition of mx
@@ -163,4 +172,13 @@ ERROR
 :79:17: error: new requires a user-defined type
     let v = new int
                 ~~~
+:93:16: error: cannot use void value in expression
+    return f[f.f()]
+               ~
+:92:9: note: 'f' declared here
+    let f = new F
+        ~
+:89:9: note: 'f' declared here
+    fun f: return
+        ~
 #]

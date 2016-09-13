@@ -599,6 +599,8 @@ void type(Node* n) {
     case Nindex:
         type(n->sons[0]);
         type(n->sons[1]);
+        force_typed_expr_context(n->sons[0]);
+        force_typed_expr_context(n->sons[1]);
         if (n->sons[0]->type->kind == Tany) n->type = anytype->override;
         else if (n->sons[0]->type->kind == Tptr) {
             if (n->sons[1]->type->kind != Tbuiltin ||
