@@ -15,6 +15,9 @@ fun _free(d: *byte) "free"
 fun _strlen(d: *char) -> size "strlen"
 fun _memcpy(tgt: *mut byte, src: *byte, len: size) "memcpy"
 
+fun _sprintf_d(tgt: *mut char, fm: *char, arg: int) -> int "sprintf"
+fun _snprintf_d(tgt: *mut char, len: size, fm: *char, arg: int) -> int "snprintf"
+
 struct str:
     _data: *mut char
     len: size
@@ -52,3 +55,9 @@ fun argument(i: int) -> str:
     let mut s = new str(len)
     _memcpy(s._data :: *byte, arg :: *byte, len+1)
     return s
+
+fun tos(i: int) -> str:
+    let len = _snprintf_d(0 :: *mut char, 0, "%d"._data, i)
+    let mut tgt = new str(len :: size)
+    _sprintf_d(tgt._data, "%d"._data, i)
+    return tgt
