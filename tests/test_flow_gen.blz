@@ -1,0 +1,36 @@
+fun main -> int:
+    print("LOOP")
+    let var x = 10
+    while x > 0:
+        print(tos(x))
+        x = x-1
+    print("END")
+    print(tos(x))
+
+    print("IF")
+    if true: print("OK")
+    if true == true: print("OK")
+    if 1 == 1: print("OK")
+
+    return 0
+
+#[
+RUN
+LOOP
+10
+9
+8
+7
+6
+5
+4
+3
+2
+1
+END
+0
+IF
+OK
+OK
+OK
+]#
