@@ -6,6 +6,8 @@
 
 #define SVFLAGS (Fmut | Fvar | Fcst)
 
+static void resolve0(Node* n);
+
 static void make_magic_this(Node* n) {
     STEntry* e;
     String* s = string_new("@");
@@ -17,6 +19,21 @@ static void make_magic_this(Node* n) {
     e = stentry_new(n->this, s, NULL);
     symtab_add(n->tab, s, e);
     string_free(s);
+}
+
+static void resolve0_tv(Node* n) {
+    int i;
+    Node* tv;
+    STEntry* e;
+    if (!n->tv) return;
+    for (i=0; i<list_len(n->tv); ++i) {
+        tv = n->tv[i];
+        e = stentry_new(tv, tv->s, NULL);
+        bassert(tv->kind == Nid, "invalid kind %d in tv", tv->kind);
+        symtab_add(n->tab, tv->s, e);
+        tv->parent = n;
+        resolve0(tv);
+    }
 }
 
 static void resolve0(Node* n) {
@@ -54,8 +71,8 @@ static void resolve0(Node* n) {
         n->tab = symtab_sub(n->parent->tab);
         symtab_add(n->parent->tab, n->s, e);
 
+        resolve0_tv(n);
         n->tab->level = -n->tab->level;
-
         make_magic_this(n);
 
         for (i=0; i<list_len(n->sons); ++i) {

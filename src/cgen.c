@@ -94,7 +94,7 @@ static void cgen_typedef(Type* t, FILE* output) {
     for (i=0; i<list_len(t->sons); ++i)
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
     switch (t->kind) {
-    case Tany: fatal("unexpected type kind Tany");
+    case Tany: case Tvar: fatal("unexpected type kind %d", t->kind);
     case Tbuiltin: case Tptr: break;
     case Tfun:
         fprintf(output, "typedef %s", CNAME(t->sons[0]));

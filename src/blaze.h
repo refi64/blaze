@@ -144,7 +144,8 @@ struct Type {
         Tbuiltin,
         Tptr,
         Tstruct,
-        Tfun
+        Tfun,
+        Tvar
     } kind;
     union {
         enum {
@@ -264,6 +265,7 @@ struct Node {
     // Nbody: stmts...
     // Nmodule: tstmts...
     List(Node*) sons;
+    List(Node*) tv; // Type vars; only on some kinds (e.g. Nstruct, Nfun).
     Node* parent, *func, *this, *module;
     STEntry* e; // Only relevant on some kinds (e.g. Nid).
     Symtab* tab; // NOTE: Only Nmodule, Nfun free their symbol tables.

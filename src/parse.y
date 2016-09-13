@@ -214,6 +214,9 @@ LexerContext* parse_string(const char* file, const char* module,
 %type <n> op
 
 %type <i> modspec
+%type <l> optgen
+%type <l> genlist
+%type <n> tvar
 
 %destructor { if ($$.s) string_free($$.s); } <t>
 %destructor { node_free($$); } <n>
@@ -234,13 +237,14 @@ tstmt2 : struct | fun | global
 
 tstmt : tstmt2         { $$ = $1; }
 
-struct : TSTRUCT id TCOLON members {
+struct : TSTRUCT id optgen TCOLON members {
     int i;
     N($$, Nstruct, $2->loc)
     $$->s = string_clone($2->s);
     node_free($2);
-    for (i=0; i<list_len($4); ++i) list_append($$->sons, $4[i]);
-    list_free($4);
+    $$->tv = $3;
+    for (i=0; i<list_len($5); ++i) list_append($$->sons, $5[i]);
+    list_free($5);
 }
 
 members : indent members2 unindent { $$ = $2; }
@@ -302,6 +306,14 @@ arglist :         { N($$, Narglist, yylloc) }
 
 arglist2 : decl { N($$, Narglist, $1->loc); list_append($$->sons, $1); }
          | arglist2 TCOMMA decl { $$ = $1; list_append($$->sons, $3); }
+
+optgen : TLBK genlist TRBK { $$ = $2; }
+       |                   { $$ = NULL; }
+
+genlist : tvar                { $$ = NULL; list_append($$, $1); }
+        | genlist TCOMMA tvar { list_append($$, $3); }
+
+tvar : id { $$ = $1; }
 
 globalsuf :          { $$ = NULL; }
           | TEQ expr { $$ = $2; }

@@ -1,0 +1,17 @@
+struct X[T]:
+    v: T
+    fun new: return
+
+fun f -> int:
+    let x = new X
+    return x.v
+
+#[
+ERROR
+:6:17: error: expected non-generic type
+    let x = new X
+                ~
+:1:8: note: 'X' declared here
+    struct X[T]:
+           ~
+]#

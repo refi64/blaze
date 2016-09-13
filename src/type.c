@@ -10,12 +10,17 @@ static void force_type_context(Node* n) {
             error(n->loc, "expression is not a type");
             if (n->e && n->e->n) declared_here(n->e->n);
         }
-        n->e = anytype;
-        type_decref(n->type);
-        n->type = anytype->override;
-        type_incref(n->type);
-        n->flags |= Ftype;
-    }
+    } else if (n->e && n->e->n && n->e->n->tv) {
+        error(n->loc, "expected non-generic type");
+        declared_here(n);
+    } else return;
+
+
+    n->e = anytype;
+    type_decref(n->type);
+    n->type = anytype->override;
+    type_incref(n->type);
+    n->flags |= Ftype;
 }
 
 static void force_typed_expr_context(Node* n) {
@@ -73,7 +78,7 @@ static String* typestring(Type* t) {
             string_free(s);
         }
         return res;
-    case Tstruct: return string_clone(t->name);
+    case Tstruct: case Tvar: return string_clone(t->name);
     case Tany: fatal("unexpected type kind Tany");
     }
 }
@@ -95,7 +100,7 @@ static int typematch(Type* a, Type* b, Node* ctx) {
             if (!typematch(a->sons[i], b->sons[i], NULL)) return 0;
         return 1;
     case Tstruct: return a == b;
-    case Tany: fatal("unexpected type kind Tany");
+    case Tany: case Tvar: fatal("unexpected type kind %d", a->kind);
     }
 }
 
@@ -291,6 +296,19 @@ static void check_index_magic(Node* n, Magic m) {
             }
 }
 
+static void type_tv(Node* n) {
+    int i;
+    Node* tv;
+    if (!n->tv) return;
+    for (i=0; i<list_len(n->tv); ++i) {
+        tv = n->tv[i];
+        tv->type = new(Type);
+        tv->type->kind = Tvar;
+        tv->type->name = string_clone(tv->s);
+        tv->flags |= Ftype;
+    }
+}
+
 void type(Node* n) {
     Node* nn;
     int i;
@@ -345,6 +363,7 @@ void type(Node* n) {
 
         n->flags |= Ftype;
         n->typing = 0;
+        type_tv(n);
         for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
 
         if (n->magic[Mnew])
