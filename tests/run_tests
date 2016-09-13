@@ -5,10 +5,23 @@
 
 dir=`dirname $0`
 
-run_test1() {
+compile() {
     test=$1
     shift
     $@ $dir/../build/tst $test /tmp/$$.tmp 2>&1 1>/dev/null
+}
+
+compile_run() {
+    test=$1
+    shift
+    $@ $dir/../build/tst $test /tmp/$$.tmp 1>/dev/null
+    [ -f /tmp/$$.tmp ] && /tmp/$$.tmp
+}
+
+message() {
+    len=`printf "$1" | wc -c`
+    str=`printf '*%.0s' $(seq 1 $len)`
+    echo -e "$str\n$1\n$str"
 }
 
 run_test() {
@@ -21,7 +34,15 @@ run_test() {
         data=`cat $test | awk '/#\[/,/\]#/' | tail -n +2 | head -n -1`
         kind=`echo "$data" | head -1`
         expected=`echo "$data" | tail -n +2 | sed "s#^:#$test:#"`
-        output=`run_test1 $test | perl -pe 's/\e\[?.*?[\@-~]//g'`
+        case "$kind" in
+            ERROR) func=compile ;;
+            RUN) func=compile_run ;;
+            *)
+                message "test $test has invalid kind $kind"
+                exit 1
+                ;;
+        esac
+        output=`$func $test | perl -pe 's/\e\[?.*?[\@-~]//g'`
         diff -u -B -b <(echo "$expected") <(echo "$output")
     fi
 }
