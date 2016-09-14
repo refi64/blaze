@@ -815,14 +815,15 @@ void type(Node* n) {
         break;
     case Nattr:
         type(n->sons[0]);
-        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
-        else if (n->sons[0]->type->kind != Tstruct) {
+        tt = skip(n->sons[0]->type);
+        if (tt == anytype->override) n->type = anytype->override;
+        else if (tt->kind != Tstruct) {
             String* ts = typestring(n->sons[0]->type);
             error(n->sons[0]->loc, "'%s' is not a struct", ts->str);
             declared_here(n->sons[0]);
             n->type = anytype->override;
         } else {
-            STEntry* e = symtab_findl(n->sons[0]->type->n->tab, n->s);
+            STEntry* e = symtab_findl(tt->n->tab, n->s);
             if (!e) {
                 error(n->loc, "undefined attribute '%s'", n->s->str);
                 declared_here(n->sons[0]);
