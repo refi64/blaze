@@ -9,6 +9,10 @@ fun f -> int:
 fun g -> int:
     let x = new X[int]
     return x
+    return x.v
+    let y = new X[str]
+    return y
+    return y.v
 
 #[
 ERROR
@@ -27,4 +31,25 @@ ERROR
 :10:9: note: 'x' declared here
     let x = new X[int]
         ~
+:14:12: error: function was declared to return type 'int', not 'X[str]'
+    return y
+           ~
+:9:10: note: function return type declared here
+    fun g -> int:
+             ~~~
+:13:9: note: 'y' declared here
+    let y = new X[str]
+        ~
+:15:14: error: function was declared to return type 'int', not 'str'
+    return y.v
+             ~
+:9:10: note: function return type declared here
+    fun g -> int:
+             ~~~
+:13:9: note: 'y' declared here
+    let y = new X[str]
+        ~
+:2:5: note: 'v' declared here
+    v: T
+    ~
 ]#

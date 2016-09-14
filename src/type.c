@@ -78,7 +78,10 @@ static String* typestring(Type* t) {
             string_free(s);
         }
         return res;
-    case Tstruct: case Tvar: return string_clone(t->name);
+    case Tvar:
+        if (t->sons) return typestring(t->sons[0]);
+    // Fallthrough.
+    case Tstruct: return string_clone(t->name);
     case Tinst:
         res = typestring(t->base);
         string_mergec(res, '[');
@@ -98,6 +101,8 @@ static int typematch(Type* a, Type* b, Node* ctx) {
     int i;
     bassert(a && b, "expected non-null types");
     if (a->kind == Tany || b->kind == Tany) return 1;
+    if (a->kind == Tvar && a->sons) a = a->sons[0];
+    if (b->kind == Tvar && b->sons) b = b->sons[0];
     if (a->kind != b->kind) return 0;
     switch (a->kind) {
     case Tbuiltin:
@@ -140,14 +145,54 @@ void type_decref(Type* t) {
     case Tany: case Tbuiltin: case Tstruct: string_free(t->name); break;
     default: break;
     }
-    for (i=0; i<list_len(t->sons); ++i) if (t->sons[i]) type_decref(t->sons[i]);
+    if (t->kind != Tvar)
+        for (i=0; i<list_len(t->sons); ++i)
+            if (t->sons[i]) type_decref(t->sons[i]);
     list_free(t->sons);
     free(t);
 }
 
 Type* skip(Type* t) {
-    while (t->kind == Tinst) t = t->base;
+    for (;;) {
+        Type* tt = t;
+        switch (t->kind) {
+        case Tinst: tt = t->base; break;
+        case Tvar: if (t->sons) tt = t->sons[0]; break;
+        default: break;
+        }
+        if (t == tt) break;
+        t = tt;
+    }
     return t;
+}
+
+Type* skipvar(Type* t) {
+    while (t->kind == Tvar && t->sons) t = t->sons[0];
+    return t;
+}
+
+static List(Type*) get_tv_context(List(Node*) tvs) {
+    int i;
+    List(Type*) res = NULL;
+    for (i=0; i<list_len(tvs); ++i)
+        list_append(res, tvs[i]->type->sons ? tvs[i]->type->sons[0] : NULL);
+    return res;
+}
+
+static void set_tv_context(List(Node*) tvs, List(Type*) ctx) {
+    int i;
+    bassert(list_len(tvs) == list_len(ctx), "tv len != context len");
+    for (i=0; i<list_len(tvs); ++i) {
+        if (ctx[i]) {
+            if (tvs[i]->type->sons) tvs[i]->type->sons[0] = ctx[i];
+            else list_append(tvs[i]->type->sons, ctx[i]);
+        } else list_free(tvs[i]->sons);
+    }
+}
+
+static void clear_tv_context(List(Node*) tvs) {
+    int i;
+    for (i=0; i<list_len(tvs); ++i) list_free(tvs[i]->type->sons);
 }
 
 typedef enum Match {
@@ -336,7 +381,14 @@ static void type_tv(Node* n) {
 void type(Node* n) {
     Node* nn;
     Type* tt;
+    List(Type*) tvx = NULL;
     int i;
+
+    #define TVS(tv, ctx) do { \
+        tvx = get_tv_context((tv)); \
+        set_tv_context((tv), (ctx)); \
+    } while (0)
+    #define TVR(tv) do { if (tvx) set_tv_context((tv), tvx); } while (0)
 
     bassert(n, "expected non-null node");
     if (n->type) return;
@@ -374,6 +426,10 @@ void type(Node* n) {
         type_incref(n->type);
         n->this->type = n->type;
         type_incref(n->type);
+        type_tv(n);
+
+        tvx = get_tv_context(n->tv);
+        clear_tv_context(n->tv);
 
         for (i=0; i<Mend; ++i) {
             STEntry* e;
@@ -388,7 +444,6 @@ void type(Node* n) {
 
         n->flags |= Ftype;
         n->typing = 0;
-        type_tv(n);
         for (i=0; i<list_len(n->sons); ++i) type(n->sons[i]);
 
         if (n->magic[Mnew])
@@ -427,6 +482,8 @@ void type(Node* n) {
                 error(nn->sons[0] ? nn->sons[0]->loc : nn->loc,
                       "bool converter must return bool");
         }
+
+        TVR(n->tv);
         break;
     case Nfun:
         if (n->sons[0]) {
@@ -824,6 +881,8 @@ void type(Node* n) {
             n->type = anytype->override;
         } else {
             STEntry* e = symtab_findl(tt->n->tab, n->s);
+            if (n->sons[0]->type->kind == Tinst)
+                TVS(tt->n->tv, n->sons[0]->type->sons);
             if (!e) {
                 error(n->loc, "undefined attribute '%s'", n->s->str);
                 declared_here(n->sons[0]);
@@ -843,12 +902,13 @@ void type(Node* n) {
 
                 bassert(e->n, "attribute node has no corresponding entry");
                 type(e->n);
-                n->type = e->n->type;
+                n->type = skipvar(e->n->type);
                 n->attr = e->n;
                 if (n->sons[0]->flags & Fmv) flags |= Fvar;
                 flags &= e->n->flags & Fmv;
                 n->flags |= flags;
             }
+            TVR(tt->n->tv);
         }
         if (n->type) type_incref(n->type);
         break;
