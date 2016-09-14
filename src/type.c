@@ -44,7 +44,7 @@ static String* typestring(Type* t) {
     int i;
     char* p;
     bassert(t, "expected non-null type");
-    switch (skip(t)->kind) {
+    switch (t->kind) {
     case Tbuiltin:
         switch (t->bkind) {
         case Tint: return string_new("int");
@@ -79,7 +79,18 @@ static String* typestring(Type* t) {
         }
         return res;
     case Tstruct: case Tvar: return string_clone(t->name);
-    case Tany: case Tinst: fatal("unexpected type kind %d", t->kind);
+    case Tinst:
+        res = typestring(t->base);
+        string_mergec(res, '[');
+        for (i=0; i<list_len(t->sons); ++i) {
+            if (i) string_merges(res, ", ");
+            s = typestring(t->sons[i]);
+            string_merge(res, s);
+            string_free(s);
+        }
+        string_mergec(res, ']');
+        return res;
+    case Tany: fatal("unexpected type kind %d", t->kind);
     }
 }
 
@@ -101,7 +112,13 @@ static int typematch(Type* a, Type* b, Node* ctx) {
         return 1;
     case Tstruct: return a == b;
     case Tinst:
-        ;
+        if (typematch(a->base, b->base, NULL)) return 1;
+        else if (list_len(a->sons) != list_len(b->sons)) return 0;
+        else {
+            for (i=0; i<list_len(a->sons); ++i)
+                if (!typematch(a->sons[i], b->sons[i], NULL)) return 0;
+            return 1;
+        }
     case Tany: case Tvar: fatal("unexpected type kind %d", a->kind);
     }
 }
@@ -730,7 +747,7 @@ void type(Node* n) {
         if (n->kind == Nnew) {
             bassert(n->sons[0]->flags & Ftype, "new of non-type");
 
-            if (skip(n->sons[0]->type)->kind != Tstruct) {
+            if (n->sons[0]->type->kind != Tstruct) {
                 nn = NULL;
                 if (n->sons[0]->type != anytype->override)
                     error(n->sons[0]->loc, "new requires a user-defined type");
@@ -738,7 +755,7 @@ void type(Node* n) {
                 n->sons[0]->type = anytype->override;
                 type_incref(n->sons[0]->type);
             } else {
-                nn = skip(n->sons[0]->type)->n;
+                nn = n->sons[0]->type->n;
                 if (!(n->sons[0]->e = nn->magic[Mnew])) {
                     type_decref(n->sons[0]->type);
                     n->sons[0]->type = anytype->override;
