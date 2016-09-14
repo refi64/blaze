@@ -6,6 +6,10 @@ fun f -> int:
     let x = new X
     return x.v
 
+fun g -> int:
+    let x = new X[int]
+    return x
+
 #[
 ERROR
 :6:17: error: expected non-generic type
@@ -14,4 +18,13 @@ ERROR
 :1:8: note: 'X' declared here
     struct X[T]:
            ~
+:11:12: error: function was declared to return type 'int', not 'X[int]'
+    return x
+           ~
+:9:10: note: function return type declared here
+    fun g -> int:
+             ~~~
+:10:9: note: 'x' declared here
+    let x = new X[int]
+        ~
 ]#

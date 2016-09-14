@@ -158,7 +158,7 @@ typedef enum Match {
 
 static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
                     int strict) {
-    Type* ft = func->type;
+    Type* ft = skip(func->type);
     *expected = NULL;
     int ngiven = list_len(n->sons)-1, nexpect, i, res = 1;
     if (ft->kind == Tstruct && !ft->n->magic[Mnew]) {
@@ -335,6 +335,7 @@ static void type_tv(Node* n) {
 
 void type(Node* n) {
     Node* nn;
+    Type* tt;
     int i;
 
     bassert(n, "expected non-null node");
@@ -717,6 +718,7 @@ void type(Node* n) {
                   ts->str);
             declared_here(n->sons[0]);
             string_free(ts);
+            n->type = anytype->override;
         } else if (list_len(n->sons)-1 != list_len(n->sons[0]->type->n->tv)) {
             String* ts = typestring(n->sons[0]->type);
             error(n->sons[0]->loc, "generic type '%s' expects %d type arguments"
@@ -725,10 +727,10 @@ void type(Node* n) {
                                    list_len(n->sons)-1);
             declared_here(n->sons[0]);
             string_free(ts);
+            n->type = anytype->override;
         } else {
             n->type = new(Type);
             n->type->kind = Tinst;
-            type_incref(n->type);
             n->type->base = n->sons[0]->type;
             type_incref(n->type->base);
             for (i=1; i<list_len(n->sons); ++i) {
@@ -736,6 +738,7 @@ void type(Node* n) {
                 type_incref(n->sons[i]->type);
             }
         }
+        type_incref(n->type);
         break;
     case Nnew: case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
@@ -743,24 +746,29 @@ void type(Node* n) {
             if (n->kind == Nnew && i == 0) force_type_context(n->sons[i]);
             else force_typed_expr_context(n->sons[i]);
         }
+        tt = NULL;
 
         if (n->kind == Nnew) {
+            Type* skt = skip(n->sons[0]->type);
             bassert(n->sons[0]->flags & Ftype, "new of non-type");
 
-            if (n->sons[0]->type->kind != Tstruct) {
+            if (skt->kind != Tstruct) {
                 nn = NULL;
-                if (n->sons[0]->type != anytype->override)
+                tt = NULL;
+                if (skt != anytype->override)
                     error(n->sons[0]->loc, "new requires a user-defined type");
                 type_decref(n->sons[0]->type);
                 n->sons[0]->type = anytype->override;
                 type_incref(n->sons[0]->type);
             } else {
-                nn = n->sons[0]->type->n;
+                nn = skt->n;
                 if (!(n->sons[0]->e = nn->magic[Mnew])) {
                     type_decref(n->sons[0]->type);
                     n->sons[0]->type = anytype->override;
                     type_incref(n->sons[0]->type);
                 }
+                tt = n->sons[0]->type;
+                type_incref(tt);
             }
         }
 
@@ -772,8 +780,7 @@ void type(Node* n) {
         }
 
         if (n->sons[0]->type == anytype->override)
-            n->type = n->kind == Nnew && nn && nn->type ? nn->type :
-                      anytype->override;
+            n->type = n->kind == Nnew && tt ? tt : anytype->override;
         else if (n->kind == Ncall && !is_callable(n->sons[0])) {
             String* ts = typestring(n->sons[0]->type);
             error(n->loc, "cannot call non-callable type '%s'", ts->str);
@@ -787,7 +794,7 @@ void type(Node* n) {
                 else if (n->kind == Nnew) {
                     bassert(n->sons[0]->flags & Ftype,
                             "expected type as first son");
-                    n->type = n->sons[0]->e->n->parent->type; // XXX
+                    n->type = tt;
                 } else {
                     n->type = anytype->override;
                     n->flags |= Fvoid;
@@ -795,6 +802,7 @@ void type(Node* n) {
             } else n->type = anytype->override;
         }
         type_incref(n->type);
+        if (tt) type_decref(tt);
         break;
     case Ncast:
         type(n->sons[0]);
