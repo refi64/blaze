@@ -117,7 +117,11 @@ static int typematch(Type* a, Type* b, Node* ctx) {
         return 1;
     case Tstruct: return a == b;
     case Tinst:
-        if (typematch(a->base, b->base, NULL)) return 1;
+        for (i=0; i<list_len(a->sons); ++i)
+            if (a->sons[i]->kind == Tany) return 1;
+        for (i=0; i<list_len(b->sons); ++i)
+            if (b->sons[i]->kind == Tany) return 1;
+        if (!typematch(a->base, b->base, NULL)) return 0;
         else if (list_len(a->sons) != list_len(b->sons)) return 0;
         else {
             for (i=0; i<list_len(a->sons); ++i)

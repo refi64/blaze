@@ -14,8 +14,15 @@ fun g -> int:
     return y
     return y.v
 
+fun h -> X[int]:
+    return new X[Y]
+    return new X[str]
+
 #[
 ERROR
+:18:18: error: undeclared identifier 'Y'
+    return new X[Y]
+                 ~
 :6:17: error: expected non-generic type
     let x = new X
                 ~
@@ -52,4 +59,10 @@ ERROR
 :2:5: note: 'v' declared here
     v: T
     ~
+:19:17: error: function was declared to return type 'X[int]', not 'X[str]'
+    return new X[str]
+                ~
+:17:11: note: function return type declared here
+    fun h -> X[int]:
+              ~
 ]#
