@@ -261,7 +261,7 @@ static Var* igen_node(Decl* d, VarStack* vs, Node* n) {
         ir->dst = var_new(d, ir, n->type, NULL);
         break;
     case Nmodule: case Nstruct: case Nfun: case Narglist: case Ndecl: case Nsons:
-    case Nptr:
+    case Nptr: case Ninst:
         fatal("unexpected node kind %d", n->kind);
     }
 

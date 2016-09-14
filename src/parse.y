@@ -194,6 +194,7 @@ LexerContext* parse_string(const char* file, const char* module,
 %type <n> if
 %type <n> while
 %type <n> texpr
+%type <l> tlist
 %type <i> mutptr
 %type <n> typeof
 %type <n> expr
@@ -395,6 +396,16 @@ texpr : name   { $$ = $1; }
           list_append($$->sons, $3);
           $$->flags |= $2;
       }
+      | texpr TLBK tlist TRBK {
+          int i;
+          N($$, Ninst, $2.loc)
+          list_append($$->sons, $1);
+          for (i=0; i<list_len($3); ++i) list_append($$->sons, $3[i]);
+          list_free($3);
+      }
+
+tlist : texpr              { $$ = NULL; list_append($$, $1); }
+      | tlist TCOMMA texpr { $$ = $1; list_append($$, $3); }
 
 mutptr :      { $$ = 0; }
        | TMUT { $$ = Fmut; }

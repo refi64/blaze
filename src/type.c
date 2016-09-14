@@ -10,7 +10,7 @@ static void force_type_context(Node* n) {
             error(n->loc, "expression is not a type");
             if (n->e && n->e->n) declared_here(n->e->n);
         }
-    } else if (n->e && n->e->n && n->e->n->tv) {
+    } else if (n->e && n->e->n && n->e->n->tv && n->parent->kind != Ninst) {
         error(n->loc, "expected non-generic type");
         declared_here(n);
     } else return;
@@ -44,7 +44,7 @@ static String* typestring(Type* t) {
     int i;
     char* p;
     bassert(t, "expected non-null type");
-    switch (t->kind) {
+    switch (skip(t)->kind) {
     case Tbuiltin:
         switch (t->bkind) {
         case Tint: return string_new("int");
@@ -79,7 +79,7 @@ static String* typestring(Type* t) {
         }
         return res;
     case Tstruct: case Tvar: return string_clone(t->name);
-    case Tany: fatal("unexpected type kind Tany");
+    case Tany: case Tinst: fatal("unexpected type kind %d", t->kind);
     }
 }
 
@@ -100,6 +100,8 @@ static int typematch(Type* a, Type* b, Node* ctx) {
             if (!typematch(a->sons[i], b->sons[i], NULL)) return 0;
         return 1;
     case Tstruct: return a == b;
+    case Tinst:
+        ;
     case Tany: case Tvar: fatal("unexpected type kind %d", a->kind);
     }
 }
@@ -124,6 +126,11 @@ void type_decref(Type* t) {
     for (i=0; i<list_len(t->sons); ++i) if (t->sons[i]) type_decref(t->sons[i]);
     list_free(t->sons);
     free(t);
+}
+
+Type* skip(Type* t) {
+    while (t->kind == Tinst) t = t->base;
+    return t;
 }
 
 typedef enum Match {
@@ -679,6 +686,40 @@ void type(Node* n) {
         }
         type_incref(n->type);
         break;
+    case Ninst:
+        for (i=0; i<list_len(n->sons); ++i) {
+            type(n->sons[i]);
+            force_type_context(n->sons[i]);
+        }
+        n->flags |= Ftype;
+        if (n->sons[0]->type == anytype->override) n->type = anytype->override;
+        else if (n->sons[0]->type->kind != Tstruct ||
+                 !n->sons[0]->type->n->tv) {
+            String* ts = typestring(n->sons[0]->type);
+            error(n->sons[0]->loc, "cannot instantiate non-generic type '%s'",
+                  ts->str);
+            declared_here(n->sons[0]);
+            string_free(ts);
+        } else if (list_len(n->sons)-1 != list_len(n->sons[0]->type->n->tv)) {
+            String* ts = typestring(n->sons[0]->type);
+            error(n->sons[0]->loc, "generic type '%s' expects %d type arguments"
+                                   ", not %d", ts->str,
+                                   list_len(n->sons[0]->type->n->tv),
+                                   list_len(n->sons)-1);
+            declared_here(n->sons[0]);
+            string_free(ts);
+        } else {
+            n->type = new(Type);
+            n->type->kind = Tinst;
+            type_incref(n->type);
+            n->type->base = n->sons[0]->type;
+            type_incref(n->type->base);
+            for (i=1; i<list_len(n->sons); ++i) {
+                list_append(n->type->sons, n->sons[i]->type);
+                type_incref(n->sons[i]->type);
+            }
+        }
+        break;
     case Nnew: case Ncall:
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
@@ -689,7 +730,7 @@ void type(Node* n) {
         if (n->kind == Nnew) {
             bassert(n->sons[0]->flags & Ftype, "new of non-type");
 
-            if (n->sons[0]->type->kind != Tstruct) {
+            if (skip(n->sons[0]->type)->kind != Tstruct) {
                 nn = NULL;
                 if (n->sons[0]->type != anytype->override)
                     error(n->sons[0]->loc, "new requires a user-defined type");
@@ -697,7 +738,7 @@ void type(Node* n) {
                 n->sons[0]->type = anytype->override;
                 type_incref(n->sons[0]->type);
             } else {
-                nn = n->sons[0]->type->n;
+                nn = skip(n->sons[0]->type)->n;
                 if (!(n->sons[0]->e = nn->magic[Mnew])) {
                     type_decref(n->sons[0]->type);
                     n->sons[0]->type = anytype->override;

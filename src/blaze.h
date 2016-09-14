@@ -145,7 +145,8 @@ struct Type {
         Tptr,
         Tstruct,
         Tfun,
-        Tvar
+        Tvar,
+        Tinst // Instantiated generic type.
     } kind;
     union {
         enum {
@@ -161,11 +162,13 @@ struct Type {
             Node* n;
         }; // Tstruct
         int mut; // Tptr
+        Type* base; // Tinst
     };
     String* name;
     // Tfun: ret, args...
     // Tstruct: members...
     // Tptr: base type
+    // Tinst: generic arg equivalents
     List(Type*) sons;
     int rc; // Reference count.
     GData d;
@@ -215,6 +218,7 @@ struct Node {
         Nderef,
         Ncall,
         Nindex,
+        Ninst,
         Nattr,
         Nnew,
         Ncast,
@@ -252,6 +256,7 @@ struct Node {
     // Nderef: expr
     // Ncall: target, args...
     // Nattr: base (the attribute is in s)
+    // Ninst: base, args...
     // Nlet: expr
     // Nassign: target, rhs
     // Nreturn: [expr]
@@ -325,6 +330,8 @@ void type(Node* n);
 
 void type_incref(Type* t);
 void type_decref(Type* t);
+
+Type* skip(Type* t);
 
 
 struct Token {

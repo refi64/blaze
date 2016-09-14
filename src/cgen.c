@@ -108,6 +108,7 @@ static void cgen_typedef(Type* t, FILE* output) {
     case Tstruct:
         fprintf(output, "typedef struct %s %s;\n", CNAME(t), CNAME(t));
         break;
+    case Tinst: cgen_typedef(t->base, output); break;
     }
     t->d.put_typedef = 1;
 }
