@@ -762,13 +762,13 @@ void type(Node* n) {
                 type_incref(n->sons[0]->type);
             } else {
                 nn = skt->n;
+                tt = n->sons[0]->type;
+                type_incref(tt);
                 if (!(n->sons[0]->e = nn->magic[Mnew])) {
                     type_decref(n->sons[0]->type);
                     n->sons[0]->type = anytype->override;
                     type_incref(n->sons[0]->type);
                 }
-                tt = n->sons[0]->type;
-                type_incref(tt);
             }
         }
 
