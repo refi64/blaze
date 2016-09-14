@@ -392,6 +392,10 @@ void type(Node* n) {
         tvx = get_tv_context((tv)); \
         set_tv_context((tv), (ctx)); \
     } while (0)
+    #define TVSN(nn) do { \
+        if ((nn)->type->kind == Tinst) \
+            TVS(skip((nn)->type)->n->tv, (nn)->type->sons); \
+    } while (0)
     #define TVR(tv) do { if (tvx) set_tv_context((tv), tvx); } while (0)
 
     bassert(n, "expected non-null node");
@@ -885,8 +889,7 @@ void type(Node* n) {
             n->type = anytype->override;
         } else {
             STEntry* e = symtab_findl(tt->n->tab, n->s);
-            if (n->sons[0]->type->kind == Tinst)
-                TVS(tt->n->tv, n->sons[0]->type->sons);
+            TVSN(n->sons[0]);
             if (!e) {
                 error(n->loc, "undefined attribute '%s'", n->s->str);
                 declared_here(n->sons[0]);
