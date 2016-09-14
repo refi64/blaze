@@ -128,7 +128,11 @@ static int typematch(Type* a, Type* b, Node* ctx) {
                 if (!typematch(a->sons[i], b->sons[i], NULL)) return 0;
             return 1;
         }
-    case Tany: case Tvar: fatal("unexpected type kind %d", a->kind);
+    case Tvar:
+        if (list_len(a->sons) != list_len(a->sons)) return 0;
+        if (a->sons) return typematch(a->sons[0], b->sons[0], ctx);
+        else return a == b;
+    case Tany: fatal("unexpected type kind Tany");
     }
 }
 
@@ -397,6 +401,10 @@ void type(Node* n) {
             TVS(skip((nn)->type)->n->tv, (nn)->type->sons); \
     } while (0)
     #define TVR(tv) do { if (tvx) set_tv_context((tv), tvx); } while (0)
+    #define TVRN(nn) do { \
+        if (tvx && (nn)->type->kind == Tinst) \
+            TVR(skip((nn)->type)->n->tv); \
+    } while (0)
 
     bassert(n, "expected non-null node");
     if (n->type) return;
@@ -723,9 +731,9 @@ void type(Node* n) {
                 n->type = n->sons[0]->type->sons[0];
                 if (n->sons[0]->type->mut) n->flags |= Fmv;
             }
-        } else if (n->sons[0]->type->kind == Tstruct) {
+        } else if ((tt = skip(n->sons[0]->type))->kind == Tstruct) {
             nn = n->sons[0];
-            if (!nn->type->n->magic[Mindex] && !nn->type->n->magic[Maindex]) {
+            if (!tt->n->magic[Mindex] && !tt->n->magic[Maindex]) {
                 String* ts = typestring(nn->type);
                 error(n->loc, "structural type '%s' doesn't overload any index "
                               "operators", ts->str);
@@ -737,17 +745,18 @@ void type(Node* n) {
                 n->sons[0]->kind = Nid;
                 n->sons[0]->loc = nn->loc;
                 if ((n->parent->kind == Naddr || n->parent->kind == Nassign ||
-                     !nn->type->n->magic[Mindex]) &&
-                    nn->type->n->magic[Maindex]) {
-                    n->sons[0]->e = nn->type->n->magic[Maindex];
+                     !tt->n->magic[Mindex]) && tt->n->magic[Maindex]) {
+                    n->sons[0]->e = tt->n->magic[Maindex];
                     i = 1;
                 } else {
                     n->flags &= ~Faddr; // Remove Faddr.
-                    n->sons[0]->e = nn->type->n->magic[Mindex];
+                    n->sons[0]->e = tt->n->magic[Mindex];
                     i = 0;
                 }
                 type(n->sons[0]);
+                TVSN(nn);
                 resolve_overload(n);
+                TVRN(nn);
                 n->type = n->sons[0]->type == anytype->override ?
                           anytype->override : n->sons[0]->type->sons[0];
                 if (i && n->type != anytype->override) {
@@ -915,7 +924,7 @@ void type(Node* n) {
                 flags &= e->n->flags & Fmv;
                 n->flags |= flags;
             }
-            TVR(tt->n->tv);
+            TVRN(n->sons[0]);
         }
         if (n->type) type_incref(n->type);
         break;
@@ -968,7 +977,7 @@ void type(Node* n) {
                     type(n->e->overloads[i]->n);
             } else if (n->e->n) {
                 type(n->e->n);
-                n->type = n->e->n->type;
+                n->type = skipvar(n->e->n->type);
                 n->flags |= n->e->n->flags & Ftype;
             } else {
                 n->type = n->e->override;

@@ -1,6 +1,7 @@
 struct X[T]:
     v: T
     fun new: return
+    fun [](x: T) -> T: return x
 
 fun f -> int:
     let x = new X
@@ -13,6 +14,10 @@ fun g -> int:
     let y = new X[str]
     return y
     return y.v
+    return x[0]
+    return y[0]
+    return x[x.v]
+    return y[y.v]
 
 fun h -> X[int]:
     return new X[Y]
@@ -20,49 +25,55 @@ fun h -> X[int]:
 
 #[
 ERROR
-:18:18: error: undeclared identifier 'Y'
+:23:18: error: undeclared identifier 'Y'
     return new X[Y]
                  ~
-:6:17: error: expected non-generic type
+:7:17: error: expected non-generic type
     let x = new X
                 ~
 :1:8: note: 'X' declared here
     struct X[T]:
            ~
-:11:12: error: function was declared to return type 'int', not 'X[int]'
+:12:12: error: function was declared to return type 'int', not 'X[int]'
     return x
            ~
-:9:10: note: function return type declared here
+:10:10: note: function return type declared here
     fun g -> int:
              ~~~
-:10:9: note: 'x' declared here
+:11:9: note: 'x' declared here
     let x = new X[int]
         ~
-:14:12: error: function was declared to return type 'int', not 'X[str]'
+:15:12: error: function was declared to return type 'int', not 'X[str]'
     return y
            ~
-:9:10: note: function return type declared here
+:10:10: note: function return type declared here
     fun g -> int:
              ~~~
-:13:9: note: 'y' declared here
+:14:9: note: 'y' declared here
     let y = new X[str]
         ~
-:15:14: error: function was declared to return type 'int', not 'str'
+:16:14: error: function was declared to return type 'int', not 'str'
     return y.v
              ~
-:9:10: note: function return type declared here
+:10:10: note: function return type declared here
     fun g -> int:
              ~~~
-:13:9: note: 'y' declared here
+:14:9: note: 'y' declared here
     let y = new X[str]
         ~
 :2:5: note: 'v' declared here
     v: T
     ~
-:19:17: error: function was declared to return type 'X[int]', not 'X[str]'
+:18:12: error: no overload of 'X' with given arguments available
+    return y[0]
+           ~
+:4:9: note: function expected argument of type 'str', not 'int'
+    fun [](x: T) -> T: return x
+        ~
+:24:17: error: function was declared to return type 'X[int]', not 'X[str]'
     return new X[str]
                 ~
-:17:11: note: function return type declared here
+:22:11: note: function return type declared here
     fun h -> X[int]:
               ~
 ]#
