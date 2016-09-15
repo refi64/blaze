@@ -160,9 +160,14 @@ struct Type {
         struct {
             Type** constr;
             Node* n;
+            List(Type*) insts;
         }; // Tstruct
         int mut; // Tptr
-        Type* base; // Tinst
+        struct {
+            Type* base; // The base type of the Tinst (e.g. T[A,B] -> T).
+            Type* di; /* If the type has been instantiated before, then this is
+                         the other instantiation. */
+        }; // Tinst
     };
     String* name;
     // Tfun: ret, args...
@@ -332,6 +337,11 @@ void type_incref(Type* t);
 void type_decref(Type* t);
 
 Type* skip(Type* t);
+Type* skipvar(Type* t);
+
+List(Type*) get_tv_context(List(Node*) tvs);
+void set_tv_context(List(Node*) tvs, List(Type*) ctx);
+void clear_tv_context(List(Node*) tvs);
 
 
 struct Token {

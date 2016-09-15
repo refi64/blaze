@@ -179,7 +179,7 @@ Type* skipvar(Type* t) {
     return t;
 }
 
-static List(Type*) get_tv_context(List(Node*) tvs) {
+List(Type*) get_tv_context(List(Node*) tvs) {
     int i;
     List(Type*) res = NULL;
     for (i=0; i<list_len(tvs); ++i)
@@ -187,20 +187,26 @@ static List(Type*) get_tv_context(List(Node*) tvs) {
     return res;
 }
 
-static void set_tv_context(List(Node*) tvs, List(Type*) ctx) {
+void set_tv_context(List(Node*) tvs, List(Type*) ctx) {
     int i;
     bassert(list_len(tvs) == list_len(ctx), "tv len != context len");
     for (i=0; i<list_len(tvs); ++i) {
         if (ctx[i]) {
             if (tvs[i]->type->sons) tvs[i]->type->sons[0] = ctx[i];
             else list_append(tvs[i]->type->sons, ctx[i]);
-        } else list_free(tvs[i]->sons);
+        } else {
+            list_free(tvs[i]->sons);
+            tvs[i]->sons = NULL;
+        }
     }
 }
 
-static void clear_tv_context(List(Node*) tvs) {
+void clear_tv_context(List(Node*) tvs) {
     int i;
-    for (i=0; i<list_len(tvs); ++i) list_free(tvs[i]->type->sons);
+    for (i=0; i<list_len(tvs); ++i) {
+        list_free(tvs[i]->type->sons);
+        tvs[i]->type->sons = NULL;
+    }
 }
 
 typedef enum Match {
@@ -338,6 +344,7 @@ static void resolve_overload(Node* n) {
         type_incref(id->type);
     } else {
         id->e = possibilities[0];
+        if (id->kind == Ninst) id->sons[0]->e = id->e;
         if (id->type) type_decref(id->type);
         id->type = possibilities[0]->n->type;
         type_incref(id->type);
@@ -811,6 +818,16 @@ void type(Node* n) {
                 list_append(n->type->sons, n->sons[i]->type);
                 type_incref(n->sons[i]->type);
             }
+            for (i=0; i<list_len(n->type->base->insts); ++i) {
+                tt = n->type->base->insts[i];
+                bassert(tt->kind == Tinst, "non-Tinst kind %d in insts",
+                        tt->kind);
+                if (typematch(n->type, tt, NULL)) {
+                    n->type->di = tt;
+                    break;
+                }
+            }
+            if (!n->type->di) list_append(n->type->base->insts, n->type);
         }
         type_incref(n->type);
         break;

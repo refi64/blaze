@@ -90,11 +90,15 @@ static void cgen_typedef(Type* t, FILE* output) {
     int i;
     bassert(t, "expected non-null type");
     if (t->d.put_typedef || t->d.done) return;
+    if (t->kind == Tinst && t->di) {
+        t->d.cname = string_clone(t->di->d.cname);
+        return;
+    }
     generate_typename(t);
     for (i=0; i<list_len(t->sons); ++i)
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
     switch (t->kind) {
-    case Tany: case Tvar: fatal("unexpected type kind %d", t->kind);
+    case Tany: fatal("unexpected type kind Tany");
     case Tbuiltin: case Tptr: break;
     case Tfun:
         fprintf(output, "typedef %s", CNAME(t->sons[0]));
@@ -106,9 +110,21 @@ static void cgen_typedef(Type* t, FILE* output) {
         fputs(");\n", output);
         break;
     case Tstruct:
-        fprintf(output, "typedef struct %s %s;\n", CNAME(t), CNAME(t));
+        if (t->n->tv)
+            for (i=0; i<list_len(t->insts); ++i) {
+                Type* g = t->insts[i];
+                cgen_typedef(g, output);
+                fprintf(output, "typedef struct %s %s;\n", CNAME(g), CNAME(g));
+            }
+        else
+            fprintf(output, "typedef struct %s %s;\n", CNAME(t), CNAME(t));
         break;
-    case Tinst: cgen_typedef(t->base, output); break;
+    case Tinst:
+        /* Prevent recursion errors, since cgen_typedef(Tstruct) calls
+           cgen_typedef(Tinst). */
+        if (!t->base->d.cname) cgen_typedef(t->base, output);
+        break;
+    case Tvar: break;
     }
     t->d.put_typedef = 1;
 }
@@ -119,14 +135,39 @@ static void cgen_typeimpl(Type* t, FILE* output) {
     int i;
 
     if (t->kind != Tstruct || t->d.done) return;
-    fprintf(output, "struct %s {\n", CNAME(t));
-    for (i=0; i<list_len(t->d.sons); ++i) {
-        Decl* d = t->d.sons[i];
-        if (d->kind != Dglobal) continue;
-        fputs("    ", output);
-        cgen_decl0(d, output, 0);
+    if (t->n->tv && !t->n->tv[0]->type->sons) {
+        int j;
+        String* t_cname;
+        List(String*) orig_cnames;
+        Type* tvt;
+        t_cname = t->d.cname;
+        for (i=0; i<list_len(t->insts); ++i) {
+            set_tv_context(t->n->tv, t->insts[i]->sons);
+            orig_cnames = NULL;
+            t->d.cname = t->insts[i]->d.cname;
+            for (j=0; j<list_len(t->n->tv); ++j) {
+                tvt = t->n->tv[j]->type;
+                list_append(orig_cnames, tvt->d.cname);
+                tvt->d.cname = tvt->sons[0]->d.cname;
+            }
+            cgen_typeimpl(t, output);
+            t->d.done = 0;
+            clear_tv_context(t->n->tv);
+            for (j=0; j<list_len(t->n->tv); ++j)
+                t->n->tv[j]->type->d.cname = orig_cnames[j];
+            list_free(orig_cnames);
+        }
+        t->d.cname = t_cname;
+    } else {
+        fprintf(output, "struct %s {\n", CNAME(t));
+        for (i=0; i<list_len(t->d.sons); ++i) {
+            Decl* d = t->d.sons[i];
+            if (d->kind != Dglobal) continue;
+            fputs("    ", output);
+            cgen_decl0(d, output, 0);
+        }
+        fputs("};\n", output);
     }
-    fputs("};\n", output);
     t->d.done = 1;
 }
 
