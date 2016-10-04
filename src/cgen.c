@@ -419,15 +419,19 @@ static void cgen_decl1(Decl* d, FILE* output) {
         if (!v->type) continue;
         if (v->type->kind == Tvar) {
             Var* src;
-            bassert(v->ir && v->ir->kind == Icall,
-                    "this will be fixed eventually");
-            src = v->ir->v[0];
-            generate_varname(src);
-            bassert(src->flags & Fstc);
-            bassert(src->base->type->kind == Tinst);
-            set_tv_context(src->base->type->base->n->tv, src->base->type->sons);
-            v->type = v->type->sons[0];
-            clear_tv_context(src->base->type->base->n->tv);
+
+            if (!v->type->sons) {
+                bassert(v->ir && v->ir->kind == Icall,
+                        "this will be fixed eventually");
+                src = v->ir->v[0];
+                generate_varname(src);
+                bassert(src->flags & Fstc);
+                bassert(src->base->type->kind == Tinst);
+                set_tv_context(src->base->type->base->n->tv,
+                               src->base->type->sons);
+                v->type = v->type->sons[0];
+                clear_tv_context(src->base->type->base->n->tv);
+            } else v->type = v->type->sons[0];
         }
         generate_typename(v->type);
         generate_varname(v);
