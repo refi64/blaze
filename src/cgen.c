@@ -189,7 +189,8 @@ static void cgen_typeimpl(Type* t, FILE* output) {
 
 #define HAS_COPY(v) ((v)->type && (v)->type->kind == Tstruct && \
                      (v)->type->n->magic[Mcopy])
-#define RADDR(vr) ((vr)->owner->ra)
+#define RADDR(vr) (((vr)->av ? *(vr)->av[list_len((vr)->av)-1] : (vr)) \
+                   ->owner->ra)
 
 static const char* copy(Var* v) {
     return HAS_COPY(v) ? CNAME(v->type->n->magic[Mcopy]->overloads[0]->n->v) : "";

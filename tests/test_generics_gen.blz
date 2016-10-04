@@ -10,10 +10,10 @@ fun f -> X[char]:
 
 fun main -> int:
     let x = f()
-    print(tos(x.v :: int))
+    print(tos((x.v + x.f()) :: int))
     return 0
 
 #[
 RUN
-7
+14
 ]#
