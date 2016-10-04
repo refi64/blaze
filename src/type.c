@@ -215,6 +215,20 @@ void clear_tv_context(List(Node*) tvs) {
     }
 }
 
+#define TVS(tv, ctx) do { \
+    tvx = get_tv_context((tv)); \
+    set_tv_context((tv), (ctx)); \
+} while (0)
+#define TVSN(nn) do { \
+    if ((nn)->type->kind == Tinst) \
+        TVS(skip((nn)->type)->n->tv, (nn)->type->sons); \
+} while (0)
+#define TVR(tv) do { if (tvx) set_tv_context((tv), tvx); } while (0)
+#define TVRN(nn) do { \
+    if (tvx && (nn)->type->kind == Tinst) \
+        TVR(skip((nn)->type)->n->tv); \
+} while (0)
+
 typedef enum Match {
     Mnothing,
     Merror,
@@ -223,6 +237,7 @@ typedef enum Match {
 
 static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
                     int strict) {
+    List(Type*) tvx = NULL;
     Type* ft = skip(func->type);
     *expected = NULL;
     int ngiven = list_len(n->sons)-1, nexpect, i, res = 1;
@@ -261,7 +276,8 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
         return 0;
     }
 
-    for (i=1; i<min(ngiven+1, nexpect+1); ++i)
+    for (i=1; i<min(ngiven+1, nexpect+1); ++i) {
+        TVSN(n->sons[i]);
         if (!typematch((*expected)[i], n->sons[i]->type,
                                        strict ? NULL : n->sons[i])) {
             String* expects, *givens;
@@ -284,6 +300,8 @@ static int funmatch(Match kind, Node* func, Node* n, List(Type*)* expected,
             string_free(expects);
             string_free(givens);
         }
+        TVRN(n->sons[i]);
+    }
 
 
     if (n->sons[0]->kind == Nattr && func->flags & Fmvm &&
@@ -312,9 +330,12 @@ static void resolve_overload(Node* n) {
     int i, j;
     List(STEntry*) possibilities = NULL;
     List(Type*) expected;
+    List(Type*) tvx;
     Node* id = n->sons[0];
 
     bassert(id->e && id->e->overload, "attempt to resolve non-overloaded node");
+
+    if (id->kind == Ninst) TVSN(id);
 
     for (i=0; i<list_len(n->sons); ++i)
         if (n->sons[i]->type == anytype->override) {
@@ -325,7 +346,8 @@ static void resolve_overload(Node* n) {
         }
 
     for (i=0; i<2; ++i) {
-        List(STEntry*) choices = possibilities ? possibilities : id->e->overloads;
+        List(STEntry*) choices = possibilities ? possibilities :
+                                 id->e->overloads;
         List(STEntry*) result = NULL;
         for (j=0; j<list_len(choices); ++j)
             if (funmatch(Mnothing, choices[j]->n, n, &expected, i))
@@ -356,6 +378,7 @@ static void resolve_overload(Node* n) {
         type_incref(id->type);
     }
 
+    if (id->kind == Ninst) TVRN(id);
     list_free(possibilities);
 }
 
@@ -404,20 +427,6 @@ void type(Node* n) {
     Type* tt;
     List(Type*) tvx = NULL;
     int i;
-
-    #define TVS(tv, ctx) do { \
-        tvx = get_tv_context((tv)); \
-        set_tv_context((tv), (ctx)); \
-    } while (0)
-    #define TVSN(nn) do { \
-        if ((nn)->type->kind == Tinst) \
-            TVS(skip((nn)->type)->n->tv, (nn)->type->sons); \
-    } while (0)
-    #define TVR(tv) do { if (tvx) set_tv_context((tv), tvx); } while (0)
-    #define TVRN(nn) do { \
-        if (tvx && (nn)->type->kind == Tinst) \
-            TVR(skip((nn)->type)->n->tv); \
-    } while (0)
 
     bassert(n, "expected non-null node");
     if (n->type) return;
