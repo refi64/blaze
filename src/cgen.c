@@ -189,7 +189,7 @@ static void cgen_typeimpl(Type* t, FILE* output) {
 
 #define HAS_COPY(v) ((v)->type && (v)->type->kind == Tstruct && \
                      (v)->type->n->magic[Mcopy])
-#define RADDR(vr) ((vr)->owner->v == (vr) && (vr)->owner->ra)
+#define RADDR(vr) ((vr)->owner->ra)
 
 static const char* copy(Var* v) {
     return HAS_COPY(v) ? CNAME(v->type->n->magic[Mcopy]->overloads[0]->n->v) : "";
@@ -278,16 +278,18 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         break;
     case Icall:
         fprintf(output, "%s(", CNAME(ir->v[0]));
+
+        if (RADDR(ir->v[0])) {
+            fprintf(output, "&(%s)", CNAME(ir->dst));
+            if (list_len(ir->v) > 1) fputs(", ", output);
+        }
+
         if (ir->v[0]->flags & Fstc && ir->v[0]->base) {
+            if (RADDR(ir->v[0])) fputs(", ", output);
             fprintf(output, "&(%s", CNAME(ir->v[0]->base));
             for (i=0; i<list_len(ir->v[0]->av)-1; ++i)
                 fprintf(output, ".%s", CNAME(*ir->v[0]->av[i]));
             fputc(')', output);
-            if (list_len(ir->v) > 1) fputs(", ", output);
-        }
-
-        if (RADDR(ir->v[0])) {
-            fprintf(output, "&(%s)", CNAME(ir->dst));
             if (list_len(ir->v) > 1) fputs(", ", output);
         }
 
