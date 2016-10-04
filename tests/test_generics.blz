@@ -26,6 +26,13 @@ fun h -> X[int]:
 fun i -> int:
     return new X[int].v + 2
 
+struct Z[T]:
+    v: T
+    fun new(v: T): @v = v
+
+fun j -> char:
+    return new Z[char](0).v
+
 #[
 ERROR
 :23:18: error: undeclared identifier 'Y'
