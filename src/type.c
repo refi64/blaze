@@ -963,24 +963,33 @@ void type(Node* n) {
             n->type = builtin_types[Tbool]->override;
         }
         else {
-            if (n->sons[0]->type->kind == Tany || n->sons[1]->type->kind == Tany)
+            Type* tl, *tr;
+
+            TVSN(n->sons[0]);
+            tl = skipvar(n->sons[0]->type);
+            TVRN(n->sons[0]);
+
+            TVSN(n->sons[1]);
+            tr = skipvar(n->sons[1]->type);
+            TVRN(n->sons[1]);
+
+            if (tl->kind == Tany || tr->kind == Tany)
                 n->type = anytype->override;
-            else if (n->sons[0]->type->kind != Tbuiltin ||
-                     n->sons[1]->type->kind != Tbuiltin)
+            else if (tr->kind != Tbuiltin || tr->kind != Tbuiltin)
                 n->type = NULL;
-            else if (typematch(n->sons[0]->type, n->sons[1]->type, n->sons[1]))
+            else if (typematch(tl, tr, n->sons[1]))
                 n->type = n->sons[0]->type;
-            else if (typematch(n->sons[1]->type, n->sons[0]->type, n->sons[0]))
+            else if (typematch(tr, tl, n->sons[0]))
                 n->type = n->sons[1]->type;
 
             if (!n->type) {
-                String* tl, *tr;
-                tl = typestring(n->sons[0]->type);
-                tr = typestring(n->sons[1]->type);
+                String* tls, *trs;
+                tls = typestring(n->sons[0]->type);
+                trs = typestring(n->sons[1]->type);
                 error(n->loc, "invalid types '%s' and '%s' in binary expression",
-                      tl->str, tr->str);
-                string_free(tl);
-                string_free(tr);
+                      tls->str, trs->str);
+                string_free(tls);
+                string_free(trs);
                 n->type = anytype->override;
             }
         }
