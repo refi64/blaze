@@ -394,7 +394,8 @@ static void cgen_decl1(Decl* d, FILE* output) {
     int i;
     static int ptv = 0;
     if (d->kind != Dfun || d->import) return;
-    if (d->flags & Fmemb && DFUN_THIS(d) && !ptv) {
+    if (d->flags & Fmemb && d->args[0]->type->sons[0]->kind == Tinst &&
+        DFUN_THIS(d) && !ptv) {
         List(String*) orig_cnames;
         Type* this = DFUN_THIS(d);
         String* d_cname = string_clone(d->v->d.cname);
