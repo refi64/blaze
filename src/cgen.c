@@ -217,6 +217,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     int i;
     List(String*) orig_cnames = NULL;
     for (i=0; i<list_len(ir->v); ++i) {
+        generate_varname(ir->v[i]);
         if (ir->v[i]->type &&
             ((ir->v[i]->flags & Fstc && ir->v[i]->base &&
               ir->v[i]->base->type->kind == Tinst) ||
@@ -226,7 +227,6 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
                                                ir->dst->type :
                                                ir->v[i]->base->type);
         } else list_append(orig_cnames, NULL);
-        generate_varname(ir->v[i]);
     }
     // The IR was optimized out by iopt.
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0) ||
@@ -414,6 +414,18 @@ static void cgen_decl1(Decl* d, FILE* output) {
     for (i=0; i<list_len(d->vars); ++i) {
         Var* v = d->vars[i];
         if (!v->type) continue;
+        if (v->type->kind == Tvar) {
+            Var* src;
+            bassert(v->ir && v->ir->kind == Icall,
+                    "this will be fixed eventually");
+            src = v->ir->v[0];
+            generate_varname(src);
+            bassert(src->flags & Fstc);
+            bassert(src->base->type->kind == Tinst);
+            set_tv_context(src->base->type->base->n->tv, src->base->type->sons);
+            v->type = v->type->sons[0];
+            clear_tv_context(src->base->type->base->n->tv);
+        }
         generate_typename(v->type);
         generate_varname(v);
         fprintf(output, "    %s %s;\n", CNAME(v->type), CNAME(v));
