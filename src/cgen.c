@@ -221,7 +221,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         if (ir->v[i]->type &&
             ((ir->v[i]->flags & Fstc && ir->v[i]->base &&
               ir->v[i]->base->type->kind == Tinst) ||
-             (ir->kind == Iconstr && ir->dst->type->kind == Tinst))) {
+             (ir->kind == Iconstr && ir->dst->type->kind == Tinst && i == 0))) {
             list_append(orig_cnames, string_clone(ir->v[i]->d.cname));
             dfun_inst_cname(ir->v[i]->d.cname, ir->kind == Iconstr ?
                                                ir->dst->type :
