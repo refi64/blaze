@@ -79,8 +79,14 @@ static String* typestring(Type* t) {
         }
         return res;
     case Tvar:
-        if (t->sons) return typestring(t->sons[0]);
-    // Fallthrough.
+        res = string_clone(t->name);
+        if (t->sons) {
+            s = typestring(t->sons[0]);
+            string_merges(res, " = ");
+            string_merge(res, s);
+            string_free(s);
+        }
+        return res;
     case Tstruct: return string_clone(t->name);
     case Tinst:
         res = typestring(t->base);
