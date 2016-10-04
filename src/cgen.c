@@ -101,11 +101,15 @@ static void cgen_typedef(Type* t, FILE* output) {
     case Tany: fatal("unexpected type kind Tany");
     case Tbuiltin: case Tptr: break;
     case Tfun:
-        fprintf(output, "typedef %s", CNAME(t->sons[0]));
+        // XXX: this is a hack.
+        fprintf(output, "typedef %s", t->sons[0] && t->sons[0]->kind == Tvar ?
+                                      "void*" : CNAME(t->sons[0]));
         fprintf(output, " (*%s)(", CNAME(t));
         for (i=1; i<list_len(t->sons); ++i) {
             if (i > 1) fputs(", ", output);
-            fputs(CNAME(t->sons[i]), output);
+            // XXX: here too!
+            fputs(t->sons[i] && t->sons[i]->kind == Tvar ? "void*" :
+                  CNAME(t->sons[i]), output);
         }
         fputs(");\n", output);
         break;
@@ -131,31 +135,41 @@ static void cgen_typedef(Type* t, FILE* output) {
 
 static void cgen_decl0(Decl* d, FILE* output, int external);
 
+static void cgen_set_tv(List(String*)* orig_cnames, Type* t, Type* inst) {
+    int i;
+    Type* tvt;
+    set_tv_context(t->n->tv, inst->sons);
+    *orig_cnames = NULL;
+    t->d.cname = inst->d.cname;
+    for (i=0; i<list_len(t->n->tv); ++i) {
+        tvt = t->n->tv[i]->type;
+        list_append(*orig_cnames, tvt->d.cname);
+        tvt->d.cname = tvt->sons[0]->d.cname;
+    }
+}
+
+static void cgen_clear_tv(List(String*)* orig_cnames, Type* t) {
+    int i;
+    clear_tv_context(t->n->tv);
+    for (i=0; i<list_len(t->n->tv); ++i)
+        t->n->tv[i]->type->d.cname = (*orig_cnames)[i];
+    list_free(*orig_cnames);
+    *orig_cnames = NULL;
+}
+
 static void cgen_typeimpl(Type* t, FILE* output) {
     int i;
 
     if (t->kind != Tstruct || t->d.done) return;
     if (t->n->tv && !t->n->tv[0]->type->sons) {
-        int j;
         String* t_cname;
         List(String*) orig_cnames;
-        Type* tvt;
         t_cname = t->d.cname;
         for (i=0; i<list_len(t->insts); ++i) {
-            set_tv_context(t->n->tv, t->insts[i]->sons);
-            orig_cnames = NULL;
-            t->d.cname = t->insts[i]->d.cname;
-            for (j=0; j<list_len(t->n->tv); ++j) {
-                tvt = t->n->tv[j]->type;
-                list_append(orig_cnames, tvt->d.cname);
-                tvt->d.cname = tvt->sons[0]->d.cname;
-            }
+            cgen_set_tv(&orig_cnames, t, t->insts[i]);
             cgen_typeimpl(t, output);
             t->d.done = 0;
-            clear_tv_context(t->n->tv);
-            for (j=0; j<list_len(t->n->tv); ++j)
-                t->n->tv[j]->type->d.cname = orig_cnames[j];
-            list_free(orig_cnames);
+            cgen_clear_tv(&orig_cnames, t);
         }
         t->d.cname = t_cname;
     } else {
@@ -183,6 +197,11 @@ static const char* copy_addr(Var* v) {
     return HAS_COPY(v) ? "&" : "";
 }
 
+static void dfun_inst_cname(String* s, Type* inst) {
+    string_mergec(s, '$');
+    string_merge(s, inst->d.cname);
+}
+
 static void cgen_set(Var* dst, int dstaddr, Var* src, FILE* output) {
     if (HAS_COPY(src) && src->type->n->magic[Mcopy]->overloads[0]->n->d->ra)
         fprintf(output, "%s(%s%s, %s%s)", copy(src), dstaddr ? "" : "&",
@@ -194,7 +213,19 @@ static void cgen_set(Var* dst, int dstaddr, Var* src, FILE* output) {
 
 static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     int i;
-    for (i=0; i<list_len(ir->v); ++i) generate_varname(ir->v[i]);
+    List(String*) orig_cnames = NULL;
+    for (i=0; i<list_len(ir->v); ++i) {
+        if (ir->v[i]->type &&
+            ((ir->v[i]->flags & Fstc && ir->v[i]->base &&
+              ir->v[i]->base->type->kind == Tinst) ||
+             (ir->kind == Iconstr && ir->dst->type->kind == Tinst))) {
+            list_append(orig_cnames, string_clone(ir->v[i]->d.cname));
+            dfun_inst_cname(ir->v[i]->d.cname, ir->kind == Iconstr ?
+                                               ir->dst->type :
+                                               ir->v[i]->base->type);
+        } else list_append(orig_cnames, NULL);
+        generate_varname(ir->v[i]);
+    }
     // The IR was optimized out by iopt.
     if (ir->kind == Inull || (ir->kind == Iaddr && ir->dst->uses == 0) ||
         (ir->kind == Inew && !ir->dst->type)) return;
@@ -288,6 +319,12 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         break;
     }
     fputs(";\n", output);
+
+    for (i=0; i<list_len(orig_cnames); ++i)
+        if (orig_cnames[i]) {
+            string_free(ir->v[i]->d.cname);
+            ir->v[i]->d.cname = orig_cnames[i];
+        }
 }
 
 static void cgen_proto(Decl* d, FILE* output) {
@@ -300,22 +337,46 @@ static void cgen_proto(Decl* d, FILE* output) {
             CNAME(d->v));
     if (d->ra) {
         generate_varname(d->rv);
+        generate_typename(d->ret);
         fprintf(output, "%s %s", CNAME(d->rv->type), CNAME(d->rv));
     }
     for (i=0; i<list_len(d->args); ++i) {
         generate_argname(d->args[i]);
+        generate_typename(d->args[i]->type);
         if (i || d->ra) fputs(", ", output);
         fprintf(output, "%s %s", CNAME(d->args[i]->type), CNAME(d->args[i]));
     }
     fputc(')', output);
 }
 
+#define DFUN_THIS(d) ((d)->args[0]->type->sons[0])
+
 static void cgen_decl0(Decl* d, FILE* output, int external) {
+    static int ptv = 0;
     generate_declname(d);
     switch (d->kind) {
     case Dfun:
-        cgen_proto(d, output);
-        fputs(";\n", output);
+        if (d->flags & Fmemb && DFUN_THIS(d)->insts && !ptv) {
+            int i;
+            Type* this = DFUN_THIS(d);
+            String* d_cname = string_clone(d->v->d.cname);
+            List(String*) orig_cnames;
+            for (i=0; i<list_len(this->insts); ++i) {
+                Type* inst = this->insts[i];
+                dfun_inst_cname(d->v->d.cname, inst);
+                cgen_set_tv(&orig_cnames, this, inst);
+                ptv = 1;
+                cgen_decl0(d, output, external);
+                ptv = 0;
+                cgen_clear_tv(&orig_cnames, this);
+                string_free(d->v->d.cname);
+                d->v->d.cname = string_clone(d_cname);
+            }
+            string_free(d_cname);
+        } else {
+            cgen_proto(d, output);
+            fputs(";\n", output);
+        }
         break;
     case Dglobal:
         if (external || d->import) fputs("extern ", output);
@@ -327,19 +388,40 @@ static void cgen_decl0(Decl* d, FILE* output, int external) {
 
 static void cgen_decl1(Decl* d, FILE* output) {
     int i;
+    static int ptv = 0;
     if (d->kind != Dfun || d->import) return;
+    if (d->flags & Fmemb && DFUN_THIS(d) && !ptv) {
+        List(String*) orig_cnames;
+        Type* this = DFUN_THIS(d);
+        String* d_cname = string_clone(d->v->d.cname);
+        for (i=0; i<list_len(this->insts); ++i) {
+            Type* inst = this->insts[i];
+            dfun_inst_cname(d->v->d.cname, inst);
+            cgen_set_tv(&orig_cnames, DFUN_THIS(d), inst);
+            ptv = 1;
+            cgen_decl1(d, output);
+            ptv = 0;
+            cgen_clear_tv(&orig_cnames, DFUN_THIS(d));
+            d->v->d.cname = string_clone(d_cname);
+        }
+        string_free(d_cname);
+        return;
+    }
     cgen_proto(d, output);
     fputs(" {\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
         Var* v = d->vars[i];
         if (!v->type) continue;
+        generate_typename(v->type);
         generate_varname(v);
         fprintf(output, "    %s %s;\n", CNAME(v->type), CNAME(v));
     }
     if (d->rv) {
         generate_varname(d->rv);
-        if (!d->ra)
+        if (!d->ra) {
+            generate_typename(d->ret);
             fprintf(output, "    %s %s;\n", CNAME(d->ret), CNAME(d->rv));
+        }
     }
     for (i=0; i<list_len(d->sons); ++i) cgen_ir(d, d->sons[i], output);
     if (d->rv && !d->ra) fprintf(output, "    return %s;\n", CNAME(d->rv));
