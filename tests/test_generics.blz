@@ -23,6 +23,9 @@ fun h -> X[int]:
     return new X[Y]
     return new X[str]
 
+fun i -> int:
+    return new X[int].v + 2
+
 #[
 ERROR
 :23:18: error: undeclared identifier 'Y'
@@ -67,7 +70,7 @@ ERROR
 :18:12: error: no overload of 'X' with given arguments available
     return y[0]
            ~
-:4:9: note: function expected argument of type 'str', not 'int'
+:4:9: note: function expected argument of type 'T = str', not 'int'
     fun [](x: T) -> T: return x
         ~
 :24:17: error: function was declared to return type 'X[int]', not 'X[str]'
