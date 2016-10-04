@@ -335,8 +335,6 @@ static void resolve_overload(Node* n) {
 
     bassert(id->e && id->e->overload, "attempt to resolve non-overloaded node");
 
-    if (id->kind == Ninst) TVSN(id);
-
     for (i=0; i<list_len(n->sons); ++i)
         if (n->sons[i]->type == anytype->override) {
             if (id->type) type_decref(id->type);
@@ -344,6 +342,8 @@ static void resolve_overload(Node* n) {
             type_incref(id->type);
             return;
         }
+
+    if (id->type) TVSN(id);
 
     for (i=0; i<2; ++i) {
         List(STEntry*) choices = possibilities ? possibilities :
@@ -368,9 +368,11 @@ static void resolve_overload(Node* n) {
         else error(id->loc, "ambiguous occurrence of '%s'", s->str);
         for (i=0; i<list_len(id->e->overloads); ++i)
             funmatch(Mnote, id->e->overloads[i]->n, n, &expected, 0);
+        if (id->type) TVRN(id);
         id->type = anytype->override;
         type_incref(id->type);
     } else {
+        if (id->type) TVRN(id);
         id->e = possibilities[0];
         if (id->kind == Ninst) id->sons[0]->e = id->e;
         if (id->type) type_decref(id->type);
@@ -378,7 +380,6 @@ static void resolve_overload(Node* n) {
         type_incref(id->type);
     }
 
-    if (id->kind == Ninst) TVRN(id);
     list_free(possibilities);
 }
 
