@@ -140,6 +140,7 @@ static void cgen_set_tv(List(String*)* orig_cnames, Type* t, Type* inst) {
     Type* tvt;
     set_tv_context(t->n->tv, inst->sons);
     *orig_cnames = NULL;
+    list_append(*orig_cnames, t->d.cname);
     t->d.cname = inst->d.cname;
     for (i=0; i<list_len(t->n->tv); ++i) {
         tvt = t->n->tv[i]->type;
@@ -151,8 +152,9 @@ static void cgen_set_tv(List(String*)* orig_cnames, Type* t, Type* inst) {
 static void cgen_clear_tv(List(String*)* orig_cnames, Type* t) {
     int i;
     clear_tv_context(t->n->tv);
+    t->d.cname = (*orig_cnames)[0];
     for (i=0; i<list_len(t->n->tv); ++i)
-        t->n->tv[i]->type->d.cname = (*orig_cnames)[i];
+        t->n->tv[i]->type->d.cname = (*orig_cnames)[i+1];
     list_free(*orig_cnames);
     *orig_cnames = NULL;
 }
