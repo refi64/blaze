@@ -286,7 +286,7 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
         }
 
         if (ir->v[0]->flags & Fstc && ir->v[0]->base) {
-            if (RADDR(ir->v[0])) fputs(", ", output);
+            if (RADDR(ir->v[0]) && list_len(ir->v) <= 1) fputs(", ", output);
             fprintf(output, "&(%s", CNAME(ir->v[0]->base));
             for (i=0; i<list_len(ir->v[0]->av)-1; ++i)
                 fprintf(output, ".%s", CNAME(*ir->v[0]->av[i]));
@@ -391,6 +391,20 @@ static void cgen_decl0(Decl* d, FILE* output, int external) {
 
 }
 
+static Var* trace_inst(Var* v) {
+    Var* r = NULL;
+    if (v->type->kind == Tinst) return v;
+    else if (!v->ir) return NULL;
+    else switch (v->ir->kind) {
+    case Icall: return trace_inst(v->ir->v[0]->base);
+    case Iop:
+        r = trace_inst(v->ir->v[0]);
+        if (!r) r = trace_inst(v->ir->v[1]);
+        return r;
+    default: fatal("generics are broken");
+    }
+}
+
 static void cgen_decl1(Decl* d, FILE* output) {
     int i;
     static int ptv = 0;
@@ -419,19 +433,12 @@ static void cgen_decl1(Decl* d, FILE* output) {
         Var* v = d->vars[i];
         if (!v->type) continue;
         if (v->type->kind == Tvar) {
-            Var* src;
-
             if (!v->type->sons) {
-                bassert(v->ir && v->ir->kind == Icall,
-                        "this will be fixed eventually");
-                src = v->ir->v[0];
-                generate_varname(src);
-                bassert(src->flags & Fstc);
-                bassert(src->base->type->kind == Tinst);
-                set_tv_context(src->base->type->base->n->tv,
-                               src->base->type->sons);
+                Var* iv = trace_inst(v);
+                generate_varname(iv);
+                set_tv_context(iv->type->base->n->tv, iv->type->sons);
                 v->type = v->type->sons[0];
-                clear_tv_context(src->base->type->base->n->tv);
+                clear_tv_context(iv->type->base->n->tv);
             } else v->type = v->type->sons[0];
         }
         generate_typename(v->type);
