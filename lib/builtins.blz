@@ -94,3 +94,5 @@ struct list[T]:
 
     fun [](i: size) -> T: return @_data[i]
     fun &[](i: size) -> *mut T: return &@_data[i]
+
+    fun delete: _free(@_data :: *byte)

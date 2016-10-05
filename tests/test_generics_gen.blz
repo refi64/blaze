@@ -1,6 +1,7 @@
 struct X[T]:
     v: T
     fun new(v: T): @v = v :: T
+    fun delete: print("Deleting!")
     fun f -> T: return @v
     fun [](x: T) -> T: return x
     fun indirect -> T: return @f()
@@ -27,4 +28,5 @@ RUN
 7
 7
 2
+Deleting!
 ]#

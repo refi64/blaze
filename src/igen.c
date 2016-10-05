@@ -73,8 +73,15 @@ static void igen_index_chain(Decl* d, VarStack* vs, Var* v, Node* n) {
 static void igen_destr(Decl* d, Var* v) {
     Instr* ir;
     STEntry* destr;
-    if (!v->type || v->type->kind != Tstruct) return;
-    destr = v->type->n->magic[Mdelete];
+    Type* t = v->type;
+    if (!t) return;
+    if (t->kind == Tinst) {
+        set_tv_context(t->base->n->tv, t->sons);
+        t = t->base;
+        bassert(t->kind == Tstruct, "non-Tstruct in Tinst");
+    }
+    else if (t->kind != Tstruct) return;
+    destr = t->n->magic[Mdelete];
     if (!destr) return;
     ir = new(Instr);
     ir->kind = Idel;
@@ -82,6 +89,8 @@ static void igen_destr(Decl* d, Var* v) {
     list_append(ir->v, v);
     list_append(v->destr, ir);
     instr_result(d, NULL, ir);
+    if (v->type->kind == Tinst)
+        clear_tv_context(v->type->base->n->tv);
 }
 
 static void igen_destr_live_vars(Decl* d, VarStack* vs) {

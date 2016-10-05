@@ -239,10 +239,13 @@ static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
             ((ir->v[i]->flags & Fstc && t &&
               (t->kind == Tinst ||
                (d->flags & Fmemb && t == DFUN_THIS(d) && t->n->tv))) ||
-             (ir->kind == Iconstr && ir->dst->type->kind == Tinst && i == 0))) {
+             (ir->kind == Iconstr && ir->dst->type->kind == Tinst && i == 0) ||
+             (ir->kind == Idel && i == 0 && ir->v[1]->type->kind == Tinst))) {
             list_append(orig_cnames, string_clone(ir->v[i]->d.cname));
             dfun_inst_cname(ir->v[i]->d.cname, ir->kind == Iconstr ?
-                                               ir->dst->type : t);
+                                               ir->dst->type :
+                                               ir->kind == Idel ?
+                                               ir->v[1]->type : t);
         } else list_append(orig_cnames, NULL);
     }
     // The IR was optimized out by iopt.
