@@ -28,12 +28,13 @@ static void generate_typename(Type* t) {
     if (t->kind == Tbuiltin) t->d.cname = string_new(typenames[t->bkind]);
     else if (t->kind == Tptr) {
         generate_typename(t->sons[0]);
-        if (t->sons[0]->kind == Tvar && !t->sons[0]->sons)
-            t->d.cname = string_new("void*");
-        else {
-            t->d.cname = string_clone(t->sons[0]->d.cname);
-            string_mergec(t->d.cname, '*');
-        }
+        if (t->sons[0]->kind == Tvar) {
+            if (t->sons[0]->sons && t->sons[0]->sons[0])
+                t->d.cname = string_clone(t->sons[0]->sons[0]->d.cname);
+            else
+                t->d.cname = string_new("void");
+        } else t->d.cname = string_clone(t->sons[0]->d.cname);
+        string_mergec(t->d.cname, '*');
     } else generate_basename('t', &t->d, t->name, type_id++);
 }
 
