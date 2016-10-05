@@ -99,7 +99,13 @@ static void cgen_typedef(Type* t, FILE* output) {
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
     switch (t->kind) {
     case Tany: fatal("unexpected type kind Tany");
-    case Tbuiltin: case Tptr: break;
+    case Tptr:
+        if (t->sons[0]->kind == Tvar) {
+            string_free(t->d.cname);
+            t->d.cname = string_new("void*");
+        }
+        break;
+    case Tbuiltin: break;
     case Tfun:
         // XXX: this is a hack.
         fprintf(output, "typedef %s", t->sons[0] && t->sons[0]->kind == Tvar ?
