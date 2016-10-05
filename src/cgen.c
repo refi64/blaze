@@ -91,10 +91,12 @@ static void generate_declname(Decl* d) {
     else generate_basename(prefixes[d->kind], &d->v->d, d->v->name, d->v->id);
 }
 
-static Type* skipptr(Type* t) {
-    while (t->kind == Tptr) t = t->sons[0];
+static Type** skipptrm(Type** t) {
+    while ((*t)->kind == Tptr) t = &(*t)->sons[0];
     return t;
 }
+
+static Type* skipptr(Type* t) { return *skipptrm(&t); }
 
 static void cgen_typedef(Type* t, FILE* output) {
     int i;
@@ -445,16 +447,23 @@ static void cgen_decl1(Decl* d, FILE* output) {
     cgen_proto(d, output);
     fputs(" {\n", output);
     for (i=0; i<list_len(d->vars); ++i) {
+        Type** t;
         Var* v = d->vars[i];
         if (!v->type) continue;
-        if (v->type->kind == Tvar) {
-            if (!v->type->sons) {
-                Var* iv = trace_inst(v);
+        t = skipptrm(&v->type);
+        if ((*t)->kind == Tvar) {
+            Type* o = *t;
+            int ctx;
+            Var* iv;
+            if (!o->sons) {
+                ctx = 1;
+                iv = trace_inst(v);
                 generate_varname(iv);
                 set_tv_context(iv->type->base->n->tv, iv->type->sons);
-                v->type = v->type->sons[0];
-                clear_tv_context(iv->type->base->n->tv);
-            } else v->type = v->type->sons[0];
+            } else ctx = 0;
+            *t = o->sons[0];
+            type_incref(*t);
+            if (ctx) clear_tv_context(iv->type->base->n->tv);
         }
         generate_typename(v->type);
         generate_varname(v);
