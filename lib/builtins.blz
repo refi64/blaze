@@ -4,11 +4,13 @@
 
 global true: bool = 1 :: bool
 global false: bool = 0 :: bool
+global null: *byte = 0 :: size :: *mut byte
 
 global argc: int "__blaze_argc"
 global _c_argv: **char "__blaze_argv"
 
 fun _calloc(n: size, sz: size) -> *mut byte "calloc"
+fun _realloc(ptr: *byte, sz: size) -> *mut byte "realloc"
 fun _puts(s: *char) "puts"
 fun _free(d: *byte) "free"
 
@@ -57,7 +59,38 @@ fun argument(i: int) -> str:
     return s
 
 fun tos(i: int) -> str:
-    let len = _snprintf_d(0 :: *mut char, 0, "%d"._data, i)
+    let len = _snprintf_d(null :: *mut char, 0, "%d"._data, i)
     let mut tgt = new str(len :: size)
     _sprintf_d(tgt._data, "%d"._data, i)
     return tgt
+
+struct list[T]:
+    var _data: *mut T
+    var _sz: size
+    var len: size
+
+    mut fun _resize:
+        let data = _realloc(@_data :: *byte, @len*@_sz)
+        if data == null:
+            _free(@_data :: *byte)
+            @_data = null :: *mut T
+            @len = 0
+            return
+        @_data = data :: *mut T
+
+    fun new(len: size, sz: size):
+        @len = len
+        @_sz = sz
+        @_data = null :: *mut T
+        if len: @_resize()
+
+    mut fun append(x: T):
+        let last = @len
+        @len = last+1
+        @_resize()
+        if @len:
+            @_data[last] = x
+        return
+
+    fun [](i: size) -> T: return @_data[i]
+    fun &[](i: size) -> *mut T: return &@_data[i]
