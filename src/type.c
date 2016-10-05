@@ -805,6 +805,8 @@ void type(Node* n) {
         for (i=0; i<list_len(n->sons); ++i) {
             type(n->sons[i]);
             force_type_context(n->sons[i]);
+            if (i && n->sons[i]->kind == Ninst)
+                error(n->sons[i]->loc, "nested generics don't work yet");
         }
         n->flags |= Ftype;
         if (n->sons[0]->type == anytype->override) n->type = anytype->override;
