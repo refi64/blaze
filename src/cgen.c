@@ -361,7 +361,7 @@ static void cgen_decl0(Decl* d, FILE* output, int external) {
     generate_declname(d);
     switch (d->kind) {
     case Dfun:
-        if (d->flags & Fmemb && DFUN_THIS(d)->insts && !ptv) {
+        if (d->flags & Fmemb && DFUN_THIS(d)->n->tv && !ptv) {
             int i;
             Type* this = DFUN_THIS(d);
             String* d_cname = string_clone(d->v->d.cname);

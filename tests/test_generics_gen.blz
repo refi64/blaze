@@ -9,6 +9,9 @@ fun f -> X[char]:
     x.f()
     return x
 
+struct Unused[T]:
+    fun new: return
+
 fun main -> int:
     let x = f()
     print(tos(x.v :: int))
