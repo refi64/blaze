@@ -330,7 +330,7 @@ static void resolve_overload(Node* n) {
     int i, j;
     List(STEntry*) possibilities = NULL;
     List(Type*) expected;
-    List(Type*) tvx;
+    List(Type*) tvx = NULL;
     Node* id = n->sons[0];
 
     bassert(id->e && id->e->overload, "attempt to resolve non-overloaded node");
