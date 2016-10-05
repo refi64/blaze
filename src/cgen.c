@@ -28,8 +28,12 @@ static void generate_typename(Type* t) {
     if (t->kind == Tbuiltin) t->d.cname = string_new(typenames[t->bkind]);
     else if (t->kind == Tptr) {
         generate_typename(t->sons[0]);
-        t->d.cname = string_clone(t->sons[0]->d.cname);
-        string_mergec(t->d.cname, '*');
+        if (t->sons[0]->kind == Tvar && !t->sons[0]->sons)
+            t->d.cname = string_new("void*");
+        else {
+            t->d.cname = string_clone(t->sons[0]->d.cname);
+            string_mergec(t->d.cname, '*');
+        }
     } else generate_basename('t', &t->d, t->name, type_id++);
 }
 
@@ -89,7 +93,7 @@ static void generate_declname(Decl* d) {
 static void cgen_typedef(Type* t, FILE* output) {
     int i;
     bassert(t, "expected non-null type");
-    if (t->d.put_typedef || t->d.done) return;
+    if ((t->d.put_typedef || t->d.done) && t->kind != Tptr) return;
     if (t->kind == Tinst && t->di) {
         t->d.cname = string_clone(t->di->d.cname);
         return;
@@ -99,13 +103,7 @@ static void cgen_typedef(Type* t, FILE* output) {
         if (t->sons[i]) cgen_typedef(t->sons[i], output);
     switch (t->kind) {
     case Tany: fatal("unexpected type kind Tany");
-    case Tptr:
-        if (t->sons[0]->kind == Tvar) {
-            string_free(t->d.cname);
-            t->d.cname = string_new("void*");
-        }
-        break;
-    case Tbuiltin: break;
+    case Tbuiltin: case Tptr: break;
     case Tfun:
         // XXX: this is a hack.
         fprintf(output, "typedef %s", t->sons[0] && t->sons[0]->kind == Tvar ?
@@ -343,6 +341,8 @@ static void cgen_proto(Decl* d, FILE* output) {
 
     bassert(d->kind == Dfun, "unexpected decl kind %d", d->kind);
     if (!d->exportc && !d->import && !d->export) fputs("static ", output);
+    if (d->v->type && d->v->type->sons[0])
+        generate_typename(d->v->type->sons[0]);
     fprintf(output, "%s %s(", d->v->type && !d->ra ? CNAME(d->v->type->sons[0])
                                                    : "void",
             CNAME(d->v));
@@ -390,6 +390,7 @@ static void cgen_decl0(Decl* d, FILE* output, int external) {
         }
         break;
     case Dglobal:
+        generate_typename(d->v->type);
         if (external || d->import) fputs("extern ", output);
         fprintf(output, "%s %s;\n", CNAME(d->v->type), CNAME(d->v));
         break;
