@@ -3,6 +3,7 @@ struct X[T]:
     fun new(v: T): @v = v :: T
     fun f -> T: return @v
     fun [](x: T) -> T: return x
+    fun indirect -> T: return @f()
 
 fun f -> X[char]:
     let x = new X[char](7)
@@ -16,11 +17,13 @@ fun main -> int:
     let x = f()
     print(tos(x.v :: int))
     print(tos(x.f() :: int))
+    print(tos(x.indirect() :: int))
     print(tos(x[2] :: int))
     return 0
 
 #[
 RUN
+7
 7
 7
 2

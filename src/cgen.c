@@ -91,6 +91,11 @@ static void generate_declname(Decl* d) {
     else generate_basename(prefixes[d->kind], &d->v->d, d->v->name, d->v->id);
 }
 
+static Type* skipptr(Type* t) {
+    while (t->kind == Tptr) t = t->sons[0];
+    return t;
+}
+
 static void cgen_typedef(Type* t, FILE* output) {
     int i;
     bassert(t, "expected non-null type");
@@ -219,19 +224,23 @@ static void cgen_set(Var* dst, int dstaddr, Var* src, FILE* output) {
                         copy(src), copy_addr(src), CNAME(src));
 }
 
+#define DFUN_THIS(d) ((d)->args[0]->type->sons[0])
+
 static void cgen_ir(Decl* d, Instr* ir, FILE* output) {
     int i;
     List(String*) orig_cnames = NULL;
     for (i=0; i<list_len(ir->v); ++i) {
+        Type* t = ir->v[i]->base && ir->v[i]->base->type ?
+                  skipptr(ir->v[i]->base->type) : NULL;
         generate_varname(ir->v[i]);
         if (ir->v[i]->type &&
-            ((ir->v[i]->flags & Fstc && ir->v[i]->base &&
-              ir->v[i]->base->type->kind == Tinst) ||
+            ((ir->v[i]->flags & Fstc && t &&
+              (t->kind == Tinst ||
+               (d->flags & Fmemb && t == DFUN_THIS(d) && t->n->tv))) ||
              (ir->kind == Iconstr && ir->dst->type->kind == Tinst && i == 0))) {
             list_append(orig_cnames, string_clone(ir->v[i]->d.cname));
             dfun_inst_cname(ir->v[i]->d.cname, ir->kind == Iconstr ?
-                                               ir->dst->type :
-                                               ir->v[i]->base->type);
+                                               ir->dst->type : t);
         } else list_append(orig_cnames, NULL);
     }
     // The IR was optimized out by iopt.
@@ -360,8 +369,6 @@ static void cgen_proto(Decl* d, FILE* output) {
     }
     fputc(')', output);
 }
-
-#define DFUN_THIS(d) ((d)->args[0]->type->sons[0])
 
 static void cgen_decl0(Decl* d, FILE* output, int external) {
     static int ptv = 0;
